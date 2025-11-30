@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin - Student Records / Result</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{
+      font-family:Arial, sans-serif;
+      background:radial-gradient(circle at top,#1a4fff 0%,#000b33 55%,#000316 100%);
+      color:#fff;
+    }
+    header{
+      background:rgba(0,0,0,.8);
+      padding:8px 14px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      flex-wrap:wrap;
+      border-bottom:2px solid #ffbf00;
+    }
+    .logo-text{font-size:18px;font-weight:bold;}
+    a.back{
+      color:#ffbf00;
+      text-decoration:none;
+      font-size:13px;
+    }
+
+    .container{max-width:1100px;margin:18px auto;padding:0 10px;}
+    .card{
+      background:rgba(0,0,0,.7);
+      padding:14px;
+      border-radius:10px;
+      border:1px solid rgba(255,255,255,.2);
+    }
+    h1{font-size:22px;margin-bottom:6px;}
+    p.small{font-size:13px;color:#ffeaa7;margin-bottom:8px;}
+
+    table{
+      width:100%;
+      border-collapse:collapse;
+      font-size:12px;
+      margin-top:6px;
+    }
+    th,td{
+      border-bottom:1px solid rgba(255,255,255,.2);
+      padding:5px 6px;
+      vertical-align:middle;
+      text-align:left;
+    }
+    th{
+      background:rgba(0,0,0,.6);
+      font-size:12px;
+    }
+
+    select, input[type="text"], input[type="number"]{
+      width:100%;
+      padding:4px;
+      border-radius:4px;
+      border:none;
+      font-size:11px;
+    }
+
+    .btn-save{
+      padding:4px 8px;
+      border-radius:14px;
+      border:none;
+      cursor:pointer;
+      font-size:11px;
+      font-weight:bold;
+      background:#22c55e;
+      color:#000;
+    }
+    .status-pill{
+      padding:2px 8px;
+      border-radius:999px;
+      font-size:11px;
+      font-weight:bold;
+      display:inline-block;
+    }
+    .st-pending{background:#4b5563;color:#fff;}
+    .st-approved{background:#22c55e;color:#000;}
+    .st-notpub{background:#7c2d12;color:#fff;}
+    .st-pub{background:#facc15;color:#000;}
+
+    a.whatsapp{
+      color:#22c55e;
+      font-size:11px;
+      text-decoration:none;
+    }
+    a.whatsapp:hover{text-decoration:underline;}
+
+    #msgBox{margin-top:6px;font-size:13px;}
+    .scroll-wrap{
+      overflow-x:auto;
+      margin-top:8px;
+    }
+  </style>
+
+  <!-- Firebase v8 -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+</head>
+<body>
+
+<header>
+  <div class="logo-text">Admin — Student Records & Result</div>
+  <a class="back" href="dashboard.html">&larr; Back to Dashboard</a>
+</header>
+
+<div class="container">
+  <div class="card">
+    <h1>All Students (Payment + Result Control)</h1>
+    <p class="small">
+      Yahin se aap:
+      <b>Payment Status</b> approve kar sakte hain,
+      <b>Marks / Rank</b> fill kar sakte hain,
+      aur <b>Result Publish</b> kar sakte hain.
+    </p>
+
+    <div id="msgBox"></div>
+
+    <div class="scroll-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Roll</th>
+            <th>Name</th>
+            <th>Mobile</th>
+            <th>Payment</th>
+            <th>Marks</th>
+            <th>Rank</th>
+            <th>Result Text</th>
+            <th>Published?</th>
+            <th>WhatsApp</th>
+            <th>Save</th>
+          </tr>
+        </thead>
+        <tbody id="stuBody">
+          <tr><td colspan="11" style="text-align:center;">Loading...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+  // SAME CONFIG AS APPLY PAGE
+  var firebaseConfig = {
+    apiKey: "AIzaSyC87KEyqV3BMDeIexM_kom2rR7AMQ67eQ8",
+    authDomain: "bds-exam-portal.firebaseapp.com",
+    projectId: "bds-exam-portal",
+    storageBucket: "bds-exam-portal.appspot.com",
+    messagingSenderId: "376704151840",
+    appId: "1:376704151840:web:1f530924b850e008434883"
+  };
+  if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+  }
+  var db = firebase.firestore();
+
+  function showMsg(text, color){
+    var m = document.getElementById("msgBox");
+    m.style.color = color || "#fff";
+    m.innerHTML = text;
+  }
+
+  function loadStudents(){
+    var body = document.getElementById("stuBody");
+    body.innerHTML = '<tr><td colspan="11" style="text-align:center;">Loading...</td></tr>';
+
+    db.collection("students").orderBy("createdAt","desc").get()
+      .then(function(snap){
+        body.innerHTML = "";
+        if(snap.empty){
+          body.innerHTML = '<tr><td colspan="11" style="text-align:center;">No records.</td></tr>';
+          return;
+        }
+        var i = 1;
+        snap.forEach(function(doc){
+          var d = doc.data();
+          var id = doc.id;
+
+          var payStatus = (d.paymentVerified || d.status === "Approved") ? "Approved" : "Pending";
+          var marks = (d.marks !== undefined && d.marks !== null) ? d.marks : "";
+          var rank  = (d.rank  !== undefined && d.rank  !== null) ? d.rank  : "";
+          var rtext = d.resultStatus || "";
+          var rpub  = (d.resultPublished === true);
+
+          var tr = document.createElement("tr");
+          tr.innerHTML =
+            '<td>'+ (i++) +'</td>'+
+            '<td>'+ (d.rollNumber || "") +'</td>'+
+            '<td>'+ (d.name || "") +'</td>'+
+            '<td>'+ (d.mobile || "") +'</td>'+
+
+            // Payment status dropdown
+            '<td>'+
+              '<select id="pay-'+id+'">'+
+                '<option value="Pending" '+(payStatus==="Pending"?'selected':'')+'>Pending</option>'+
+                '<option value="Approved" '+(payStatus==="Approved"?'selected':'')+'>Approved</option>'+
+              '</select>'+
+            '</td>'+
+
+            // Marks
+            '<td><input type="number" id="marks-'+id+'" value="'+marks+'" placeholder="Marks"></td>'+
+
+            // Rank
+            '<td><input type="text" id="rank-'+id+'" value="'+rank+'" placeholder="Rank"></td>'+
+
+            // Result text (Pass/Fail/Selected...)
+            '<td><input type="text" id="rstatus-'+id+'" value="'+rtext+'" placeholder="Result text"></td>'+
+
+            // Publish checkbox
+            '<td style="text-align:center;">'+
+              '<input type="checkbox" id="rpub-'+id+'" '+(rpub?'checked':'')+'>'+
+            '</td>'+
+
+            // WhatsApp link
+            '<td>'+
+              (d.mobile
+                ? '<a class="whatsapp" target="_blank" href="https://wa.me/91'+d.mobile+'?text='+
+                    encodeURIComponent("BDS Exam: Roll "+(d.rollNumber||"")+" Result: "+(rtext||"")+
+                      ", Marks: "+(marks||"-")+", Rank: "+(rank||"-"))+
+                  '">Send</a>'
+                : '-')+
+            '</td>'+
+
+            // Save button
+            '<td><button class="btn-save" onclick="updateStudent(\''+id+'\')">Save</button></td>';
+
+          body.appendChild(tr);
+        });
+      })
+      .catch(function(err){
+        console.error(err);
+        body.innerHTML = '<tr><td colspan="11" style="text-align:center;color:#ff8080;">Error: '+err+'</td></tr>';
+      });
+  }
+
+  function updateStudent(id){
+    var payVal = document.getElementById("pay-"+id).value;
+    var marksVal = document.getElementById("marks-"+id).value;
+    var rankVal  = document.getElementById("rank-"+id).value;
+    var rstatusVal = document.getElementById("rstatus-"+id).value;
+    var rpubVal = document.getElementById("rpub-"+id).checked;
+
+    showMsg("Updating record...","#fff");
+
+    db.collection("students").doc(id).update({
+      paymentVerified: (payVal === "Approved"),
+      status: payVal,                         // "Pending" / "Approved"
+      marks: marksVal ? Number(marksVal) : null,
+      rank: rankVal || "",
+      resultStatus: rstatusVal || "",
+      resultPublished: rpubVal,
+      resultUpdatedAt: new Date()
+    }).then(function(){
+      showMsg("Record updated successfully!","#22c55e");
+      loadStudents();
+    }).catch(function(err){
+      console.error(err);
+      showMsg("Error: "+err,"#ff8080");
+    });
+  }
+
+  loadStudents();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin - Home Poster</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{
+      font-family:Arial, sans-serif;
+      background:radial-gradient(circle at top,#1a4fff 0%,#000b33 55%,#000316 100%);
+      color:#fff;
+    }
+    header{
+      background:rgba(0,0,0,.8);
+      padding:8px 14px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      flex-wrap:wrap;
+      border-bottom:2px solid #ffbf00;
+    }
+    .logo-text{font-size:18px;font-weight:bold;}
+    a.back{
+      color:#ffbf00;
+      text-decoration:none;
+      font-size:13px;
+    }
+
+    .container{max-width:900px;margin:18px auto;padding:0 10px;}
+    .card{
+      background:rgba(0,0,0,0.7);
+      padding:14px;
+      border-radius:10px;
+      border:1px solid rgba(255,255,255,.2);
+    }
+    h1{font-size:22px;margin-bottom:6px;}
+    label{display:block;font-size:14px;margin-top:6px;}
+    input{
+      width:100%;
+      padding:7px;
+      border-radius:6px;
+      border:none;
+      margin-top:3px;
+      font-size:14px;
+    }
+    .btn-primary{
+      margin-top:10px;
+      padding:9px 20px;
+      border-radius:999px;
+      border:none;
+      background:#ffbf00;
+      color:#000;
+      font-weight:bold;
+      cursor:pointer;
+      font-size:14px;
+    }
+    #msgBox{margin-top:6px;font-size:13px;}
+    #preview{
+      margin-top:10px;
+      text-align:center;
+    }
+    #preview img{
+      max-width:260px;
+      border-radius:10px;
+      border:2px solid #ffbf00;
+      box-shadow:0 0 15px rgba(0,0,0,.7);
+    }
+  </style>
+
+  <!-- Firebase v8 -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+</head>
+<body>
+
+<header>
+  <div class="logo-text">Admin — Home Flex / Poster</div>
+  <a class="back" href="dashboard.html">&larr; Back to Dashboard</a>
+</header>
+
+<div class="container">
+  <div class="card">
+    <h1>Change Home Page Poster</h1>
+    <p style="font-size:13px;color:#ffeaa7;">
+      Yahan par aap <b>poster image ka direct URL</b> (Google Drive / Imgbb / etc.) daal sakte hain.
+      Home page par ye poster automatically update ho jayega.
+    </p>
+
+    <label>Poster Image URL (https://...)</label>
+    <input type="text" id="posterUrl" placeholder="Direct image link">
+
+    <button class="btn-primary" onclick="savePoster()">Save Poster</button>
+    <div id="msgBox"></div>
+
+    <div id="preview">
+      <p style="font-size:13px;margin-bottom:4px;">Current Preview:</p>
+      <img id="posterPreview" src="../flex.jpg" alt="Current Poster">
+    </div>
+  </div>
+</div>
+
+<script>
+  var firebaseConfig = {
+    apiKey: "AIzaSyC87KEyqV3BMDeIexM_kom2rR7AMQ67eQ8",
+    authDomain: "bds-exam-portal.firebaseapp.com",
+    projectId: "bds-exam-portal",
+    storageBucket: "bds-exam-portal.appspot.com",
+    messagingSenderId: "376704151840",
+    appId: "1:376704151840:web:1f530924b850e008434883"
+  };
+  if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+  }
+  var db = firebase.firestore();
+
+  function showMsg(t,c){
+    var m = document.getElementById("msgBox");
+    m.style.color = c || "#fff";
+    m.innerHTML = t;
+  }
+
+  function loadPoster(){
+    db.collection("meta").doc("homePoster").get()
+      .then(function(doc){
+        if(doc.exists && doc.data().url){
+          document.getElementById("posterUrl").value = doc.data().url;
+          document.getElementById("posterPreview").src = doc.data().url;
+        }else{
+          document.getElementById("posterPreview").src = "../flex.jpg";
+        }
+      })
+      .catch(function(err){
+        console.error(err);
+      });
+  }
+
+  function savePoster(){
+    var url = document.getElementById("posterUrl").value.trim();
+    if(!url){
+      alert("Please enter poster image URL.");
+      return;
+    }
+    showMsg("Saving poster...");
+
+    db.collection("meta").doc("homePoster").set({
+      url: url,
+      updatedAt: new Date()
+    },{merge:true}).then(function(){
+      showMsg("Poster updated successfully!","#22c55e");
+      document.getElementById("posterPreview").src = url;
+    }).catch(function(err){
+      console.error(err);
+      showMsg("Error: "+err,"#ff8080");
+    });
+  }
+
+  loadPoster();
+</script>
+
+</body>
+</html>

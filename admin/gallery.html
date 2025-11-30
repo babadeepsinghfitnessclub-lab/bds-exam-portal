@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Admin – Manage Gallery | BDS Exam Portal</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: radial-gradient(circle at top, #0b4a8f 0, #020824 60%);
+      color: #fff;
+    }
+    .navbar {
+      background: rgba(0, 0, 0, 0.9);
+      padding: 10px 25px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .navbar-title {
+      font-size: 18px;
+      font-weight: bold;
+    }
+    .navbar a {
+      color: #ffca28;
+      text-decoration: none;
+      font-size: 13px;
+    }
+    .page {
+      max-width: 1100px;
+      margin: 20px auto 40px;
+      padding: 0 15px;
+    }
+    h1 {
+      text-align: center;
+      font-size: 24px;
+      margin-bottom: 5px;
+    }
+    .subtitle {
+      text-align: center;
+      font-size: 13px;
+      color: #cfd8dc;
+      margin-bottom: 20px;
+    }
+    .form-box {
+      background: rgba(0, 0, 0, 0.6);
+      border-radius: 14px;
+      padding: 15px;
+      margin-bottom: 25px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    label {
+      font-size: 13px;
+      display: block;
+      margin-bottom: 4px;
+    }
+    input[type="text"] {
+      width: 100%;
+      padding: 7px 10px;
+      border-radius: 6px;
+      border: 1px solid #455a64;
+      outline: none;
+      font-size: 13px;
+      box-sizing: border-box;
+      margin-bottom: 10px;
+    }
+    button {
+      padding: 7px 16px;
+      border: none;
+      border-radius: 999px;
+      background: #ffca28;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 13px;
+      margin-right: 6px;
+    }
+    button.delete {
+      background: #ff5252;
+      color: #fff;
+    }
+    button.secondary {
+      background: #455a64;
+      color: #fff;
+    }
+    .msg {
+      font-size: 13px;
+      margin-top: 5px;
+    }
+    .msg.ok {
+      color: #b2ff59;
+    }
+    .msg.err {
+      color: #ff5252;
+    }
+    .list {
+      margin-top: 10px;
+    }
+    .item {
+      display: flex;
+      align-items: center;
+      background: rgba(0,0,0,0.55);
+      border-radius: 12px;
+      padding: 8px 10px;
+      margin-bottom: 8px;
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+    .thumb {
+      width: 60px;
+      height: 60px;
+      border-radius: 8px;
+      object-fit: cover;
+      background: #000;
+      margin-right: 10px;
+    }
+    .info {
+      flex: 1;
+      font-size: 12px;
+    }
+    .info .caption {
+      font-weight: bold;
+      margin-bottom: 3px;
+    }
+    .info .url {
+      color: #90a4ae;
+      word-break: break-all;
+    }
+    .info .time {
+      color: #b0bec5;
+      margin-top: 2px;
+    }
+    .actions {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+  </style>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore-compat.js"></script>
+</head>
+<body>
+  <div class="navbar">
+    <div class="navbar-title">Admin – Manage Gallery</div>
+    <a href="dashboard.html">&larr; Back to Admin Dashboard</a>
+  </div>
+
+  <div class="page">
+    <h1>Gallery Photos</h1>
+    <div class="subtitle">
+      Yahan se aap students ke liye gallery photos add / hide / delete kar sakte hain.
+    </div>
+
+    <div class="form-box">
+      <label for="imageUrl">Image URL (Google Drive, Imgur, etc.)</label>
+      <input type="text" id="imageUrl" placeholder="Yahan image ka link paste karein" />
+
+      <label for="caption">Caption / Description</label>
+      <input type="text" id="caption" placeholder="e.g. Orientation Program, Prize Distribution" />
+
+      <button onclick="savePhoto()">Save Photo</button>
+      <span id="msg" class="msg"></span>
+      <div style="font-size:11px;color:#cfd8dc;margin-top:6px;">
+        Google Drive link paste karne par URL automatic direct image link me convert ho jayega.
+      </div>
+    </div>
+
+    <div class="list" id="photoList"></div>
+  </div>
+
+  <script>
+    // --- Firebase init ---
+    const firebaseConfig = {
+      apiKey: "AIzaSyAsKcExC1vXevjigyT2cWFSuQvZUziM19B",
+      authDomain: "bds-exam-portal.firebaseapp.com",
+      projectId: "bds-exam-portal",
+      storageBucket: "bds-exam-portal.appspot.com",
+      messagingSenderId: "937670115018",
+      appId: "1:937670115018:web:15392c0158d0c8a8407e33"
+    };
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
+    const db = firebase.firestore();
+    const galleryCol = db.collection("gallery");
+
+    const msgEl = document.getElementById("msg");
+    const listEl = document.getElementById("photoList");
+
+    function showMsg(text, ok=true) {
+      msgEl.textContent = text;
+      msgEl.className = "msg " + (ok ? "ok" : "err");
+    }
+
+    // Google Drive link ko direct image link me convert kare
+    function normalizeImageUrl(raw) {
+      if (!raw) return "";
+      raw = raw.trim();
+
+      // agar already i.ibb.co, imgur, etc hai to as-is chhod do
+      if (!raw.includes("drive.google.com")) {
+        return raw;
+      }
+
+      // pattern: https://drive.google.com/file/d/FILEID/view?...
+      const m = raw.match(/\/file\/d\/([^/]+)/);
+      if (m && m[1]) {
+        const id = m[1];
+        return "https://drive.google.com/uc?export=view&id=" + id;
+      }
+      return raw;
+    }
+
+    async function savePhoto() {
+      let url = document.getElementById("imageUrl").value;
+      const caption = document.getElementById("caption").value.trim() || "Gallery photo";
+
+      if (!url.trim()) {
+        showMsg("Please image URL paste karein.", false);
+        return;
+      }
+
+      url = normalizeImageUrl(url);
+
+      try {
+        showMsg("Saving photo...", true);
+        await galleryCol.add({
+          url: url,
+          caption: caption,
+          visible: true,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        document.getElementById("imageUrl").value = "";
+        document.getElementById("caption").value = "";
+        showMsg("Photo added to gallery.");
+        loadPhotos();
+      } catch (e) {
+        console.error(e);
+        showMsg("Error: " + e.message, false);
+      }
+    }
+
+    async function loadPhotos() {
+      listEl.innerHTML = "Loading photos...";
+      try {
+        const snap = await galleryCol.orderBy("createdAt", "desc").get();
+        if (snap.empty) {
+          listEl.innerHTML = "<div style='font-size:13px;color:#cfd8dc;'>Abhi koi photo add nahi hai.</div>";
+          return;
+        }
+        listEl.innerHTML = "";
+        snap.forEach(doc => {
+          const data = doc.data();
+          const id = doc.id;
+
+          const item = document.createElement("div");
+          item.className = "item";
+
+          const img = document.createElement("img");
+          img.className = "thumb";
+          img.src = data.url || "";
+          img.alt = data.caption || "Photo";
+
+          const info = document.createElement("div");
+          info.className = "info";
+
+          const cap = document.createElement("div");
+          cap.className = "caption";
+          cap.textContent = data.caption || "Gallery photo";
+
+          const urlDiv = document.createElement("div");
+          urlDiv.className = "url";
+          urlDiv.textContent = data.url || "";
+
+          const timeDiv = document.createElement("div");
+          timeDiv.className = "time";
+          if (data.createdAt && data.createdAt.toDate) {
+            timeDiv.textContent = new Date(data.createdAt.toDate()).toLocaleString();
+          }
+
+          info.appendChild(cap);
+          info.appendChild(urlDiv);
+          info.appendChild(timeDiv);
+
+          const actions = document.createElement("div");
+          actions.className = "actions";
+
+          const visBtn = document.createElement("button");
+          visBtn.className = "secondary";
+          visBtn.textContent = data.visible === false ? "Show" : "Hide";
+          visBtn.onclick = () => toggleVisible(id, !(data.visible === false));
+
+          const delBtn = document.createElement("button");
+          delBtn.className = "delete";
+          delBtn.textContent = "Delete";
+          delBtn.onclick = () => deletePhoto(id);
+
+          actions.appendChild(visBtn);
+          actions.appendChild(delBtn);
+
+          item.appendChild(img);
+          item.appendChild(info);
+          item.appendChild(actions);
+
+          listEl.appendChild(item);
+        });
+      } catch (e) {
+        console.error(e);
+        listEl.innerHTML = "<div style='color:#ff5252;font-size:13px;'>Error: " + e.message + "</div>";
+      }
+    }
+
+    async function toggleVisible(id, currentlyVisible) {
+      try {
+        await galleryCol.doc(id).update({ visible: !currentlyVisible });
+        loadPhotos();
+      } catch (e) {
+        console.error(e);
+        showMsg("Error visibility update: " + e.message, false);
+      }
+    }
+
+    async function deletePhoto(id) {
+      if (!confirm("Ye photo gallery se hamesha ke liye delete ho jayegi. Continue?")) return;
+      try {
+        await galleryCol.doc(id).delete();
+        loadPhotos();
+      } catch (e) {
+        console.error(e);
+        showMsg("Error delete: " + e.message, false);
+      }
+    }
+
+    loadPhotos();
+  </script>
+</body>
+</html>

@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin - Answer Keys</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{
+      font-family:Arial, sans-serif;
+      background:radial-gradient(circle at top,#1a4fff 0%,#000b33 55%,#000316 100%);
+      color:#fff;
+    }
+    header{
+      background:rgba(0,0,0,.8);
+      padding:8px 14px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      flex-wrap:wrap;
+      border-bottom:2px solid #ffbf00;
+    }
+    .logo-text{font-size:18px;font-weight:bold;}
+    a.back{
+      color:#ffbf00;
+      text-decoration:none;
+      font-size:13px;
+    }
+
+    .container{max-width:1000px;margin:18px auto;padding:0 10px;}
+    .card{
+      background:rgba(0,0,0,.7);
+      padding:14px;
+      border-radius:10px;
+      margin-bottom:16px;
+      border:1px solid rgba(255,255,255,.2);
+    }
+    h1{font-size:22px;margin-bottom:6px;}
+    h2{font-size:18px;margin:10px 0 6px;color:#ffd84d;}
+
+    label{display:block;font-size:14px;margin-top:6px;}
+    input{
+      width:100%;
+      padding:7px;
+      border-radius:6px;
+      border:none;
+      margin-top:3px;
+      font-size:14px;
+    }
+
+    .btn-primary{
+      margin-top:10px;
+      padding:9px 20px;
+      border-radius:999px;
+      border:none;
+      background:#ffbf00;
+      color:#000;
+      font-weight:bold;
+      cursor:pointer;
+      font-size:14px;
+    }
+    .btn-small{
+      padding:4px 10px;
+      border-radius:14px;
+      border:none;
+      cursor:pointer;
+      font-size:11px;
+      font-weight:bold;
+    }
+    .btn-visible{background:#22c55e;color:#000;}
+    .btn-hide{background:#facc15;color:#000;}
+    .btn-delete{background:#ef4444;color:#fff;}
+
+    table{
+      width:100%;
+      border-collapse:collapse;
+      margin-top:8px;
+      font-size:13px;
+    }
+    th,td{
+      padding:6px 8px;
+      border-bottom:1px solid rgba(255,255,255,.2);
+    }
+    th{background:rgba(0,0,0,.5);text-align:left;}
+
+    #msgBox{margin-top:6px;font-size:13px;}
+  </style>
+
+  <!-- Firebase v8 -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+</head>
+<body>
+
+<header>
+  <div class="logo-text">Admin &mdash; Answer Keys</div>
+  <a class="back" href="dashboard.html">&larr; Back to Dashboard</a>
+</header>
+
+<div class="container">
+
+  <!-- ADD NEW ANSWER KEY -->
+  <div class="card">
+    <h1>Upload / Add Answer Key (PDF URL)</h1>
+    <p style="font-size:13px;color:#ffeaa7;">
+      Yahan par aap <b>Google Drive / kisi bhi server</b> ka direct PDF link daal sakte hain.
+      Students <b>Download</b> page se isse dekh sakenge.
+    </p>
+
+    <label>Exam / Paper Title</label>
+    <input type="text" id="akTitle" placeholder="e.g. Scholarship Exam 2026 - Answer Key">
+
+    <label>Exam Date</label>
+    <input type="text" id="akDate" placeholder="e.g. 08/02/2026">
+
+    <label>PDF URL (https://...)</label>
+    <input type="text" id="akUrl" placeholder="Direct PDF link">
+
+    <button class="btn-primary" onclick="saveAnswerKey()">Save Answer Key</button>
+    <div id="msgBox"></div>
+  </div>
+
+  <!-- CURRENT ANSWER KEYS -->
+  <div class="card">
+    <h2>Current Answer Keys</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Title</th>
+          <th>Exam Date</th>
+          <th>Status</th>
+          <th>Link</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="akTableBody">
+        <tr><td colspan="6" style="text-align:center;">Loading...</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+<script>
+  // same config as apply.html
+  var firebaseConfig = {
+    apiKey: "AIzaSyC87KEyqV3BMDeIexM_kom2rR7AMQ67eQ8",
+    authDomain: "bds-exam-portal.firebaseapp.com",
+    projectId: "bds-exam-portal",
+    storageBucket: "bds-exam-portal.appspot.com",
+    messagingSenderId: "376704151840",
+    appId: "1:376704151840:web:1f530924b850e008434883"
+  };
+  if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+  }
+  var db = firebase.firestore();
+
+  function showMsg(text,color){
+    var m = document.getElementById("msgBox");
+    m.style.color = color || "#fff";
+    m.innerHTML = text;
+  }
+
+  function saveAnswerKey(){
+    var title = document.getElementById("akTitle").value.trim();
+    var date  = document.getElementById("akDate").value.trim();
+    var url   = document.getElementById("akUrl").value.trim();
+
+    if(!title || !url){
+      alert("Title aur PDF URL zaroori hai.");
+      return;
+    }
+
+    showMsg("Saving, please wait...");
+
+    db.collection("answerkeys").add({
+      title: title,
+      examDate: date,
+      url: url,
+      visible: true,
+      createdAt: new Date()
+    }).then(function(){
+      showMsg("Answer key saved successfully!","#22c55e");
+      document.getElementById("akTitle").value = "";
+      document.getElementById("akDate").value = "";
+      document.getElementById("akUrl").value = "";
+      loadAnswerKeys();
+    }).catch(function(err){
+      console.error(err);
+      showMsg("Error: "+err,"#ff8080");
+    });
+  }
+
+  function setVisibility(id,current){
+    db.collection("answerkeys").doc(id).update({
+      visible: !current
+    }).then(loadAnswerKeys);
+  }
+
+  function deleteKey(id){
+    if(!confirm("Sure? Is answer key ko delete karna hai?")) return;
+    db.collection("answerkeys").doc(id).delete().then(loadAnswerKeys);
+  }
+
+  function loadAnswerKeys(){
+    var body = document.getElementById("akTableBody");
+    body.innerHTML = '<tr><td colspan="6" style="text-align:center;">Loading...</td></tr>';
+
+    db.collection("answerkeys").orderBy("createdAt","desc").get()
+      .then(function(snap){
+        body.innerHTML = "";
+        if(snap.empty){
+          body.innerHTML = '<tr><td colspan="6" style="text-align:center;">No answer keys added yet.</td></tr>';
+          return;
+        }
+        var i=1;
+        snap.forEach(function(doc){
+          var d = doc.data();
+          var tr = document.createElement("tr");
+
+          tr.innerHTML =
+            "<td>"+(i++)+"</td>"+
+            "<td>"+(d.title || "-")+"</td>"+
+            "<td>"+(d.examDate || "-")+"</td>"+
+            "<td>"+(d.visible===false ? "Hidden" : "Visible")+"</td>"+
+            "<td>"+(d.url ? '<a href="'+d.url+'" target="_blank" style="color:#ffbf00;">Open</a>' : '-')+"</td>"+
+            "<td>"+
+              '<button class="btn-small '+(d.visible===false?'btn-visible':'btn-hide')+'" onclick="setVisibility(\''+doc.id+'\','+(d.visible!==false)+')">'+
+                (d.visible===false ? 'Make Visible' : 'Hide')+
+              '</button> '+
+              '<button class="btn-small btn-delete" onclick="deleteKey(\''+doc.id+'\')">Delete</button>'+
+            "</td>";
+
+          body.appendChild(tr);
+        });
+      })
+      .catch(function(err){
+        console.error(err);
+        body.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#ff8080;">Error: '+err+'</td></tr>';
+      });
+  }
+
+  loadAnswerKeys();
+</script>
+
+</body>
+</html>

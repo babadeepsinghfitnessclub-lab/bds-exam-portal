@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>BDS Admin Login</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <style>
+    body{
+      margin:0;
+      font-family:Arial, sans-serif;
+      background:#001532;
+      color:#fff;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      min-height:100vh;
+    }
+    .card{
+      background:rgba(0,0,0,0.8);
+      padding:24px;
+      border-radius:14px;
+      width:320px;
+      box-shadow:0 0 18px #000;
+      text-align:center;
+    }
+    h1{
+      margin:0 0 8px;
+      font-size:20px;
+      color:#ffca28;
+    }
+    p.subtitle{
+      margin:0 0 14px;
+      font-size:12px;
+      color:#cccccc;
+    }
+    input{
+      width:100%;
+      padding:9px;
+      margin-top:8px;
+      border-radius:6px;
+      border:none;
+      font-size:14px;
+      box-sizing:border-box;
+    }
+    button{
+      width:100%;
+      margin-top:12px;
+      padding:9px;
+      border-radius:999px;
+      border:none;
+      background:#ffbf00;
+      color:#000;
+      font-weight:bold;
+      cursor:pointer;
+      font-size:14px;
+    }
+    button:hover{
+      filter:brightness(1.05);
+    }
+    label{
+      display:block;
+      margin-top:6px;
+      font-size:12px;
+      text-align:left;
+    }
+    #msg{
+      margin-top:8px;
+      font-size:13px;
+    }
+    a.back-link{
+      display:inline-block;
+      margin-top:10px;
+      font-size:12px;
+      color:#9ecbff;
+      text-decoration:none;
+    }
+    a.back-link:hover{text-decoration:underline;}
+  </style>
+</head>
+<body>
+
+<div class="card">
+  <h1>BDS Admin Login</h1>
+  <p class="subtitle">Authorized access only</p>
+
+  <input type="password" id="adminPass" placeholder="Enter Admin Password">
+
+  <label>
+    <input type="checkbox" onclick="togglePass()">
+    Show Password
+  </label>
+
+  <button onclick="adminLogin()">Login</button>
+
+  <div id="msg"></div>
+
+  <a class="back-link" href="../index.html">← Back to Website</a>
+</div>
+
+<script>
+  // 🔐 Admin password yahi hai (Ajeet ne diya hua)
+  var ADMIN_PASSWORD = "Ajeet@1993";
+
+  function togglePass(){
+    var input = document.getElementById("adminPass");
+    input.type = (input.type === "password") ? "text" : "password";
+  }
+
+  function adminLogin(){
+    var pass = document.getElementById("adminPass").value.trim();
+    var msg  = document.getElementById("msg");
+
+    if(pass === ADMIN_PASSWORD){
+      msg.style.color = "#0f0";
+      msg.textContent = "Access granted… opening dashboard.";
+      // Local storage me ek flag save kar dete hain:
+      localStorage.setItem("bdsAdminLoggedIn", "yes");
+      // Dashboard pe bhej do
+      window.location.href = "dashboard.html";
+    }else{
+      msg.style.color = "red";
+      msg.textContent = "Wrong password.";
+    }
+  }
+</script>
+
+</body>
+</html>
