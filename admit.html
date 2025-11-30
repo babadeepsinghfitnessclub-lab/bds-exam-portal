@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Admit Card | BDS Mega Talent Hub</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{
+      font-family:Arial, sans-serif;
+      background:radial-gradient(circle at top,#1a4fff 0%,#000b33 55%,#000316 100%);
+      color:#fff;
+    }
+
+    /* HEADER + NAV */
+    header{
+      background:rgba(0,0,0,0.7);
+      padding:8px 14px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      flex-wrap:wrap;
+      border-bottom:2px solid #ffbf00;
+    }
+    .logo-text{font-size:18px;font-weight:bold;letter-spacing:1px;}
+    nav a{
+      color:#fff;
+      text-decoration:none;
+      margin-left:10px;
+      font-size:13px;
+      font-weight:bold;
+    }
+    nav a:hover{text-decoration:underline;}
+
+    .container{max-width:900px;margin:18px auto;padding:0 10px;}
+
+    .search-card{
+      background:rgba(0,0,0,0.65);
+      padding:12px;
+      border-radius:10px;
+      margin-bottom:15px;
+    }
+    .search-card h1{
+      font-size:22px;
+      margin-bottom:6px;
+    }
+    label{
+      display:block;
+      font-size:14px;
+      margin-top:6px;
+    }
+    input{
+      width:100%;
+      padding:7px;
+      border-radius:6px;
+      border:none;
+      margin-top:3px;
+      font-size:14px;
+    }
+    .btn-primary{
+      margin-top:10px;
+      padding:9px 20px;
+      border-radius:999px;
+      border:none;
+      background:#ffbf00;
+      color:#000;
+      font-weight:bold;
+      cursor:pointer;
+      font-size:14px;
+    }
+    .btn-primary:disabled{opacity:.6;cursor:default;}
+
+    #msgBox{margin-top:8px;font-size:13px;}
+
+    /* ADMIT CARD DESIGN */
+    .cards-wrap{
+      display:flex;
+      flex-wrap:wrap;
+      gap:14px;
+      margin-top:10px;
+    }
+    .admit-card{
+      flex:1 1 360px;
+      background:#001129;
+      border-radius:10px;
+      border:1px solid #ffbf00;
+      padding:10px 12px 12px;
+      box-shadow:0 0 16px rgba(0,0,0,.8);
+    }
+    .card-title{
+      text-align:center;
+      font-weight:bold;
+      font-size:16px;
+      margin-bottom:4px;
+      text-transform:uppercase;
+    }
+    .card-subtitle{
+      text-align:center;
+      font-size:13px;
+      margin-bottom:6px;
+      color:#ffd75e;
+    }
+    .card-row{
+      display:flex;
+      justify-content:space-between;
+      font-size:13px;
+      margin-bottom:2px;
+    }
+    .card-row span.label{font-weight:bold;}
+    .card-section-title{
+      margin-top:6px;
+      margin-bottom:2px;
+      border-bottom:1px solid rgba(255,255,255,.2);
+      font-size:13px;
+      font-weight:bold;
+    }
+    .photo-box{
+      width:90px;
+      height:110px;
+      border:1px solid #fff;
+      border-radius:4px;
+      overflow:hidden;
+      background:#000;
+      margin-left:auto;
+    }
+    .photo-box img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+    }
+    .top-line{
+      display:flex;
+      gap:10px;
+      align-items:flex-start;
+      margin-bottom:6px;
+    }
+    .top-text{
+      flex:1;
+      font-size:12px;
+    }
+
+    .note{
+      font-size:11px;
+      margin-top:6px;
+      color:#ffc;
+    }
+
+    .btn-print{
+      margin-top:14px;
+      text-align:center;
+    }
+    .btn-print button{
+      padding:8px 18px;
+      border-radius:20px;
+      border:none;
+      background:#00e676;
+      color:#000;
+      font-weight:bold;
+      cursor:pointer;
+      font-size:14px;
+    }
+
+    footer{
+      text-align:center;
+      font-size:12px;
+      padding:10px;
+      background:rgba(0,0,0,0.9);
+      margin-top:15px;
+    }
+
+    @media(max-width:700px){
+      .cards-wrap{flex-direction:column;}
+    }
+  </style>
+
+  <!-- Firebase v8 -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+</head>
+<body>
+
+<header>
+  <div class="logo-text">BABA DEEP SINGH MEGA TALENT HUB</div>
+  <nav>
+    <a href="index.html">HOME</a>
+    <a href="apply.html">APPLY</a>
+    <a href="admit.html">ADMIT CARD</a>
+    <a href="result.html">RESULT</a>
+    <a href="download.html">DOWNLOAD</a>
+    <a href="help.html">HELP</a>
+    <a href="admin/login.html">ADMIN</a>
+  </nav>
+</header>
+
+<div class="container">
+  <!-- SEARCH FORM -->
+  <div class="search-card">
+    <h1>Download Admit Card</h1>
+    <p style="font-size:13px;color:#ffeaa7;">
+      Admit card sirf unhi students ka show hoga jinka payment organizer ki taraf se
+      <b>verify</b> ho chuka hai.
+    </p>
+
+    <label>Roll Number</label>
+    <input type="text" id="rollInput" placeholder="e.g. BDS26XXXX" />
+
+    <label>Date of Birth</label>
+    <input type="date" id="dobInput" />
+
+    <button class="btn-primary" id="btnGet" onclick="getAdmitCard()">Get Admit Card</button>
+    <div id="msgBox"></div>
+  </div>
+
+  <!-- ADMIT CARDS RENDER -->
+  <div id="cardsArea" style="display:none;">
+    <div class="cards-wrap" id="cardsWrap"></div>
+
+    <div class="btn-print">
+      <button onclick="window.print()">Print / Download PDF</button>
+    </div>
+  </div>
+</div>
+
+<footer>© 2026 Baba Deep Singh Mega Talent Hub</footer>
+
+<script>
+  // SAME CONFIG AS APPLY.HTML
+  var firebaseConfig = {
+    apiKey: "AIzaSyC87KEyqV3BMDeIexM_kom2rR7AMQ67eQ8",
+    authDomain: "bds-exam-portal.firebaseapp.com",
+    projectId: "bds-exam-portal",
+    storageBucket: "bds-exam-portal.appspot.com",
+    messagingSenderId: "376704151840",
+    appId: "1:376704151840:web:1f530924b850e008434883"
+  };
+  if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+  }
+  var db = firebase.firestore();
+
+  // === STATIC EXAM DETAILS (abhi ke liye; baad me change kar sakte ho) ===
+  var EXAM_DETAILS = {
+    examName: "Future Achievers Scholarship Exam 2026",
+    examDate: "08/02/2026",
+    reportingTime: "09:00 AM",
+    examTime: "10:00 AM – 12:00 PM",
+    centreName: "Baba Deep Singh Mega Talent Hub",
+    centreAddress: "Near Railway Station, Sangariya, Dist. Hanumangarh (Raj.)"
+  };
+
+  function showMessage(text, color){
+    var box = document.getElementById("msgBox");
+    box.style.color = color || "#fff";
+    box.innerHTML = text;
+  }
+
+  function getAdmitCard(){
+    var roll = document.getElementById("rollInput").value.trim().toUpperCase();
+    var dob  = document.getElementById("dobInput").value;
+
+    var btn = document.getElementById("btnGet");
+    btn.disabled = true;
+    showMessage("Please wait, searching record...","#fff");
+    document.getElementById("cardsArea").style.display = "none";
+    document.getElementById("cardsWrap").innerHTML = "";
+
+    if(!roll || !dob){
+      showMessage("Roll number aur Date of Birth dono fill karein.","#ff8080");
+      btn.disabled = false;
+      return;
+    }
+
+    db.collection("students").where("rollNumber","==",roll).limit(1).get()
+      .then(function(snap){
+        if(snap.empty){
+          showMessage("Record nahi mila. Roll number check karein.","#ff8080");
+          btn.disabled = false;
+          return;
+        }
+        var doc = snap.docs[0];
+        var data = doc.data();
+
+        // DOB match check
+        if(!data.dob || data.dob !== dob){
+          showMessage("Date of Birth match nahi ho rahi. Sahi DOB enter karein.","#ff8080");
+          btn.disabled = false;
+          return;
+        }
+
+        // Payment verification check
+        if(data.paymentVerified !== true){
+          showMessage(
+            "Aapki registration abhi <b>PENDING</b> hai. " +
+            "Organizer payment verify karne ke baad admit card active hoga.",
+            "#ffcc66"
+          );
+          btn.disabled = false;
+          return;
+        }
+
+        // Everything OK → render admit card
+        renderAdmitCards(data);
+        showMessage("Admit card ready. Aap print / PDF download kar sakte hain.","#7CFC00");
+        btn.disabled = false;
+      })
+      .catch(function(err){
+        console.error(err);
+        showMessage("Error: " + err,"#ff8080");
+        document.getElementById("btnGet").disabled = false;
+      });
+  }
+
+  function renderAdmitCards(stu){
+    var wrap = document.getElementById("cardsWrap");
+    wrap.innerHTML = "";
+
+    // Helper to create one card (Student / Centre)
+    function makeCard(copyType){
+      var div = document.createElement("div");
+      div.className = "admit-card";
+
+      var html = "";
+      html += '<div class="card-title">'+EXAM_DETAILS.examName+'</div>';
+      html += '<div class="card-subtitle">ADMIT CARD – '+copyType+' COPY</div>';
+
+      html += '<div class="top-line">';
+      html += '  <div class="top-text">';
+      html += '    <div style="font-size:13px;font-weight:bold;">Exam Date: '+EXAM_DETAILS.examDate+'</div>';
+      html += '    <div style="font-size:12px;">Reporting Time: '+EXAM_DETAILS.reportingTime+
+              ' | Exam Time: '+EXAM_DETAILS.examTime+'</div>';
+      html += '    <div style="font-size:12px;margin-top:3px;">Centre: '+EXAM_DETAILS.centreName+
+              ', '+EXAM_DETAILS.centreAddress+'</div>';
+      html += '  </div>';
+      html += '  <div class="photo-box">';
+      if(stu.photoURL){
+        html += '    <img src="'+stu.photoURL+'" alt="Student Photo">';
+      }else{
+        html += '    <div style="font-size:10px;padding:4px;text-align:center;">Photo<br>Not<br>Available</div>';
+      }
+      html += '  </div>';
+      html += '</div>';
+
+      html += '<div class="card-section-title">Student Details</div>';
+      html += '<div class="card-row"><span class="label">Roll No:</span> <span>'+ (stu.rollNumber || "") +'</span></div>';
+      html += '<div class="card-row"><span class="label">Name:</span> <span>'+ (stu.name || "") +'</span></div>';
+      html += '<div class="card-row"><span class="label">Father\'s Name:</span> <span>'+ (stu.father || "") +'</span></div>';
+      html += '<div class="card-row"><span class="label">DOB:</span> <span>'+ (stu.dob || "") +'</span></div>';
+      html += '<div class="card-row"><span class="label">Gender:</span> <span>'+ (stu.gender || "") +'</span></div>';
+      html += '<div class="card-row"><span class="label">Mobile:</span> <span>'+ (stu.mobile || "") +'</span></div>';
+      html += '<div class="card-row"><span class="label">Whatsapp:</span> <span>'+ (stu.whatsapp || "-") +'</span></div>';
+      html += '<div class="card-row"><span class="label">Qualification:</span> <span>'+ (stu.qualification || "") +'</span></div>';
+      html += '<div class="card-row"><span class="label">Address:</span> <span>'+ (stu.address || "") +'</span></div>';
+
+      html += '<div class="card-section-title">Exam Instructions</div>';
+      html += '<div class="note">';
+      html += '• Admit card aur original ID proof (Aadhar / School ID) exam centre par le kar aayen.<br>';
+      html += '• Reporting time se 30 minute pehle centre par pohonchna anivaarya hai.<br>';
+      html += '• Mobile phone, calculator, smart watch, etc. exam hall me allowed nahi hain.';
+      html += '</div>';
+
+      div.innerHTML = html;
+      return div;
+    }
+
+    wrap.appendChild(makeCard("STUDENT"));
+    wrap.appendChild(makeCard("EXAM CENTRE"));
+
+    document.getElementById("cardsArea").style.display = "block";
+  }
+</script>
+
+</body>
+</html>

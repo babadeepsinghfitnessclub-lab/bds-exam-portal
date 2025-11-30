@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>BDS Mega Talent Hub | Home</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{
+      font-family: Arial, sans-serif;
+      background: radial-gradient(circle at top, #003f8f, #000820);
+      color:#fff;
+    }
+
+    /* TOP BAR + NAV */
+    header{
+      background:rgba(0,0,0,0.7);
+      padding:10px 15px;
+      border-bottom:2px solid #ffb400;
+      text-align:center;
+      font-weight:700;
+      letter-spacing:1px;
+      font-size:18px;
+    }
+    nav{
+      text-align:center;
+      background:rgba(0,0,0,0.5);
+      padding:8px 0;
+    }
+    nav a{
+      color:#ffeb99;
+      text-decoration:none;
+      font-size:13px;
+      font-weight:bold;
+      margin:0 10px;
+    }
+    nav a:hover{text-decoration:underline;}
+
+    /* MAIN LAYOUT */
+    .main{
+      max-width:1000px;
+      margin:15px auto 40px;
+      padding:0 10px;
+      display:flex;
+      flex-wrap:wrap;
+      gap:15px;
+      align-items:flex-start;
+      justify-content:center;
+    }
+
+    .left{
+      flex:1 1 260px;
+      text-align:left;
+    }
+    .right{
+      flex:1 1 260px;
+      text-align:center;
+    }
+
+    .headline{
+      font-size:22px;
+      font-weight:700;
+      margin-bottom:5px;
+    }
+    .subline{
+      font-size:13px;
+      margin-bottom:8px;
+    }
+    ul.points{
+      font-size:13px;
+      margin-left:18px;
+      margin-bottom:10px;
+    }
+    ul.points li{margin-bottom:4px;}
+
+    .btn-apply{
+      display:inline-block;
+      background:#ffdd00;
+      color:#000;
+      padding:8px 18px;
+      border-radius:20px;
+      font-weight:700;
+      font-size:13px;
+      text-decoration:none;
+      margin-bottom:10px;
+    }
+    .btn-apply:hover{background:#ffe866;}
+
+    .poster{
+      width:100%;
+      max-width:380px;
+      border-radius:12px;
+      border:2px solid #ffb400;
+      box-shadow:0 0 18px rgba(0,0,0,0.9);
+    }
+
+    /* NOTICES */
+    .notice-wrap{
+      width:100%;
+      margin-top:15px;
+      text-align:center;
+    }
+    .notice-card{
+      max-width:600px;
+      margin:0 auto;
+      background:rgba(0,0,0,0.65);
+      border-radius:12px;
+      padding:8px 12px 12px;
+      border:1px solid rgba(255,255,255,0.2);
+    }
+    .notice-header{
+      background:linear-gradient(90deg,#ff0078,#ffa800);
+      padding:4px 10px;
+      border-radius:999px;
+      display:inline-block;
+      font-size:13px;
+      font-weight:700;
+      margin-bottom:6px;
+    }
+    #noticeList{
+      list-style:none;
+      padding-left:0;
+      text-align:left;
+      font-size:13px;
+    }
+    #noticeList li{
+      padding:3px 0;
+    }
+
+    footer{
+      background:rgba(0,0,0,0.8);
+      text-align:center;
+      padding:10px;
+      font-size:11px;
+      color:#dddddd;
+    }
+
+    @media(max-width:700px){
+      header{font-size:15px;}
+      .headline{font-size:19px;}
+      nav a{margin:0 6px;}
+    }
+  </style>
+</head>
+<body>
+
+<header>BABA DEEP SINGH MEGA TALENT HUB</header>
+
+<nav>
+  <a href="index.html">HOME</a>
+  <a href="apply.html">APPLY</a>
+  <a href="admit.html">ADMIT CARD</a>
+  <a href="result.html">RESULT</a>
+  <a href="download.html">DOWNLOAD</a>
+  <a href="help.html">HELP</a>
+  <a href="admin/login.html">ADMIN</a>
+</nav>
+
+<div class="main">
+  <!-- LEFT TEXT -->
+  <div class="left">
+    <div class="headline">Future Achievers Scholarship Exam 2026</div>
+    <div class="subline">
+      Show your talent & win exciting cash prizes. Eligibility: 10th Pass /
+      Students preparing competition exams.
+    </div>
+
+    <ul class="points">
+      <li>1st Prize ₹51,000 • 2nd Prize ₹21,000 • 3rd Prize ₹11,000</li>
+      <li>Rank 4 to 21: ₹5100 (Consolation Award)</li>
+      <li>First 500 registered students will get a certificate.</li>
+      <li>Exam Date: 08 February 2026</li>
+      <li>Registration Fee: ₹200 Only</li>
+    </ul>
+
+    <a href="apply.html" class="btn-apply">Apply Now</a>
+  </div>
+
+  <!-- RIGHT POSTER -->
+  <div class="right">
+    <img src="flex.jpg" alt="Scholarship Poster" class="poster">
+
+    <div class="notice-wrap">
+      <div class="notice-card">
+        <div class="notice-header">📢 Latest Notices</div>
+        <ul id="noticeList">
+          <li>Loading notices...</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  © 2026 Baba Deep Singh Mega Talent Hub • Sangariya, District Hanumangarh (335063)
+</footer>
+
+<!-- FIREBASE — LOAD NOTICES -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+  import { getFirestore, collection, getDocs }
+    from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyAxxEcKxI-V8vigjYZ6wFSuQyZUziM198",
+    authDomain: "bds-exam-portal.firebaseapp.com",
+    projectId: "bds-exam-portal",
+    storageBucket: "bds-exam-portal.appspot.com",
+    messagingSenderId: "937670115018",
+    appId: "1:937670115018:web:15392c01586dc8a8407e33"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db  = getFirestore(app);
+
+  async function loadNotices(){
+    const ul = document.getElementById("noticeList");
+    ul.innerHTML = "<li>Loading notices...</li>";
+
+    try{
+      // simple: saare documents le rahe hain, koi extra filter nahi
+      const snap = await getDocs(collection(db,"notices"));
+
+      ul.innerHTML = "";
+      if(snap.empty){
+        ul.innerHTML = "<li>No notices found.</li>";
+        return;
+      }
+
+      snap.forEach(docu=>{
+        const d = docu.data();
+        // agar active field false hai to skip
+        if(d.active === false) return;
+
+        const li = document.createElement("li");
+        li.textContent = (d.title || "Notice") + " — " + (d.body || "");
+        ul.appendChild(li);
+      });
+
+      if(!ul.innerHTML){
+        ul.innerHTML = "<li>No active notices.</li>";
+      }
+    }catch(err){
+      console.log("Notice load error:", err);
+      ul.innerHTML = "<li>Error loading notices.</li>";
+    }
+  }
+
+  loadNotices();
+</script>
+
+</body>
+</html>

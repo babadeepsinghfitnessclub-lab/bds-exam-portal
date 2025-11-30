@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Download | BDS Mega Talent Hub</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{
+      font-family:Arial, sans-serif;
+      background:radial-gradient(circle at top,#1a4fff 0%,#000b33 55%,#000316 100%);
+      color:#fff;
+    }
+    header{
+      background:rgba(0,0,0,.7);
+      padding:8px 14px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      flex-wrap:wrap;
+      border-bottom:2px solid #ffbf00;
+    }
+    .logo-text{font-size:18px;font-weight:bold;letter-spacing:1px;}
+    nav a{
+      color:#fff;
+      text-decoration:none;
+      margin-left:10px;
+      font-size:13px;
+      font-weight:bold;
+    }
+    nav a:hover{text-decoration:underline;}
+
+    .container{max-width:900px;margin:18px auto;padding:0 10px;}
+    .card{
+      background:rgba(0,0,0,0.65);
+      padding:14px;
+      border-radius:10px;
+      margin-bottom:15px;
+    }
+    h1{font-size:22px;margin-bottom:6px;}
+    h2{font-size:18px;margin:10px 0 6px;color:#ffd84d;}
+
+    table{
+      width:100%;
+      border-collapse:collapse;
+      margin-top:6px;
+      font-size:14px;
+    }
+    th,td{
+      padding:6px 8px;
+      border-bottom:1px solid rgba(255,255,255,.15);
+    }
+    th{text-align:left;background:rgba(0,0,0,.3);}
+    a.btn-download{
+      display:inline-block;
+      padding:5px 10px;
+      border-radius:16px;
+      background:#ffbf00;
+      color:#000;
+      font-size:12px;
+      font-weight:bold;
+      text-decoration:none;
+    }
+    a.btn-download:hover{background:#ffe066;}
+
+    #msgBox{margin-top:6px;font-size:13px;}
+
+    footer{
+      text-align:center;
+      font-size:12px;
+      padding:10px;
+      background:rgba(0,0,0,.9);
+      margin-top:15px;
+    }
+  </style>
+
+  <!-- Firebase v8 -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+</head>
+<body>
+
+<header>
+  <div class="logo-text">BABA DEEP SINGH MEGA TALENT HUB</div>
+  <nav>
+    <a href="index.html">HOME</a>
+    <a href="apply.html">APPLY</a>
+    <a href="admit.html">ADMIT CARD</a>
+    <a href="result.html">RESULT</a>
+    <a href="download.html">DOWNLOAD</a>
+    <a href="help.html">HELP</a>
+    <a href="admin/login.html">ADMIN</a>
+  </nav>
+</header>
+
+<div class="container">
+  <div class="card">
+    <h1>Download Section</h1>
+    <p style="font-size:13px;color:#ffeaa7;">
+      Yahan se aap exam ke baad answer key (PDF) download kar sakte hain.
+    </p>
+
+    <h2>Answer Keys</h2>
+    <div id="msgBox">Loading answer keys...</div>
+
+    <table id="akTable" style="display:none;">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Exam / Paper</th>
+          <th>Exam Date</th>
+          <th>Download</th>
+        </tr>
+      </thead>
+      <tbody id="akBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<footer>© 2026 Baba Deep Singh Mega Talent Hub</footer>
+
+<script>
+  var firebaseConfig = {
+    apiKey: "AIzaSyC87KEyqV3BMDeIexM_kom2rR7AMQ67eQ8",
+    authDomain: "bds-exam-portal.firebaseapp.com",
+    projectId: "bds-exam-portal",
+    storageBucket: "bds-exam-portal.appspot.com",
+    messagingSenderId: "376704151840",
+    appId: "1:376704151840:web:1f530924b850e008434883"
+  };
+  if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+  }
+  var db = firebase.firestore();
+
+  function loadAnswerKeys(){
+    var msg = document.getElementById("msgBox");
+    var table = document.getElementById("akTable");
+    var body = document.getElementById("akBody");
+
+    msg.style.color = "#fff";
+    msg.innerHTML = "Loading answer keys...";
+
+    db.collection("answerkeys").get()
+      .then(function(snap){
+        body.innerHTML = "";
+        if(snap.empty){
+          msg.innerHTML = "Abhi koi answer key upload nahi hai.";
+          table.style.display = "none";
+          return;
+        }
+
+        var i=1;
+        snap.forEach(function(doc){
+          var d = doc.data();
+          if(d.visible === false) return;  // hidden
+
+          var tr = document.createElement("tr");
+
+          var examTitle = d.title || "Answer Key";
+          var examDate  = d.examDate || "-";
+          var url       = d.url || "";
+
+          tr.innerHTML =
+            "<td>"+(i++)+"</td>"+
+            "<td>"+examTitle+"</td>"+
+            "<td>"+examDate+"</td>"+
+            "<td>"+(url
+              ? '<a class="btn-download" href="'+url+'" target="_blank">View / Download</a>'
+              : 'Link not available')+
+            "</td>";
+
+          body.appendChild(tr);
+        });
+
+        if(!body.innerHTML){
+          msg.innerHTML = "Abhi koi visible answer key nahi hai.";
+          table.style.display = "none";
+        }else{
+          msg.innerHTML = "";
+          table.style.display = "table";
+        }
+      })
+      .catch(function(err){
+        console.error(err);
+        msg.style.color = "#ff8080";
+        msg.innerHTML = "Error loading data: "+err;
+      });
+  }
+
+  loadAnswerKeys();
+</script>
+
+</body>
+</html>

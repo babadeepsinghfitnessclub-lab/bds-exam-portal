@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Apply | BDS Mega Talent Hub</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <style>
+    body{
+      margin:0;
+      font-family:Arial, sans-serif;
+      background:radial-gradient(circle at top, #1a4fff 0%, #000b33 55%, #000316 100%);
+      color:#fff;
+    }
+    header{
+      background:rgba(0,0,0,0.7);
+      padding:8px 14px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      flex-wrap:wrap;
+    }
+    .logo-text{font-size:18px;font-weight:bold;letter-spacing:1px;}
+    nav a{
+      color:#fff;
+      text-decoration:none;
+      margin-left:10px;
+      font-size:13px;
+      font-weight:bold;
+    }
+    nav a:hover{text-decoration:underline;}
+
+    .container{max-width:900px;margin:15px auto;padding:10px;}
+    .card{background:rgba(0,0,0,0.6);border-radius:10px;padding:14px;}
+    h1{font-size:22px;margin:6px 0 4px;}
+    h2{font-size:18px;margin:10px 0 6px;color:#ffd84d;}
+
+    label{display:block;font-size:14px;margin-top:6px;}
+    .req-star{color:#ff5555;margin-left:2px;}
+
+    input, select, textarea{
+      width:100%;
+      padding:7px;
+      border-radius:6px;
+      border:none;
+      margin-top:2px;
+      font-size:14px;
+      box-sizing:border-box;
+    }
+    textarea{resize:vertical;min-height:60px;}
+    input[type="file"]{padding:4px;background:#fff;color:#000;}
+
+    .btn-primary{
+      margin-top:12px;
+      padding:10px 22px;
+      border-radius:999px;
+      border:none;
+      background:#ffbf00;
+      color:#000;
+      font-weight:bold;
+      cursor:pointer;
+      font-size:15px;
+    }
+    .btn-primary:disabled{opacity:0.6;cursor:default;}
+
+    #msgBox{margin-top:10px;font-size:14px;}
+
+    footer{text-align:center;font-size:13px;padding:10px;background:rgba(0,0,0,0.85);margin-top:10px;}
+  </style>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
+</head>
+<body>
+
+<header>
+  <div class="logo-text">BABA DEEP SINGH MEGA TALENT HUB</div>
+  <nav>
+    <a href="index.html">HOME</a>
+    <a href="apply.html">APPLY</a>
+    <a href="admit.html">ADMIT CARD</a>
+    <a href="result.html">RESULT</a>
+    <a href="download.html">DOWNLOAD</a>
+    <a href="help.html">HELP</a>
+    <a href="admin.html">ADMIN</a>
+  </nav>
+</header>
+
+<div class="container">
+  <div class="card">
+    <h1>Apply for Scholarship Exam 2026</h1>
+    <p style="font-size:13px;color:#ffe8a3;">
+      Step 1: Fill your details & upload documents. <br>
+      Step 2: Pay <b>₹200</b> via Paytm / UPI, enter Transaction ID & upload payment screenshot. <br>
+      <b>Note:</b> Registration Status: <span style="color:#ffbf00;">PENDING</span> until organizer verifies your payment.
+    </p>
+
+    <form id="applyForm" onsubmit="submitForm(event)">
+
+      <h2>Step 1 – Student Details</h2>
+
+      <label>Full Name<span class="req-star">*</span></label>
+      <input type="text" id="name" required>
+
+      <label>Father's Name<span class="req-star">*</span></label>
+      <input type="text" id="father" required>
+
+      <label>Date of Birth<span class="req-star">*</span></label>
+      <input type="date" id="dob" required>
+
+      <label>Gender<span class="req-star">*</span></label>
+      <select id="gender" required>
+        <option value="">Select</option>
+        <option>Male</option>
+        <option>Female</option>
+        <option>Other</option>
+      </select>
+
+      <label>Mobile Number<span class="req-star">*</span></label>
+      <input type="tel" id="mobile" maxlength="10" required>
+
+      <label>WhatsApp Number (optional)</label>
+      <input type="tel" id="whatsapp" maxlength="10">
+
+      <label>Email (optional)</label>
+      <input type="email" id="email">
+
+      <label>Qualification<span class="req-star">*</span></label>
+      <select id="qualification" required>
+        <option value="">Select</option>
+        <option>12th Appearing</option>
+        <option>12th Pass</option>
+        <option>Other Competition Student</option>
+      </select>
+
+      <label>Aadhar Number<span class="req-star">*</span></label>
+      <input type="text" id="aadhar" maxlength="12" required>
+
+      <label>Address<span class="req-star">*</span></label>
+      <textarea id="address" required></textarea>
+
+      <h2>Upload Documents</h2>
+
+      <label>Passport Size Photo <span class="req-star">*</span></label>
+      <input type="file" id="photoFile" accept="image/*" required>
+
+      <label>Aadhar Card <span class="req-star">*</span></label>
+      <input type="file" id="aadharFile" accept="image/*,application/pdf" required>
+
+      <label>Last Passing Marksheet <span class="req-star">*</span></label>
+      <input type="file" id="marksheetFile" accept="image/*,application/pdf" required>
+
+      <h2>Step 2 – Pay ₹200 (UPI / Paytm)</h2>
+
+      <p>Pay to UPI ID: <b>paytm.s1uuzab@pty</b></p>
+
+      <div style="text-align:center;margin:8px 0;">
+        <img src="upi-qr.png" alt="Paytm QR" style="width:180px;border-radius:8px;border:2px solid #fff;">
+      </div>
+
+      <p style="text-align:center;">
+        <a href="upi://pay?pa=paytm.s1uuzab@pty&pn=Baba%20Deep%20Singh%20Fitness%20Club&am=200&cu=INR"
+           style="display:inline-block;padding:10px 18px;border-radius:20px;background:#ffbf00;color:#000;font-weight:bold;">
+          Pay ₹200 via UPI App
+        </a>
+      </p>
+
+      <label>Payment Screenshot <span class="req-star">*</span></label>
+      <input type="file" id="paymentFile" accept="image/*" required>
+
+      <label>Transaction ID<span class="req-star">*</span></label>
+      <input type="text" id="upiTxn" required>
+
+      <label><input type="checkbox" id="paymentConfirm" required>
+        I verify above payment details.
+      </label>
+
+      <button class="btn-primary" id="submitBtn">Final Submit & Generate Roll No.</button>
+      <div id="msgBox"></div>
+
+    </form>
+  </div>
+</div>
+
+<footer>© 2026 Baba Deep Singh Mega Talent Hub</footer>
+
+<script>
+  // Firebase config
+  var firebaseConfig = {
+    apiKey: "AIzaSyC87KEyqV3BMDeIexM_kom2rR7AMQ67eQ8",
+    authDomain: "bds-exam-portal.firebaseapp.com",
+    projectId: "bds-exam-portal",
+    storageBucket: "bds-exam-portal.appspot.com",
+    messagingSenderId: "376704151840",
+    appId: "1:376704151840:web:1f530924b850e008434883"
+  };
+  if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+  }
+  var db = firebase.firestore();
+  var storage = firebase.storage();
+
+  function uploadFile(path, file){
+    return storage.ref().child(path).put(file).then(function(s){
+      return s.ref.getDownloadURL();
+    });
+  }
+
+  function submitForm(e){
+    e.preventDefault();
+    var msg = document.getElementById("msgBox");
+    var btn = document.getElementById("submitBtn");
+    msg.style.color = "#fff";
+    msg.innerHTML = "";
+    btn.disabled = true;
+    btn.innerText = "Submitting... Please wait";
+
+    // Values
+    var nameVal   = document.getElementById("name").value.trim();
+    var fatherVal = document.getElementById("father").value.trim();
+    var dobVal    = document.getElementById("dob").value;
+    var genderVal = document.getElementById("gender").value;
+    var mobileVal = document.getElementById("mobile").value.trim();
+    var whatsappVal = document.getElementById("whatsapp").value.trim();
+    var emailVal  = document.getElementById("email").value.trim();
+    var qualVal   = document.getElementById("qualification").value;
+    var aadharVal = document.getElementById("aadhar").value.trim();
+    var addrVal   = document.getElementById("address").value.trim();
+    var upiTxnVal = document.getElementById("upiTxn").value.trim();
+    var payOk     = document.getElementById("paymentConfirm").checked;
+
+    var photoFile     = document.getElementById("photoFile").files[0];
+    var aadharFile    = document.getElementById("aadharFile").files[0];
+    var marksheetFile = document.getElementById("marksheetFile").files[0];
+    var paymentFile   = document.getElementById("paymentFile").files[0];
+
+    // Checks
+    if(!nameVal || !fatherVal || !dobVal || !genderVal || !mobileVal || !qualVal || !aadharVal || !addrVal){
+      alert("Please fill all required student details.");
+      btn.disabled = false;
+      btn.innerText = "Final Submit & Generate Roll No.";
+      return;
+    }
+    if(!photoFile || !aadharFile || !marksheetFile || !paymentFile){
+      alert("Please upload photo, Aadhar, marksheet and payment screenshot.");
+      btn.disabled = false;
+      btn.innerText = "Final Submit & Generate Roll No.";
+      return;
+    }
+    if(!upiTxnVal){
+      alert("Please enter Paytm / UPI Transaction ID.");
+      btn.disabled = false;
+      btn.innerText = "Final Submit & Generate Roll No.";
+      return;
+    }
+    if(!payOk){
+      alert("Payment verify checkbox tick kare!");
+      btn.disabled = false;
+      btn.innerText = "Final Submit & Generate Roll No.";
+      return;
+    }
+
+    msg.innerHTML = "Please wait, uploading your details and documents...";
+
+    // STEP 1: Generate roll number
+    db.runTransaction(function(t){
+      var ref = db.collection("meta").doc("rollCounter");
+      return t.get(ref).then(function(doc){
+        var last = 0;
+        if(doc.exists && doc.data().last){
+          last = doc.data().last;
+        }
+        var next = last + 1;
+        t.set(ref, {last: next}, {merge: true});
+        return next;
+      });
+    }).then(function(next){
+      var roll = "BDS26" + ("0000"+next).slice(-4);
+
+      // STEP 2: Upload all files
+      var uploads = [
+        uploadFile("photos/"+roll+"_photo", photoFile),
+        uploadFile("docs/"+roll+"_aadhar", aadharFile),
+        uploadFile("docs/"+roll+"_marksheet", marksheetFile),
+        uploadFile("payments/"+roll+"_ss", paymentFile)
+      ];
+
+      Promise.all(uploads).then(function(urls){
+        var photoURL     = urls[0];
+        var aadharURL    = urls[1];
+        var marksheetURL = urls[2];
+        var paymentURL   = urls[3];
+
+        // STEP 3: Save student record
+        return db.collection("students").add({
+          rollNumber: roll,
+          name: nameVal,
+          father: fatherVal,
+          dob: dobVal,
+          gender: genderVal,
+          mobile: mobileVal,
+          whatsapp: whatsappVal,
+          email: emailVal,
+          qualification: qualVal,
+          aadhar: aadharVal,
+          address: addrVal,
+          upiTxn: upiTxnVal,
+          photoURL: photoURL,
+          aadharURL: aadharURL,
+          marksheetURL: marksheetURL,
+          paymentScreenshotURL: paymentURL,
+          paymentVerified: false,
+          status: "Pending",
+          createdAt: new Date()
+        }).then(function(){
+          return roll;
+        });
+
+      }).then(function(roll){
+        msg.style.color = "#0f0";
+        msg.innerHTML =
+          "✔ Submitted Successfully!<br>" +
+          "Your Roll Number: <b>"+roll+"</b><br>" +
+          "Payment Status: <b>PENDING</b><br>" +
+          "Organizer verification ke baad activate hoga.";
+        document.getElementById("applyForm").reset();
+      }).catch(function(err){
+        console.error(err);
+        msg.style.color = "red";
+        msg.innerText = "Error saving data: "+err;
+      }).finally(function(){
+        btn.disabled = false;
+        btn.innerText = "Final Submit & Generate Roll No.";
+      });
+
+    }).catch(function(err){
+      console.error(err);
+      msg.style.color = "red";
+      msg.innerText = "Error generating roll number: "+err;
+      btn.disabled = false;
+      btn.innerText = "Final Submit & Generate Roll No.";
+    });
+  }
+</script>
+
+</body>
+</html>

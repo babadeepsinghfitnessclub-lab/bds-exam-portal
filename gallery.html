@@ -1,0 +1,128 @@
+!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Exam & Event Gallery</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background: #002b6b;
+      font-family: Arial, sans-serif;
+      color: #fff;
+      text-align: center;
+    }
+
+    h2 {
+      margin-top: 20px;
+    }
+
+    .subtitle {
+      font-size: 14px;
+      margin-bottom: 15px;
+      opacity: 0.9;
+    }
+
+    #gallery {
+      width: 90%;
+      margin: 0 auto 30px auto;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .photo-card {
+      background: #011b3c;
+      border-radius: 10px;
+      margin: 10px;
+      padding: 10px;
+      width: 220px;
+      box-shadow: 0 0 6px rgba(0,0,0,0.4);
+    }
+
+    .photo-card img {
+      width: 200px;
+      height: 200px;
+      object-fit: cover;
+      border-radius: 8px;
+      display: block;
+      margin: 0 auto;
+    }
+
+    .caption {
+      margin-top: 8px;
+      font-size: 14px;
+    }
+
+    #status {
+      margin-top: 15px;
+      font-size: 14px;
+      color: #ff8080;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>📸 Exam & Event Gallery</h2>
+  <div class="subtitle">
+    Yahan par aap scholarship exam se related photos dekh sakte hain.
+  </div>
+
+  <div id="status">Loading photos...</div>
+  <div id="gallery"></div>
+
+  <!-- ✅ COMPAT Firebase scripts (yeh hi baaki pages me use ho rahe honge) -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-firestore-compat.js"></script>
+
+  <script>
+    // 🔹 Yahan apna WALA firebaseConfig paste karo (jo apply / admin page me hai)
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+      projectId: "YOUR_PROJECT_ID",
+    };
+
+    // Firebase init
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    const statusEl = document.getElementById("status");
+    const galleryEl = document.getElementById("gallery");
+
+    function loadGallery() {
+      statusEl.textContent = "Loading photos...";
+
+      db.collection("gallery")
+        .where("visible", "==", true)   // sirf visible = true waale
+        .get()
+        .then((snapshot) => {
+          galleryEl.innerHTML = "";
+          if (snapshot.empty) {
+            statusEl.textContent = "Koi photo nahi mili. Admin se upload karwaen.";
+            return;
+          }
+
+          statusEl.textContent = "";
+
+          snapshot.forEach((doc) => {
+            const data = doc.data();
+            const card = document.createElement("div");
+            card.className = "photo-card";
+            card.innerHTML = `
+              <img src="${data.url}" alt="Gallery Image">
+              <div class="caption">${data.caption || ""}</div>
+            `;
+            galleryEl.appendChild(card);
+          });
+        })
+        .catch((err) => {
+          console.error("Gallery error:", err);
+          statusEl.textContent = "Gallery load karne me error aaya. Thodi der baad try karein.";
+        });
+    }
+
+    loadGallery();
+  </script>
+</body>
+</html>
