@@ -1,4 +1,4 @@
-!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -71,30 +71,33 @@
   <div id="status">Loading photos...</div>
   <div id="gallery"></div>
 
-  <!-- ✅ COMPAT Firebase scripts (yeh hi baaki pages me use ho rahe honge) -->
+  <!-- Firebase compat scripts -->
   <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-firestore-compat.js"></script>
 
   <script>
-    // 🔹 Yahan apna WALA firebaseConfig paste karo (jo apply / admin page me hai)
+    // 🔹 Same config jo APPLY / ADMIN me use kar rahe ho
     const firebaseConfig = {
-      apiKey: "YOUR_API_KEY",
-      authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-      projectId: "YOUR_PROJECT_ID",
+      apiKey: "AIzaSyC87KEyqV3BMDeIexM_kom2rR7AMQ67eQ8",
+      authDomain: "bds-exam-portal.firebaseapp.com",
+      projectId: "bds-exam-portal",
+      storageBucket: "bds-exam-portal.appspot.com",
+      messagingSenderId: "376704151840",
+      appId: "1:376704151840:web:1f530924b850e008434883"
     };
 
-    // Firebase init
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    const statusEl = document.getElementById("status");
+    const statusEl  = document.getElementById("status");
     const galleryEl = document.getElementById("gallery");
 
     function loadGallery() {
       statusEl.textContent = "Loading photos...";
 
       db.collection("gallery")
-        .where("visible", "==", true)   // sirf visible = true waale
+        .where("visible", "==", true)
+        .orderBy("createdAt", "desc")
         .get()
         .then((snapshot) => {
           galleryEl.innerHTML = "";
