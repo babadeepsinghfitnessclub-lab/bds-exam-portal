@@ -37,13 +37,9 @@
     }
     h1{font-size:22px;margin-bottom:6px;}
     label{display:block;font-size:14px;margin-top:6px;}
-    input{
-      width:100%;
-      padding:7px;
-      border-radius:6px;
-      border:none;
-      margin-top:3px;
-      font-size:14px;
+    input[type="file"]{
+      margin-top:4px;
+      font-size:13px;
     }
     .btn-primary{
       margin-top:10px;
@@ -80,14 +76,14 @@
   <div class="card">
     <h1>Change Home Page Poster</h1>
     <p style="font-size:13px;color:#ffeaa7;">
-      Yahan par aap <b>poster image ka direct URL</b> (Supabase Storage / Google Drive / Imgbb / etc.) daal sakte hain.
-      Home page par ye poster automatically update ho jayega.
+      Yahan se aap <b>direct image file upload</b> karoge.  
+      Supabase storage me save hogi, aur home page par naya poster automatic dikhega.
     </p>
 
-    <label>Poster Image URL (https://...)</label>
-    <input type="text" id="posterUrl" placeholder="Direct image link">
+    <label>Choose Poster Image (JPG/PNG)</label>
+    <input type="file" id="posterFile" accept="image/*">
 
-    <button class="btn-primary" id="saveBtn">Save Poster</button>
+    <button class="btn-primary" id="uploadBtn">Upload & Save Poster</button>
     <div id="msgBox"></div>
 
     <div id="preview">
@@ -100,6 +96,11 @@
 <!-- Supabase JS -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
+  // 🔐 Admin login guard
+  if (localStorage.getItem("bdsAdminLoggedIn") !== "yes") {
+    window.location.href = "login.html";
+  }
+
   const { createClient } = supabase;
 
   const SUPABASE_URL = "https://yyymjhuwjvyykukfzqow.supabase.co";
@@ -107,17 +108,18 @@
 
   const db = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-  const urlInput = document.getElementById("posterUrl");
-  const previewImg = document.getElementById("posterPreview");
-  const msgBox = document.getElementById("msgBox");
-  const saveBtn = document.getElementById("saveBtn");
+  const fileInput = document.getElementById("posterFile");
+  const uploadBtn = document.getElementById("uploadBtn");
+  const msgBox    = document.getElementById("msgBox");
+  const preview   = document.getElementById("posterPreview");
 
-  function showMsg(text, color){
-    msgBox.style.color = color || "#fff";
-    msgBox.innerHTML = text;
+  function showMsg(t,c){
+    msgBox.style.color = c || "#fff";
+    msgBox.innerHTML = t;
   }
 
-  async function loadPoster(){
+  // 🔄 Latest poster load kar ke preview me dikhao
+  async function loadCurrentPoster(){
     try{
       const { data, error } = await db
         .from("flex_banners")
@@ -129,45 +131,69 @@
       if(error) throw error;
 
       if(data && data.image_url){
-        urlInput.value = data.image_url;
-        previewImg.src = data.image_url;
+        preview.src = data.image_url;
       }else{
-        // table khali ho to default flex.jpg
-        previewImg.src = "../flex.jpg";
+        preview.src = "../flex.jpg"; // default
       }
     }catch(err){
-      console.log("Load poster error:", err);
+      console.log("Load poster error:", err.message);
     }
   }
 
-  async function savePoster(){
-    const url = urlInput.value.trim();
-    if(!url){
-      alert("Please enter poster image URL.");
+  loadCurrentPoster();
+
+  // 📤 Upload & Save Poster
+  uploadBtn.addEventListener("click", async () => {
+    const file = fileInput.files[0];
+    if(!file){
+      showMsg("Please select an image file.","#ff8080");
       return;
     }
-    saveBtn.disabled = true;
-    showMsg("Saving poster...", "#fff");
+
+    uploadBtn.disabled = true;
+    showMsg("Uploading poster, please wait...","#fff");
 
     try{
-      const { error } = await db
+      // 1) Storage me upload (bucket: flex)
+      const filePath = Date.now() + "" + file.name.replace(/\s+/g,"");
+
+      const { data: uploadData, error: uploadErr } = await db
+        .storage
+        .from("flex")
+        .upload(filePath, file, {
+          cacheControl: "3600",
+          upsert: true
+        });
+
+      if(uploadErr) throw uploadErr;
+
+      // 2) Public URL nikalo
+      const { data: publicData } = db
+        .storage
+        .from("flex")
+        .getPublicUrl(filePath);
+
+      const publicUrl = publicData.publicUrl;
+
+      // 3) flex_banners table me entry
+      const { error: insertErr } = await db
         .from("flex_banners")
-        .insert({ image_url: url });
+        .insert({ image_url: publicUrl });
 
-      if(error) throw error;
+      if(insertErr) throw insertErr;
 
-      showMsg("Poster updated successfully!","#22c55e");
-      previewImg.src = url;
+      // 4) Preview update
+      preview.src = publicUrl;
+      showMsg("Poster uploaded & saved successfully! Home page par bhi naya poster dikhega.","#22c55e");
+      fileInput.value = "";
+
     }catch(err){
       console.error(err);
-      showMsg("Error: "+err.message,"#ff8080");
+      showMsg("Error: " + (err.message || err),"#ff8080");
     }finally{
-      saveBtn.disabled = false;
+      uploadBtn.disabled = false;
     }
-  }
-
-  saveBtn.addEventListener("click", savePoster);
-  loadPoster();
+  });
 </script>
 
 </body>
