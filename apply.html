@@ -68,7 +68,7 @@
     footer{text-align:center;font-size:13px;padding:10px;background:rgba(0,0,0,0.85);margin-top:10px;}
   </style>
 
-  <!-- Firebase -->
+  <!-- Firebase v8 -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
@@ -146,8 +146,13 @@
       <label>Passport Size Photo <span class="req-star">*</span></label>
       <input type="file" id="photoFile" accept="image/*" required>
 
-      <label>Aadhar Card <span class="req-star">*</span></label>
+      <!-- Aadhaar Front -->
+      <label>Aadhar Card (Front Side) <span class="req-star">*</span></label>
       <input type="file" id="aadharFile" accept="image/*,application/pdf" required>
+
+      <!-- ✅ NEW: Aadhaar Back -->
+      <label>Aadhar Card (Back Side) <span class="req-star">*</span></label>
+      <input type="file" id="aadharBackFile" accept="image/*,application/pdf" required>
 
       <label>Last Passing Marksheet <span class="req-star">*</span></label>
       <input type="file" id="marksheetFile" accept="image/*,application/pdf" required>
@@ -187,7 +192,7 @@
 <footer>© 2026 Baba Deep Singh Mega Talent Hub</footer>
 
 <script>
-  // Firebase config
+  // Firebase config (same as pehle)
   var firebaseConfig = {
     apiKey: "AIzaSyC87KEyqV3BMDeIexM_kom2rR7AMQ67eQ8",
     authDomain: "bds-exam-portal.firebaseapp.com",
@@ -231,20 +236,36 @@
     var upiTxnVal = document.getElementById("upiTxn").value.trim();
     var payOk     = document.getElementById("paymentConfirm").checked;
 
-    var photoFile     = document.getElementById("photoFile").files[0];
-    var aadharFile    = document.getElementById("aadharFile").files[0];
-    var marksheetFile = document.getElementById("marksheetFile").files[0];
-    var paymentFile   = document.getElementById("paymentFile").files[0];
+    var photoFile       = document.getElementById("photoFile").files[0];
+    var aadharFile      = document.getElementById("aadharFile").files[0];
+    var aadharBackFile  = document.getElementById("aadharBackFile").files[0]; // ✅ NEW
+    var marksheetFile   = document.getElementById("marksheetFile").files[0];
+    var paymentFile     = document.getElementById("paymentFile").files[0];
 
-    // Checks
+    // Basic Checks
     if(!nameVal || !fatherVal || !dobVal || !genderVal || !mobileVal || !qualVal || !aadharVal || !addrVal){
       alert("Please fill all required student details.");
       btn.disabled = false;
       btn.innerText = "Final Submit & Generate Roll No.";
       return;
     }
-    if(!photoFile || !aadharFile || !marksheetFile || !paymentFile){
-      alert("Please upload photo, Aadhar, marksheet and payment screenshot.");
+    // Mobile 10 digit check (small improvement)
+    if(mobileVal.length !== 10 || !/^[0-9]+$/.test(mobileVal)){
+      alert("Please enter valid 10 digit mobile number.");
+      btn.disabled = false;
+      btn.innerText = "Final Submit & Generate Roll No.";
+      return;
+    }
+    // Aadhaar 12 digit basic check
+    if(aadharVal.length !== 12 || !/^[0-9]+$/.test(aadharVal)){
+      alert("Please enter valid 12 digit Aadhaar number.");
+      btn.disabled = false;
+      btn.innerText = "Final Submit & Generate Roll No.";
+      return;
+    }
+
+    if(!photoFile || !aadharFile || !aadharBackFile || !marksheetFile || !paymentFile){
+      alert("Please upload photo, Aadhaar front, Aadhaar back, marksheet and payment screenshot.");
       btn.disabled = false;
       btn.innerText = "Final Submit & Generate Roll No.";
       return;
@@ -264,7 +285,7 @@
 
     msg.innerHTML = "Please wait, uploading your details and documents...";
 
-    // STEP 1: Generate roll number
+    // STEP 1: Generate roll number (same logic)
     db.runTransaction(function(t){
       var ref = db.collection("meta").doc("rollCounter");
       return t.get(ref).then(function(doc){
@@ -279,19 +300,21 @@
     }).then(function(next){
       var roll = "BDS26" + ("0000"+next).slice(-4);
 
-      // STEP 2: Upload all files
+      // STEP 2: Upload all files (now 5 uploads)
       var uploads = [
         uploadFile("photos/"+roll+"_photo", photoFile),
-        uploadFile("docs/"+roll+"_aadhar", aadharFile),
+        uploadFile("docs/"+roll+"_aadhar_front", aadharFile),
+        uploadFile("docs/"+roll+"_aadhar_back", aadharBackFile), // ✅ NEW
         uploadFile("docs/"+roll+"_marksheet", marksheetFile),
         uploadFile("payments/"+roll+"_ss", paymentFile)
       ];
 
       Promise.all(uploads).then(function(urls){
-        var photoURL     = urls[0];
-        var aadharURL    = urls[1];
-        var marksheetURL = urls[2];
-        var paymentURL   = urls[3];
+        var photoURL       = urls[0];
+        var aadharURL      = urls[1];
+        var aadharBackURL  = urls[2]; // ✅ NEW
+        var marksheetURL   = urls[3];
+        var paymentURL     = urls[4];
 
         // STEP 3: Save student record
         return db.collection("students").add({
@@ -309,6 +332,7 @@
           upiTxn: upiTxnVal,
           photoURL: photoURL,
           aadharURL: aadharURL,
+          aadharBackURL: aadharBackURL,  // ✅ NEW field
           marksheetURL: marksheetURL,
           paymentScreenshotURL: paymentURL,
           paymentVerified: false,
