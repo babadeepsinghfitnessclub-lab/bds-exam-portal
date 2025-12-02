@@ -174,9 +174,8 @@
     }
   </style>
 
-  <!-- Firebase v8 -->
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <!-- Supabase JS (v2) -->
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
@@ -189,7 +188,7 @@
     <a href="result.html">RESULT</a>
     <a href="download.html">DOWNLOAD</a>
     <a href="help.html">HELP</a>
-    <a href="admin/login.html">ADMIN</a>
+    <a href="admin.html">ADMIN</a>
   </nav>
 </header>
 
@@ -225,22 +224,15 @@
 <footer>© 2026 Baba Deep Singh Mega Talent Hub</footer>
 
 <script>
-  // SAME CONFIG AS APPLY.HTML
-  var firebaseConfig = {
-    apiKey: "AIzaSyC87KEyqV3BMDeIexM_kom2rR7AMQ67eQ8",
-    authDomain: "bds-exam-portal.firebaseapp.com",
-    projectId: "bds-exam-portal",
-    storageBucket: "bds-exam-portal.appspot.com",
-    messagingSenderId: "376704151840",
-    appId: "1:376704151840:web:1f530924b850e008434883"
-  };
-  if (!firebase.apps.length) {
-    firebase.initializeApp(firebaseConfig);
-  }
-  var db = firebase.firestore();
+  // Supabase config (tumhara project)
+  const SUPABASE_URL = "https://yyymjhuwjvyykukfzqow.supabase.co";
+  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl5eW1qaHV3anZ5eWt1a2Z6cW93Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2NzMzMjIsImV4cCI6MjA4MDI0OTMyMn0.Ja9Do4cwumTnXx2NGIRW8Ti3rKm4MBiLClQz0xjOtrQ";
 
-  // === STATIC EXAM DETAILS (abhi ke liye; baad me change kar sakte ho) ===
-  var EXAM_DETAILS = {
+  const { createClient } = supabase;
+  const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  // === STATIC EXAM DETAILS ===
+  const EXAM_DETAILS = {
     examName: "Future Achievers Scholarship Exam 2026",
     examDate: "08/02/2026",
     reportingTime: "09:00 AM",
@@ -250,16 +242,16 @@
   };
 
   function showMessage(text, color){
-    var box = document.getElementById("msgBox");
+    const box = document.getElementById("msgBox");
     box.style.color = color || "#fff";
     box.innerHTML = text;
   }
 
-  function getAdmitCard(){
-    var roll = document.getElementById("rollInput").value.trim().toUpperCase();
-    var dob  = document.getElementById("dobInput").value;
+  async function getAdmitCard(){
+    const roll = document.getElementById("rollInput").value.trim().toUpperCase();
+    const dob  = document.getElementById("dobInput").value;
 
-    var btn = document.getElementById("btnGet");
+    const btn = document.getElementById("btnGet");
     btn.disabled = true;
     showMessage("Please wait, searching record...","#fff");
     document.getElementById("cardsArea").style.display = "none";
@@ -271,56 +263,78 @@
       return;
     }
 
-    db.collection("students").where("rollNumber","==",roll).limit(1).get()
-      .then(function(snap){
-        if(snap.empty){
-          showMessage("Record nahi mila. Roll number check karein.","#ff8080");
-          btn.disabled = false;
-          return;
-        }
-        var doc = snap.docs[0];
-        var data = doc.data();
+    try {
+      // Supabase se students table se record nikaalo
+      const { data: stu, error } = await sb
+        .from("students")
+        .select("roll_number, full_name, father_name, dob, gender, mobile, whatsapp, qualification, address, payment_status, photo_path")
+        .eq("roll_number", roll)
+        .maybeSingle();
 
-        // DOB match check
-        if(!data.dob || data.dob !== dob){
-          showMessage("Date of Birth match nahi ho rahi. Sahi DOB enter karein.","#ff8080");
-          btn.disabled = false;
-          return;
-        }
-
-        // Payment verification check
-        if(data.paymentVerified !== true){
-          showMessage(
-            "Aapki registration abhi <b>PENDING</b> hai. " +
-            "Organizer payment verify karne ke baad admit card active hoga.",
-            "#ffcc66"
-          );
-          btn.disabled = false;
-          return;
-        }
-
-        // Everything OK → render admit card
-        renderAdmitCards(data);
-        showMessage("Admit card ready. Aap print / PDF download kar sakte hain.","#7CFC00");
+      if (error) {
+        console.error(error);
+        showMessage("Error: " + error.message, "#ff8080");
         btn.disabled = false;
-      })
-      .catch(function(err){
-        console.error(err);
-        showMessage("Error: " + err,"#ff8080");
-        document.getElementById("btnGet").disabled = false;
-      });
+        return;
+      }
+
+      if (!stu) {
+        showMessage("Record nahi mila. Roll number check karein.","#ff8080");
+        btn.disabled = false;
+        return;
+      }
+
+      // DOB match check (Supabase date "YYYY-MM-DD" format deta hai)
+      if (!stu.dob || stu.dob !== dob) {
+        showMessage("Date of Birth match nahi ho rahi. Sahi DOB enter karein.","#ff8080");
+        btn.disabled = false;
+        return;
+      }
+
+      // Payment verification check (humne payment_status use kiya hai)
+      if (stu.payment_status !== "approved") {
+        showMessage(
+          "Aapki registration abhi <b>PENDING</b> hai. " +
+          "Organizer payment verify karne ke baad admit card active hoga.",
+          "#ffcc66"
+        );
+        btn.disabled = false;
+        return;
+      }
+
+      // Photo URL banana (student_docs bucket se)
+      let photoUrl = "";
+      if (stu.photo_path) {
+        const { data: publicData } = sb
+          .storage
+          .from("student_docs")
+          .getPublicUrl(stu.photo_path);
+        if (publicData && publicData.publicUrl) {
+          photoUrl = publicData.publicUrl;
+        }
+      }
+
+      // Everything OK → render admit card
+      renderAdmitCards(stu, photoUrl);
+      showMessage("Admit card ready. Aap print / PDF download kar sakte hain.","#7CFC00");
+      btn.disabled = false;
+
+    } catch (e) {
+      console.error(e);
+      showMessage("Unexpected error: " + e.message, "#ff8080");
+      btn.disabled = false;
+    }
   }
 
-  function renderAdmitCards(stu){
-    var wrap = document.getElementById("cardsWrap");
+  function renderAdmitCards(stu, photoUrl){
+    const wrap = document.getElementById("cardsWrap");
     wrap.innerHTML = "";
 
-    // Helper to create one card (Student / Centre)
     function makeCard(copyType){
-      var div = document.createElement("div");
+      const div = document.createElement("div");
       div.className = "admit-card";
 
-      var html = "";
+      let html = "";
       html += '<div class="card-title">'+EXAM_DETAILS.examName+'</div>';
       html += '<div class="card-subtitle">ADMIT CARD – '+copyType+' COPY</div>';
 
@@ -333,8 +347,8 @@
               ', '+EXAM_DETAILS.centreAddress+'</div>';
       html += '  </div>';
       html += '  <div class="photo-box">';
-      if(stu.photoURL){
-        html += '    <img src="'+stu.photoURL+'" alt="Student Photo">';
+      if(photoUrl){
+        html += '    <img src="'+photoUrl+'" alt="Student Photo">';
       }else{
         html += '    <div style="font-size:10px;padding:4px;text-align:center;">Photo<br>Not<br>Available</div>';
       }
@@ -342,9 +356,9 @@
       html += '</div>';
 
       html += '<div class="card-section-title">Student Details</div>';
-      html += '<div class="card-row"><span class="label">Roll No:</span> <span>'+ (stu.rollNumber || "") +'</span></div>';
-      html += '<div class="card-row"><span class="label">Name:</span> <span>'+ (stu.name || "") +'</span></div>';
-      html += '<div class="card-row"><span class="label">Father\'s Name:</span> <span>'+ (stu.father || "") +'</span></div>';
+      html += '<div class="card-row"><span class="label">Roll No:</span> <span>'+ (stu.roll_number || "") +'</span></div>';
+      html += '<div class="card-row"><span class="label">Name:</span> <span>'+ (stu.full_name || "") +'</span></div>';
+      html += '<div class="card-row"><span class="label">Father\'s Name:</span> <span>'+ (stu.father_name || "") +'</span></div>';
       html += '<div class="card-row"><span class="label">DOB:</span> <span>'+ (stu.dob || "") +'</span></div>';
       html += '<div class="card-row"><span class="label">Gender:</span> <span>'+ (stu.gender || "") +'</span></div>';
       html += '<div class="card-row"><span class="label">Mobile:</span> <span>'+ (stu.mobile || "") +'</span></div>';
