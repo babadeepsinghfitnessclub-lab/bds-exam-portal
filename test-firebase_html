@@ -16,15 +16,16 @@
       getFirestore, collection, addDoc, serverTimestamp 
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-    // 👉👉 YAHAN APNA firebaseConfig PASTE KARNA HAI
-   const firebaseConfig = {
-  apiKey: "....",
-  authDomain: "....",
-  projectId: "....",
-  storageBucket: "....",
-  messagingSenderId: "....",
-  appId: "...."
-};
+    // Your firebase config
+    const firebaseConfig = {
+      apiKey: "AIzaSyASkExcBlvX0vijgyT2cWfSuQvZUziM198",
+      authDomain: "bds-exam-portal.firebaseapp.com",
+      projectId: "bds-exam-portal",
+      storageBucket: "bds-exam-portal.firebasestorage.app",
+      messagingSenderId: "937670115018",
+      appId: "1:937670115018:web:226030b502b7fd79487e33"
+    };
+
     const app = initializeApp(firebaseConfig);
     const db  = getFirestore(app);
 
