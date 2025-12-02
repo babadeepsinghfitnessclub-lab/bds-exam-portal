@@ -1,339 +1,189 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Admin – Manage Gallery | BDS Exam Portal</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <title>Admin – Gallery Upload | BDS Exam Portal</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
   <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: radial-gradient(circle at top, #0b4a8f 0, #020824 60%);
-      color: #fff;
-    }
-    .navbar {
-      background: rgba(0, 0, 0, 0.9);
-      padding: 10px 25px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .navbar-title {
-      font-size: 18px;
-      font-weight: bold;
-    }
-    .navbar a {
-      color: #ffca28;
-      text-decoration: none;
-      font-size: 13px;
-    }
-    .page {
-      max-width: 1100px;
-      margin: 20px auto 40px;
-      padding: 0 15px;
-    }
-    h1 {
-      text-align: center;
-      font-size: 24px;
-      margin-bottom: 5px;
-    }
-    .subtitle {
-      text-align: center;
-      font-size: 13px;
-      color: #cfd8dc;
-      margin-bottom: 20px;
-    }
-    .form-box {
-      background: rgba(0, 0, 0, 0.6);
-      border-radius: 14px;
+    body { font-family: Arial, sans-serif; background:#f5f5f5; margin:0; }
+    .container {
+      max-width: 800px;
+      margin: 20px auto;
+      background:#fff;
       padding: 15px;
-      margin-bottom: 25px;
-      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius:8px;
+      box-shadow:0 2px 8px rgba(0,0,0,0.2);
     }
-    label {
-      font-size: 13px;
-      display: block;
-      margin-bottom: 4px;
-    }
+    h1 { margin-top:0; color:#b20c0c; }
+    label { display:block; margin-top:8px; font-size:14px; }
     input[type="text"] {
-      width: 100%;
-      padding: 7px 10px;
-      border-radius: 6px;
-      border: 1px solid #455a64;
-      outline: none;
-      font-size: 13px;
-      box-sizing: border-box;
-      margin-bottom: 10px;
+      width:100%; padding:7px; box-sizing:border-box;
+      border-radius:4px; border:1px solid #ccc; margin-top:3px;
     }
+    input[type="file"] { margin-top:5px; }
     button {
-      padding: 7px 16px;
-      border: none;
-      border-radius: 999px;
-      background: #ffca28;
-      font-weight: bold;
-      cursor: pointer;
-      font-size: 13px;
-      margin-right: 6px;
+      margin-top:12px; padding:8px 14px;
+      border:none; border-radius:4px;
+      background:#1976d2; color:#fff;
+      cursor:pointer; font-size:14px;
     }
-    button.delete {
-      background: #ff5252;
-      color: #fff;
+    .msg { margin-top:8px; font-size:13px; }
+    .preview-list { margin-top:15px; display:flex; flex-wrap:wrap; gap:10px; }
+    .preview-item {
+      width:120px; text-align:center; font-size:12px;
     }
-    button.secondary {
-      background: #455a64;
-      color: #fff;
+    .preview-item img {
+      width:110px; height:110px; object-fit:cover;
+      border-radius:6px; border:1px solid #ccc;
     }
-    .msg {
-      font-size: 13px;
-      margin-top: 5px;
-    }
-    .msg.ok {
-      color: #b2ff59;
-    }
-    .msg.err {
-      color: #ff5252;
-    }
-    .list {
-      margin-top: 10px;
-    }
-    .item {
-      display: flex;
-      align-items: center;
-      background: rgba(0,0,0,0.55);
-      border-radius: 12px;
-      padding: 8px 10px;
-      margin-bottom: 8px;
-      border: 1px solid rgba(255,255,255,0.08);
-    }
-    .thumb {
-      width: 60px;
-      height: 60px;
-      border-radius: 8px;
-      object-fit: cover;
-      background: #000;
-      margin-right: 10px;
-    }
-    .info {
-      flex: 1;
-      font-size: 12px;
-    }
-    .info .caption {
-      font-weight: bold;
-      margin-bottom: 3px;
-    }
-    .info .url {
-      color: #90a4ae;
-      word-break: break-all;
-    }
-    .info .time {
-      color: #b0bec5;
-      margin-top: 2px;
-    }
-    .actions {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
+    .topbar-links a { margin-right:8px; font-size:13px; }
   </style>
 
-  <!-- Firebase -->
-  <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore-compat.js"></script>
+  <!-- Firebase v8 (app + firestore + storage) -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
 </head>
 <body>
-  <div class="navbar">
-    <div class="navbar-title">Admin – Manage Gallery</div>
-    <a href="dashboard.html">&larr; Back to Admin Dashboard</a>
+
+<div class="container">
+  <div class="topbar-links">
+    <a href="dashboard.html">← Admin Home</a>
+    <span>|</span>
+    <a href="../gallery.html" target="_blank">View Gallery Page</a>
   </div>
 
-  <div class="page">
-    <h1>Gallery Photos</h1>
-    <div class="subtitle">
-      Yahan se aap students ke liye gallery photos add / hide / delete kar sakte hain.
-    </div>
+  <h1>Gallery Photo Upload</h1>
+  <p style="font-size:13px;">
+    Yahan se jo photo upload karoge, woh <b>gallery.html</b> page par dikhengi.
+    Firestore me <code>gallery</code> collection use ho raha hai.
+  </p>
 
-    <div class="form-box">
-      <label for="imageUrl">Image URL (Google Drive, Imgur, etc.)</label>
-      <input type="text" id="imageUrl" placeholder="Yahan image ka link paste karein" />
+  <label>Select Image File</label>
+  <input type="file" id="photoFile" accept="image/*">
 
-      <label for="caption">Caption / Description</label>
-      <input type="text" id="caption" placeholder="e.g. Orientation Program, Prize Distribution" />
+  <label>Caption (optional)</label>
+  <input type="text" id="captionInput" placeholder="Jaise: Exam hall, Prize distribution...">
 
-      <button onclick="savePhoto()">Save Photo</button>
-      <span id="msg" class="msg"></span>
-      <div style="font-size:11px;color:#cfd8dc;margin-top:6px;">
-        Google Drive link paste karne par URL automatic direct image link me convert ho jayega.
-      </div>
-    </div>
+  <label style="margin-top:10px;">
+    <input type="checkbox" id="visibleCheck" checked>
+    Visible in Gallery
+  </label>
 
-    <div class="list" id="photoList"></div>
-  </div>
+  <button id="uploadBtn">Upload to Gallery</button>
+  <p class="msg" id="msgBox"></p>
 
-  <script>
-    // --- Firebase init ---
-    const firebaseConfig = {
-      apiKey: "AIzaSyAsKcExC1vXevjigyT2cWFSuQvZUziM19B",
-      authDomain: "bds-exam-portal.firebaseapp.com",
-      projectId: "bds-exam-portal",
-      storageBucket: "bds-exam-portal.appspot.com",
-      messagingSenderId: "937670115018",
-      appId: "1:937670115018:web:15392c0158d0c8a8407e33"
-    };
-    if (!firebase.apps.length) {
-      firebase.initializeApp(firebaseConfig);
-    }
-    const db = firebase.firestore();
-    const galleryCol = db.collection("gallery");
+  <h3 style="margin-top:20px;">Latest Uploaded Photos</h3>
+  <div id="previewList" class="preview-list"></div>
+</div>
 
-    const msgEl = document.getElementById("msg");
-    const listEl = document.getElementById("photoList");
+<script>
+  // 🔐 Admin login check
+  if (localStorage.getItem("bdsAdminLoggedIn") !== "yes") {
+    window.location.href = "login.html";
+  }
 
-    function showMsg(text, ok=true) {
-      msgEl.textContent = text;
-      msgEl.className = "msg " + (ok ? "ok" : "err");
-    }
+  // Same Firebase config
+  var firebaseConfig = {
+    apiKey: "AIzaSyC87KEyqV3BMDeIexM_kom2rR7AMQ67eQ8",
+    authDomain: "bds-exam-portal.firebaseapp.com",
+    projectId: "bds-exam-portal",
+    storageBucket: "bds-exam-portal.appspot.com",
+    messagingSenderId: "376704151840",
+    appId: "1:376704151840:web:1f530924b850e008434883"
+  };
+  if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+  }
+  var db = firebase.firestore();
+  var storage = firebase.storage();
 
-    // Google Drive link ko direct image link me convert kare
-    function normalizeImageUrl(raw) {
-      if (!raw) return "";
-      raw = raw.trim();
+  var photoFileInput = document.getElementById("photoFile");
+  var captionInput   = document.getElementById("captionInput");
+  var visibleCheck   = document.getElementById("visibleCheck");
+  var uploadBtn      = document.getElementById("uploadBtn");
+  var msgBox         = document.getElementById("msgBox");
+  var previewList    = document.getElementById("previewList");
 
-      // agar already i.ibb.co, imgur, etc hai to as-is chhod do
-      if (!raw.includes("drive.google.com")) {
-        return raw;
-      }
+  uploadBtn.addEventListener("click", function(){
+    var file = photoFileInput.files[0];
+    var caption = captionInput.value.trim();
+    var visible = visibleCheck.checked;
 
-      // pattern: https://drive.google.com/file/d/FILEID/view?...
-      const m = raw.match(/\/file\/d\/([^/]+)/);
-      if (m && m[1]) {
-        const id = m[1];
-        return "https://drive.google.com/uc?export=view&id=" + id;
-      }
-      return raw;
+    if (!file) {
+      msgBox.style.color = "red";
+      msgBox.textContent = "Please select an image file.";
+      return;
     }
 
-    async function savePhoto() {
-      let url = document.getElementById("imageUrl").value;
-      const caption = document.getElementById("caption").value.trim() || "Gallery photo";
+    msgBox.style.color = "#000";
+    msgBox.textContent = "Uploading photo, please wait...";
+    uploadBtn.disabled = true;
 
-      if (!url.trim()) {
-        showMsg("Please image URL paste karein.", false);
-        return;
-      }
+    var path = "gallery/" + Date.now() + "_" + file.name;
 
-      url = normalizeImageUrl(url);
-
-      try {
-        showMsg("Saving photo...", true);
-        await galleryCol.add({
+    storage.ref().child(path).put(file)
+      .then(function(snap){
+        return snap.ref.getDownloadURL();
+      })
+      .then(function(url){
+        return db.collection("gallery").add({
           url: url,
           caption: caption,
-          visible: true,
+          visible: visible,
           createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
+      })
+      .then(function(){
+        msgBox.style.color = "green";
+        msgBox.textContent = "Photo uploaded successfully. Gallery page me show ho jayegi.";
+        photoFileInput.value = "";
+        captionInput.value = "";
+        visibleCheck.checked = true;
+        loadLatestPhotos();
+      })
+      .catch(function(err){
+        console.error(err);
+        msgBox.style.color = "red";
+        msgBox.textContent = "Error uploading photo: " + err;
+      })
+      .finally(function(){
+        uploadBtn.disabled = false;
+      });
+  });
 
-        document.getElementById("imageUrl").value = "";
-        document.getElementById("caption").value = "";
-        showMsg("Photo added to gallery.");
-        loadPhotos();
-      } catch (e) {
-        console.error(e);
-        showMsg("Error: " + e.message, false);
-      }
-    }
-
-    async function loadPhotos() {
-      listEl.innerHTML = "Loading photos...";
-      try {
-        const snap = await galleryCol.orderBy("createdAt", "desc").get();
-        if (snap.empty) {
-          listEl.innerHTML = "<div style='font-size:13px;color:#cfd8dc;'>Abhi koi photo add nahi hai.</div>";
-          return;
-        }
-        listEl.innerHTML = "";
-        snap.forEach(doc => {
-          const data = doc.data();
-          const id = doc.id;
-
-          const item = document.createElement("div");
-          item.className = "item";
-
-          const img = document.createElement("img");
-          img.className = "thumb";
-          img.src = data.url || "";
-          img.alt = data.caption || "Photo";
-
-          const info = document.createElement("div");
-          info.className = "info";
-
-          const cap = document.createElement("div");
-          cap.className = "caption";
-          cap.textContent = data.caption || "Gallery photo";
-
-          const urlDiv = document.createElement("div");
-          urlDiv.className = "url";
-          urlDiv.textContent = data.url || "";
-
-          const timeDiv = document.createElement("div");
-          timeDiv.className = "time";
-          if (data.createdAt && data.createdAt.toDate) {
-            timeDiv.textContent = new Date(data.createdAt.toDate()).toLocaleString();
-          }
-
-          info.appendChild(cap);
-          info.appendChild(urlDiv);
-          info.appendChild(timeDiv);
-
-          const actions = document.createElement("div");
-          actions.className = "actions";
-
-          const visBtn = document.createElement("button");
-          visBtn.className = "secondary";
-          visBtn.textContent = data.visible === false ? "Show" : "Hide";
-          visBtn.onclick = () => toggleVisible(id, !(data.visible === false));
-
-          const delBtn = document.createElement("button");
-          delBtn.className = "delete";
-          delBtn.textContent = "Delete";
-          delBtn.onclick = () => deletePhoto(id);
-
-          actions.appendChild(visBtn);
-          actions.appendChild(delBtn);
-
-          item.appendChild(img);
-          item.appendChild(info);
-          item.appendChild(actions);
-
-          listEl.appendChild(item);
+  // Latest photos preview for admin
+  function loadLatestPhotos(){
+    previewList.innerHTML = "Loading...";
+    db.collection("gallery")
+      .orderBy("createdAt", "desc")
+      .limit(12)
+      .get()
+      .then(function(snapshot){
+        previewList.innerHTML = "";
+        snapshot.forEach(function(doc){
+          var d = doc.data();
+          var div = document.createElement("div");
+          div.className = "preview-item";
+          div.innerHTML = `
+            <img src="${d.url}" alt="img">
+            <div>${d.caption || ""}</div>
+            <div style="font-size:11px; color:${d.visible ? 'green':'red'};">
+              ${d.visible ? 'Visible' : 'Hidden'}
+            </div>
+          `;
+          previewList.appendChild(div);
         });
-      } catch (e) {
-        console.error(e);
-        listEl.innerHTML = "<div style='color:#ff5252;font-size:13px;'>Error: " + e.message + "</div>";
-      }
-    }
+      })
+      .catch(function(err){
+        console.error(err);
+        previewList.innerHTML = "Error loading preview: " + err;
+      });
+  }
 
-    async function toggleVisible(id, currentlyVisible) {
-      try {
-        await galleryCol.doc(id).update({ visible: !currentlyVisible });
-        loadPhotos();
-      } catch (e) {
-        console.error(e);
-        showMsg("Error visibility update: " + e.message, false);
-      }
-    }
+  loadLatestPhotos();
+</script>
 
-    async function deletePhoto(id) {
-      if (!confirm("Ye photo gallery se hamesha ke liye delete ho jayegi. Continue?")) return;
-      try {
-        await galleryCol.doc(id).delete();
-        loadPhotos();
-      } catch (e) {
-        console.error(e);
-        showMsg("Error delete: " + e.message, false);
-      }
-    }
-
-    loadPhotos();
-  </script>
 </body>
 </html>
