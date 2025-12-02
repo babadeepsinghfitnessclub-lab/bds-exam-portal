@@ -141,7 +141,7 @@
   var appsBody   = document.getElementById("appsBody");
   var listMsg    = document.getElementById("listMsg");
 
-  var currentAppDocRef = null;   // apply form ka document
+  var currentAppDocRef = null;   // apply form document
   var currentRegDocRef = null;   // registration doc (doc id = mobile)
   var currentAppData   = null;
 
@@ -154,7 +154,7 @@
       var idx = 1;
       snapshot.forEach(function(doc){
         var d = doc.data();
-        // Sirf wahi entry dikhao jisme rollNumber hai (yahi apply form ke hain)
+        // Sirf wahi entry dikhao jisme rollNumber hai (apply form)
         if (!d.rollNumber) return;
 
         var tr = document.createElement("tr");
@@ -173,7 +173,6 @@
           "<td>"+ created +"</td>"+
           "<td><button class='btn-view'>View</button></td>";
 
-        // View button click
         tr.querySelector(".btn-view").addEventListener("click", function(){
           openDetails(doc.id, d);
         });
@@ -212,7 +211,7 @@
 
     document.getElementById("dPhoto").href       = data.photoURL || "#";
     document.getElementById("dAadharF").href     = data.aadharURL || "#";
-    document.getElementById("dAadharB").href     = data.aadharBackURL || "#";
+    document.getElementById("dAadharB").href    = data.aadharBackURL || "#";
     document.getElementById("dMarksheet").href   = data.marksheetURL || "#";
     document.getElementById("dPaymentSS").href   = data.paymentScreenshotURL || "#";
   }
@@ -237,7 +236,7 @@
       paymentVerified: paymentFlag
     });
 
-    // Registration doc (doc id = mobile) update – dashboard isi se status dekh raha hai
+    // Registration doc (doc id = mobile) update – dashboard isi se status dekh raha
     batch.set(currentRegDocRef, {
       status: newStatus,
       paymentVerified: paymentFlag,
