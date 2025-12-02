@@ -66,6 +66,9 @@
       text-decoration: none;
     }
   </style>
+
+  <!-- Supabase JS -->
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 </head>
 <body>
   <div class="container">
@@ -100,28 +103,17 @@
     </p>
   </div>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import {
-      getFirestore, doc, getDoc, setDoc, serverTimestamp
-    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  <script>
+    // Supabase config (tumhara project)
+    const SUPABASE_URL = "https://yyymjhuwjvyykukfzqow.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl5eW1qaHV3anZ5eWt1a2Z6cW93Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2NzMzMjIsImV4cCI6MjA4MDI0OTMyMn0.Ja9Do4cwumTnXx2NGIRW8Ti3rKm4MBiLClQz0xjOtrQ";
 
-    // 👉 Tumhara firebaseConfig (jo tumne bheja tha)
-    const firebaseConfig = {
-      apiKey: "AIzaSyASkExcBlvX0vijgyT2cWfSuQvZUziM198",
-      authDomain: "bds-exam-portal.firebaseapp.com",
-      projectId: "bds-exam-portal",
-      storageBucket: "bds-exam-portal.firebasestorage.app",
-      messagingSenderId: "937670115018",
-      appId: "1:937670115018:web:226030b502b7fd79487e33"
-    };
+    const { createClient } = supabase;
+    const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    const app = initializeApp(firebaseConfig);
-    const db  = getFirestore(app);
-
-    const form       = document.getElementById('registerForm');
-    const msgEl      = document.getElementById('msg');
-    const submitBtn  = document.getElementById('submitBtn');
+    const form      = document.getElementById('registerForm');
+    const msgEl     = document.getElementById('msg');
+    const submitBtn = document.getElementById('submitBtn');
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -136,6 +128,12 @@
       const cPassword  = document.getElementById('confirmPassword').value;
 
       // Basic checks
+      if (!name || !fatherName) {
+        msgEl.textContent = "Name aur Father Name required hain.";
+        msgEl.style.color = "red";
+        return;
+      }
+
       if (mobile.length !== 10 || !/^[0-9]+$/.test(mobile)) {
         msgEl.textContent = "Please enter valid 10 digit mobile number.";
         msgEl.style.color = "red";
@@ -159,36 +157,61 @@
       msgEl.style.color = "black";
 
       try {
-        // Hum mobile number ko hi studentId / documentId bana rahe hain
-        const studentRef = doc(db, "students", mobile);
-        const snap = await getDoc(studentRef);
+        // 1) Pehle check karo ki ye mobile pehle se registered to nahi
+        const { data: existing, error: checkErr } = await sb
+          .from("students")
+          .select("id")
+          .eq("mobile", mobile)
+          .maybeSingle();
 
-        if (snap.exists()) {
+        if (checkErr) {
+          console.error(checkErr);
+          msgEl.textContent = "Kuch error aayi, thodi der baad phir try karein.";
+          msgEl.style.color = "red";
+          submitBtn.disabled = false;
+          return;
+        }
+
+        if (existing) {
           msgEl.textContent = "Ye mobile number already registered hai. Please login karein.";
           msgEl.style.color = "red";
           submitBtn.disabled = false;
           return;
         }
 
-        await setDoc(studentRef, {
-          name,
-          mobile,
-          email: email || null,
-          fatherName,
-          password, // NOTE: simple password store (later hashing improve kar sakte hain)
-          createdAt: serverTimestamp()
-        });
+        // 2) Naya student record insert karo
+        const { data: inserted, error: insertErr } = await sb
+          .from("students")
+          .insert([{
+            full_name: name,
+            father_name: fatherName,
+            mobile: mobile,
+            email: email || null,
+            login_password: password,       // simple store (baad me hash bhi kar sakte ho)
+            form_status: "not_applied",     // abhi form fill nahi kiya
+            payment_status: "pending"       // default
+          }])
+          .select("id")
+          .single();
+
+        if (insertErr) {
+          console.error(insertErr);
+          msgEl.textContent = "Kuch error aayi, thodi der baad phir try karein.";
+          msgEl.style.color = "red";
+          submitBtn.disabled = false;
+          return;
+        }
 
         // Registration successful
         msgEl.textContent = "Registration successful! Please remember your Mobile & Password.";
         msgEl.style.color = "green";
 
-        // localStorage me student ki ID (mobile) store kar rahe
-        localStorage.setItem("studentId", mobile);
+        // localStorage me student ki identity (mobile) store
+        localStorage.setItem("student_mobile", mobile);
 
-        // 2 second baad dashboard ya login pe bhej do
+        // 2 second baad dashboard pe bhej do
         setTimeout(() => {
-          window.location.href = "dashboard.html"; // ya "login.html" agar tum chaho
+          window.location.href = "dashboard.html";
         }, 2000);
 
       } catch (err) {
