@@ -66,6 +66,9 @@
       text-decoration: none;
     }
   </style>
+
+  <!-- Supabase JS -->
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 </head>
 <body>
   <div class="container">
@@ -88,27 +91,17 @@
     </p>
   </div>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import {
-      getFirestore, doc, getDoc
-    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  <script>
+    // Supabase config (tumhara project)
+    const SUPABASE_URL = "https://yyymjhuwjvyykukfzqow.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl5eW1qaHV3anZ5eWt1a2Z6cW93Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2NzMzMjIsImV4cCI6MjA4MDI0OTMyMn0.Ja9Do4cwumTnXx2NGIRW8Ti3rKm4MBiLClQz0xjOtrQ";
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyASkExcBlvX0vijgyT2cWfSuQvZUziM198",
-      authDomain: "bds-exam-portal.firebaseapp.com",
-      projectId: "bds-exam-portal",
-      storageBucket: "bds-exam-portal.firebasestorage.app",
-      messagingSenderId: "937670115018",
-      appId: "1:937670115018:web:226030b502b7fd79487e33"
-    };
+    const { createClient } = supabase;
+    const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    const app = initializeApp(firebaseConfig);
-    const db  = getFirestore(app);
-
-    const form    = document.getElementById('loginForm');
-    const msgEl   = document.getElementById('msg');
-    const loginBtn= document.getElementById('loginBtn');
+    const form     = document.getElementById('loginForm');
+    const msgEl    = document.getElementById('msg');
+    const loginBtn = document.getElementById('loginBtn');
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -124,31 +117,50 @@
         return;
       }
 
+      if (!password) {
+        msgEl.textContent = "Password required hai.";
+        msgEl.style.color = "red";
+        return;
+      }
+
       loginBtn.disabled = true;
       msgEl.textContent = "Checking...";
       msgEl.style.color = "black";
 
       try {
-        const studentRef = doc(db, "students", mobile);
-        const snap = await getDoc(studentRef);
+        // students table se record nikaalo
+        const { data, error } = await sb
+          .from("students")
+          .select("id, full_name, mobile, login_password")
+          .eq("mobile", mobile)
+          .maybeSingle();
 
-        if (!snap.exists()) {
+        if (error) {
+          console.error(error);
+          msgEl.textContent = "Kuch error aayi, thodi der baad try karein.";
+          msgEl.style.color = "red";
+          loginBtn.disabled = false;
+          return;
+        }
+
+        if (!data) {
           msgEl.textContent = "Ye mobile number registered nahi hai. Pehle registration karein.";
           msgEl.style.color = "red";
           loginBtn.disabled = false;
           return;
         }
 
-        const data = snap.data();
-        if (data.password !== password) {
+        // Password match check
+        if (!data.login_password || data.login_password !== password) {
           msgEl.textContent = "Galat password. Dubara try karein.";
           msgEl.style.color = "red";
           loginBtn.disabled = false;
           return;
         }
 
-        // Success
-        localStorage.setItem("studentId", mobile);
+        // Success — login done
+        localStorage.setItem("student_mobile", mobile); // Dashboard isi se chalega
+
         msgEl.textContent = "Login successful!";
         msgEl.style.color = "green";
 
