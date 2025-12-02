@@ -87,107 +87,8 @@ th{
 }
 </style>
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-import {
-  getFirestore, collection, addDoc, getDocs,
-  updateDoc, deleteDoc, doc, serverTimestamp,
-  query, orderBy
-} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyAxxEcKxI-V8vigjYZ6wFSuQyZUziM198",
-  authDomain: "bds-exam-portal.firebaseapp.com",
-  projectId: "bds-exam-portal",
-  storageBucket: "bds-exam-portal.appspot.com",
-  messagingSenderId: "937670115018",
-  appId: "1:937670115018:web:15392c01586dc8a8407e33"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-
-// guard
-if(localStorage.getItem("bdsAdminLoggedIn")!=="yes"){
-  window.location.href="login.html";
-}
-window.logout = function(){
-  localStorage.removeItem("bdsAdminLoggedIn");
-  window.location.href="login.html";
-};
-
-const form = document.getElementById("noticeForm");
-const tbody = document.getElementById("noticesBody");
-
-form.addEventListener("submit", async (e)=>{
-  e.preventDefault();
-  const title = document.getElementById("nTitle").value.trim();
-  const body  = document.getElementById("nBody").value.trim();
-  if(!title || !body){
-    alert("Title aur notice text dono zaroori hain.");
-    return;
-  }
-  await addDoc(collection(db,"notices"),{
-    title,
-    body,
-    active:true,
-    createdAt:serverTimestamp()
-  });
-  form.reset();
-  loadNotices();
-});
-
-async function loadNotices(){
-  tbody.innerHTML = "<tr><td colspan='5'>Loading...</td></tr>";
-  const q = query(collection(db,"notices"), orderBy("createdAt","desc"));
-  const snap = await getDocs(q);
-  if(snap.empty){
-    tbody.innerHTML = "<tr><td colspan='5'>No notices found.</td></tr>";
-    return;
-  }
-  let i=1, html="";
-  snap.forEach(d=>{
-    const data = d.data();
-    const active = data.active!==false;
-    const created = data.createdAt?.toDate
-      ? data.createdAt.toDate().toLocaleString()
-      : "";
-    html+=`
-      <tr>
-        <td>${i++}</td>
-        <td>${data.title||""}</td>
-        <td>${data.body||""}</td>
-        <td>
-          <span class="badge ${active?"badge-on":"badge-off"}">
-            ${active?"Visible":"Hidden"}
-          </span>
-        </td>
-        <td>
-          <button class="small-btn" onclick="toggleNotice('${d.id}',${active})">
-            ${active?"Hide":"Show"}
-          </button>
-          <button class="small-btn" style="background:#ff5252;color:#fff;"
-             onclick="deleteNotice('${d.id}')">Delete</button>
-        </td>
-      </tr>`;
-  });
-  tbody.innerHTML = html;
-}
-
-window.toggleNotice = async function(id,current){
-  await updateDoc(doc(db,"notices",id),{active:!current});
-  loadNotices();
-};
-window.deleteNotice = async function(id){
-  if(confirm("Delete this notice?")){
-    await deleteDoc(doc(db,"notices",id));
-    loadNotices();
-  }
-};
-
-loadNotices();
-</script>
-
+<!-- Supabase JS -->
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
@@ -222,6 +123,153 @@ loadNotices();
     <tbody id="noticesBody"></tbody>
   </table>
 </div>
+
+<script>
+  // 🔐 Admin guard
+  if(localStorage.getItem("bdsAdminLoggedIn")!=="yes"){
+    window.location.href="login.html";
+  }
+  function logout(){
+    localStorage.removeItem("bdsAdminLoggedIn");
+    window.location.href="login.html";
+  }
+  window.logout = logout;
+
+  // Supabase config
+  const SUPABASE_URL = "https://yyymjhuwjvyykukfzqow.supabase.co";
+  const SUPABASE_ANON_KEY =
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl5eW1qaHV3anZ5eWt1a2Z6cW93Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2NzMzMjIsImV4cCI6MjA4MDI0OTMyMn0.Ja9Do4cwumTnXx2NGIRW8Ti3rKm4MBiLClQz0xjOtrQ";
+
+  const { createClient } = supabase;
+  const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  const form  = document.getElementById("noticeForm");
+  const tbody = document.getElementById("noticesBody");
+
+  // ➕ Add new notice
+  form.addEventListener("submit", async (e)=>{
+    e.preventDefault();
+    const title = document.getElementById("nTitle").value.trim();
+    const body  = document.getElementById("nBody").value.trim();
+
+    if(!title || !body){
+      alert("Title aur notice text dono zaroori hain.");
+      return;
+    }
+
+    const { error } = await sb
+      .from("notices")
+      .insert([{
+        title: title,
+        body: body,
+        active: true
+        // created_at Supabase me default now() rakha hai to auto ho jayega
+      }]);
+
+    if (error) {
+      console.error(error);
+      alert("Error adding notice: " + error.message);
+      return;
+    }
+
+    form.reset();
+    loadNotices();
+  });
+
+  // 📥 Load notices list
+  async function loadNotices(){
+    tbody.innerHTML = "<tr><td colspan='5'>Loading...</td></tr>";
+
+    const { data, error } = await sb
+      .from("notices")
+      .select("*")
+      .order("created_at", { ascending:false });
+
+    if (error) {
+      console.error(error);
+      tbody.innerHTML =
+        "<tr><td colspan='5'>Error loading notices: "+error.message+"</td></tr>";
+      return;
+    }
+
+    if (!data || data.length === 0) {
+      tbody.innerHTML = "<tr><td colspan='5'>No notices found.</td></tr>";
+      return;
+    }
+
+    let i=1, html="";
+    data.forEach(row=>{
+      const active = row.active !== false;
+      let createdText = "";
+      if (row.created_at) {
+        const dt = new Date(row.created_at);
+        if (!isNaN(dt.getTime())) {
+          createdText = dt.toLocaleString();
+        }
+      }
+
+      html += `
+        <tr>
+          <td>${i++}</td>
+          <td>${row.title || ""}</td>
+          <td>${row.body || ""}</td>
+          <td>
+            <span class="badge ${active?"badge-on":"badge-off"}">
+              ${active?"Visible":"Hidden"}
+            </span><br>
+            <span style="font-size:11px;opacity:.8;">${createdText}</span>
+          </td>
+          <td>
+            <button class="small-btn"
+              onclick="toggleNotice(${row.id},${active})">
+              ${active?"Hide":"Show"}
+            </button>
+            <button class="small-btn" style="background:#ff5252;color:#fff;"
+              onclick="deleteNotice(${row.id})">
+              Delete
+            </button>
+          </td>
+        </tr>`;
+    });
+    tbody.innerHTML = html;
+  }
+
+  // 👁 Hide/Show
+  async function toggleNotice(id,current){
+    const { error } = await sb
+      .from("notices")
+      .update({ active: !current })
+      .eq("id", id);
+
+    if (error) {
+      console.error(error);
+      alert("Error updating notice: " + error.message);
+      return;
+    }
+    loadNotices();
+  }
+  window.toggleNotice = toggleNotice;
+
+  // 🗑 Delete
+  async function deleteNotice(id){
+    if (!confirm("Delete this notice?")) return;
+
+    const { error } = await sb
+      .from("notices")
+      .delete()
+      .eq("id", id);
+
+    if (error) {
+      console.error(error);
+      alert("Error deleting notice: " + error.message);
+      return;
+    }
+    loadNotices();
+  }
+  window.deleteNotice = deleteNotice;
+
+  loadNotices();
+</script>
 
 </body>
 </html>
