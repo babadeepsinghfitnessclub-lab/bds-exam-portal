@@ -3,6 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <title>Exam & Event Gallery</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
   <style>
     body {
       margin: 0;
@@ -57,12 +59,12 @@
     #status {
       margin-top: 15px;
       font-size: 14px;
-      color: #ff8080;
+      color: #ffdf80;
     }
   </style>
 
   <!-- Supabase JS -->
-  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.48.0/dist/umd/supabase.min.js"></script>
 </head>
 <body>
 
@@ -75,12 +77,10 @@
   <div id="gallery"></div>
 
   <script>
-    // Supabase config (tumhara project)
     const SUPABASE_URL = "https://yyymjhuwjvyykukfzqow.supabase.co";
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl5eW1qaHV3anZ5eWt1a2Z6cW93Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2NzMzMjIsImV4cCI6MjA4MDI0OTMyMn0.Ja9Do4cwumTnXx2NGIRW8Ti3rKm4MBiLClQz0xjOtrQ";
 
-    const { createClient } = supabase;
-    const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     const statusEl  = document.getElementById("status");
     const galleryEl = document.getElementById("gallery");
@@ -88,63 +88,36 @@
     async function loadGallery() {
       statusEl.textContent = "Loading photos...";
 
-      try {
-        // gallery_items table se sirf visible = true waale records lao
-        const { data, error } = await sb
-          .from("gallery_items")
-          .select("*")
-          .eq("visible", true)
-          .order("created_at", { ascending: false });
+      const { data, error } = await supabase
+        .from("gallery_items")
+        .select("*")
+        .eq("visible", true)
+        .order("created_at", { ascending: false });
 
-        galleryEl.innerHTML = "";
-
-        if (error) {
-          console.error("Gallery error:", error);
-          statusEl.textContent = "Gallery load karne me error aaya. Thodi der baad try karein.";
-          return;
-        }
-
-        if (!data || data.length === 0) {
-          statusEl.textContent = "Koi photo nahi mili. Admin se upload karwaen.";
-          return;
-        }
-
-        statusEl.textContent = "";
-
-        for (const row of data) {
-          let imgUrl = row.public_url || "";
-
-          // Agar public_url nahi hai lekin file_path hai to bucket se URL banao
-          if (!imgUrl && row.file_path) {
-            const { data: pub } = sb
-              .storage
-              .from("gallery")
-              .getPublicUrl(row.file_path);
-
-            if (pub && pub.publicUrl) {
-              imgUrl = pub.publicUrl;
-            }
-          }
-
-          if (!imgUrl) continue; // agar phir bhi URL nahi mila to skip
-
-          const card = document.createElement("div");
-          card.className = "photo-card";
-          card.innerHTML = `
-            <img src="${imgUrl}" alt="Gallery Image">
-            <div class="caption">${row.caption || ""}</div>
-          `;
-          galleryEl.appendChild(card);
-        }
-
-        if (!galleryEl.innerHTML.trim()) {
-          statusEl.textContent = "Abhi koi visible photo nahi hai.";
-        }
-
-      } catch (err) {
-        console.error("Gallery error:", err);
+      if (error) {
+        console.error(error);
         statusEl.textContent = "Gallery load karne me error aaya. Thodi der baad try karein.";
+        return;
       }
+
+      galleryEl.innerHTML = "";
+
+      if (!data || data.length === 0) {
+        statusEl.textContent = "Koi photo nahi mili. Admin se upload karwaen.";
+        return;
+      }
+
+      statusEl.textContent = "";
+
+      data.forEach(row => {
+        const card = document.createElement("div");
+        card.className = "photo-card";
+        card.innerHTML = `
+          <img src="${row.public_url}" alt="Gallery Image">
+          <div class="caption">${row.caption || ""}</div>
+        `;
+        galleryEl.appendChild(card);
+      });
     }
 
     loadGallery();
