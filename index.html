@@ -2,123 +2,173 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Baba Deep Singh Mega Talent Hub</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-
+  <title>BDS Mega Talent Hub | Home</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    * { margin:0; padding:0; box-sizing:border-box; }
-    body {
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{
       font-family: Arial, sans-serif;
-      background: #001532;
-      color: #fff;
-    }
-    header {
-      background:#000000dd;
-      padding:10px;
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      flex-wrap:wrap;
-    }
-    header .logo {
-      font-size:18px;
-      font-weight:bold;
-      color:#ffca28;
-    }
-    nav a {
+      background: radial-gradient(circle at top, #003f8f, #000820);
       color:#fff;
+    }
+
+    /* TOP BAR + NAV */
+    header{
+      background:rgba(0,0,0,0.7);
+      padding:10px 15px;
+      border-bottom:2px solid #ffb400;
+      text-align:center;
+      font-weight:700;
+      letter-spacing:1px;
+      font-size:18px;
+    }
+    nav{
+      text-align:center;
+      background:rgba(0,0,0,0.5);
+      padding:8px 0;
+    }
+    nav a{
+      color:#ffeb99;
       text-decoration:none;
-      margin-left:12px;
       font-size:13px;
       font-weight:bold;
+      margin:0 10px;
     }
-    nav a:hover { text-decoration:underline; }
-    .poster-box {
+    nav a:hover{text-decoration:underline;}
+
+    /* MAIN LAYOUT */
+    .main{
+      max-width:1000px;
+      margin:15px auto 40px;
+      padding:0 10px;
+      display:flex;
+      flex-wrap:wrap;
+      gap:15px;
+      align-items:flex-start;
+      justify-content:center;
+    }
+
+    .left{
+      flex:1 1 260px;
+      text-align:left;
+    }
+    .right{
+      flex:1 1 260px;
       text-align:center;
-      padding:10px;
-      background:#000;
     }
-    .poster {
-      width:100%;
-      max-width:500px;
-      border-radius:10px;
-      border:2px solid #ffca28;
-      box-shadow:0 0 12px #000;
+
+    .headline{
+      font-size:22px;
+      font-weight:700;
+      margin-bottom:5px;
     }
-    .section {
-      padding:14px;
-      text-align:center;
+    .subline{
+      font-size:13px;
+      margin-bottom:8px;
     }
-    .btn {
+    ul.points{
+      font-size:13px;
+      margin-left:18px;
+      margin-bottom:10px;
+    }
+    ul.points li{margin-bottom:4px;}
+
+    .btn-apply{
       display:inline-block;
-      margin-top:10px;
-      padding:8px 16px;
-      background:#ffbf00;
+      background:#ffdd00;
       color:#000;
-      font-weight:bold;
-      border-radius:999px;
+      padding:8px 18px;
+      border-radius:20px;
+      font-weight:700;
+      font-size:13px;
       text-decoration:none;
-      font-size:14px;
+      margin-bottom:10px;
     }
-    footer {
+    .btn-apply:hover{background:#ffe866;}
+
+    .poster{
+      width:100%;
+      max-width:380px;
+      border-radius:12px;
+      border:2px solid #ffb400;
+      box-shadow:0 0 18px rgba(0,0,0,0.9);
+    }
+
+    footer{
+      background:rgba(0,0,0,0.8);
       text-align:center;
-      background:#000000dd;
-      color:#ccc;
       padding:10px;
-      font-size:12px;
-      margin-top:15px;
+      font-size:11px;
+      color:#dddddd;
+    }
+
+    @media(max-width:700px){
+      header{font-size:15px;}
+      .headline{font-size:19px;}
+      nav a{margin:0 6px;}
     }
   </style>
-
 </head>
 <body>
 
-<header>
-  <div class="logo">BABA DEEP SINGH MEGA TALENT HUB</div>
-  <nav>
-    <a href="index.html">HOME</a>
-    <a href="apply.html">APPLY</a>
-    <a href="admit.html">ADMIT CARD</a>
-    <a href="result.html">RESULT</a>
-    <a href="download.html">DOWNLOAD</a>
-    <a href="help.html">HELP</a>
-    <a href="admin/login.html">ADMIN</a>
-  </nav>
-</header>
+<header>BABA DEEP SINGH MEGA TALENT HUB</header>
 
-<!-- HOME POSTER -->
-<div class="poster-box">
-  <img id="homePoster" src="flex.jpg" class="poster" alt="Main Poster">
-</div>
+<nav>
+  <a href="index.html">HOME</a>
+  <a href="apply.html">APPLY</a>
+  <a href="admit.html">ADMIT CARD</a>
+  <a href="result.html">RESULT</a>
+  <a href="download.html">DOWNLOAD</a>
+  <a href="help.html">HELP</a>
+  <a href="admin/login.html">ADMIN</a>
+</nav>
 
-<div class="section">
-  <h2>Welcome to Baba Deep Singh Mega Talent Hub</h2>
-  <p style="font-size:13px;margin-top:6px;">
-    Scholarship Exam | Talent Hunt | Multiple Prizes | Future Growth
-  </p>
+<div class="main">
+  <!-- LEFT TEXT -->
+  <div class="left">
+    <div class="headline">Future Achievers Scholarship Exam 2026</div>
+    <div class="subline">
+      Show your talent & win exciting cash prizes. Eligibility: 10th Pass /
+      Students preparing competition exams.
+    </div>
 
-  <a class="btn" href="apply.html">Apply Now</a>
+    <ul class="points">
+      <li>1st Prize ₹51,000 • 2nd Prize ₹21,000 • 3rd Prize ₹9,900</li>
+      <li>Rank 4 to 21: ₹5100 (Consolation Award)</li>
+      <li>First 500 registered students will get a certificate.</li>
+      <li>Exam Date: February 2026</li>
+      <li>Registration Fee: ₹200 Only</li>
+    </ul>
+
+    <a href="apply.html" class="btn-apply">Apply Now</a>
+  </div>
+
+  <!-- RIGHT POSTER -->
+  <div class="right">
+    <!-- Default flex.jpg, baad me Supabase se latest URL aa jayega -->
+    <img id="homePoster" src="flex.jpg" alt="Scholarship Poster" class="poster">
+  </div>
 </div>
 
 <footer>
-  © 2026 Baba Deep Singh Mega Talent Hub
+  © 2026 Baba Deep Singh Mega Talent Hub • Sangariya, District Hanumangarh (335063)
 </footer>
 
-<!-- Supabase Loader Script -->
+<!-- Supabase – Home Poster Loader -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
   const { createClient } = supabase;
   const SUPABASE_URL = "https://yyymjhuwjvyykukfzqow.supabase.co";
   const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl5eW1qaHV3anZ5eWt1a2Z6cW93Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2NzMzMjIsImV4cCI6MjA4MDI0OTMyMn0.Ja9Do4cwumTnXx2NGIRW8Ti3rKm4MBiLClQz0xjOtrQ";
 
-  const db = createClient(SUPABASE_URL, SUPABASE_KEY);
+  const homeClient = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-  async function loadPoster(){
-    try {
-      const { data, error } = await db
+  async function loadHomePoster(){
+    try{
+      const { data, error } = await homeClient
         .from("flex_banners")
         .select("image_url, created_at")
-        .order("created_at", { ascending: false })
+        .order("created_at",{ ascending:false })
         .limit(1)
         .maybeSingle();
 
@@ -127,12 +177,13 @@
       if(data && data.image_url){
         document.getElementById("homePoster").src = data.image_url;
       }
-    } catch(err){
-      console.log("Poster Load Error:", err.message);
+      // agar koi record nahi mila to flex.jpg hi dikhega
+    }catch(err){
+      console.log("Home poster load error:", err.message);
     }
   }
 
-  loadPoster();
+  loadHomePoster();
 </script>
 
 </body>
