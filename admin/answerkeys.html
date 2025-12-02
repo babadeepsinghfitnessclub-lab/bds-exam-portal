@@ -87,9 +87,8 @@
     #msgBox{margin-top:6px;font-size:13px;}
   </style>
 
-  <!-- Firebase v8 -->
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <!-- Supabase JS -->
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
@@ -102,10 +101,11 @@
 
   <!-- ADD NEW ANSWER KEY -->
   <div class="card">
-    <h1>Upload / Add Answer Key (PDF URL)</h1>
+    <h1>Upload / Add Answer Key</h1>
     <p style="font-size:13px;color:#ffeaa7;">
-      Yahan par aap <b>Google Drive / kisi bhi server</b> ka direct PDF link daal sakte hain.
-      Students <b>Download</b> page se isse dekh sakenge.
+      Aap yahaan ya to <b>direct PDF URL</b> daal sakte hain, ya phir
+      <b>PDF file upload</b> kar sakte hain. <br>
+      Students <b>Download</b> page se in answer keys ko dekh sakenge.
     </p>
 
     <label>Exam / Paper Title</label>
@@ -114,8 +114,11 @@
     <label>Exam Date</label>
     <input type="text" id="akDate" placeholder="e.g. 08/02/2026">
 
-    <label>PDF URL (https://...)</label>
-    <input type="text" id="akUrl" placeholder="Direct PDF link">
+    <label>PDF URL (https://...) – optional</label>
+    <input type="text" id="akUrl" placeholder="Agar file upload nahi karni ho to direct link yahan daalein">
+
+    <label>PDF File (optional)</label>
+    <input type="file" id="akFile" accept="application/pdf">
 
     <button class="btn-primary" onclick="saveAnswerKey()">Save Answer Key</button>
     <div id="msgBox"></div>
@@ -144,103 +147,213 @@
 </div>
 
 <script>
-  // same config as apply.html
-  var firebaseConfig = {
-    apiKey: "AIzaSyC87KEyqV3BMDeIexM_kom2rR7AMQ67eQ8",
-    authDomain: "bds-exam-portal.firebaseapp.com",
-    projectId: "bds-exam-portal",
-    storageBucket: "bds-exam-portal.appspot.com",
-    messagingSenderId: "376704151840",
-    appId: "1:376704151840:web:1f530924b850e008434883"
-  };
-  if (!firebase.apps.length) {
-    firebase.initializeApp(firebaseConfig);
-  }
-  var db = firebase.firestore();
+  // Supabase config
+  const SUPABASE_URL = "https://yyymjhuwjvyykukfzqow.supabase.co";
+  const SUPABASE_ANON_KEY =
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl5eW1qaHV3anZ5eWt1a2Z6cW93Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2NzMzMjIsImV4cCI6MjA4MDI0OTMyMn0.Ja9Do4cwumTnXx2NGIRW8Ti3rKm4MBiLClQz0xjOtrQ";
+
+  const { createClient } = supabase;
+  const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
   function showMsg(text,color){
-    var m = document.getElementById("msgBox");
+    const m = document.getElementById("msgBox");
     m.style.color = color || "#fff";
     m.innerHTML = text;
   }
 
-  function saveAnswerKey(){
-    var title = document.getElementById("akTitle").value.trim();
-    var date  = document.getElementById("akDate").value.trim();
-    var url   = document.getElementById("akUrl").value.trim();
+  // 🔹 SAVE / UPLOAD ANSWER KEY
+  async function saveAnswerKey(){
+    const title = document.getElementById("akTitle").value.trim();
+    const date  = document.getElementById("akDate").value.trim();
+    const urlIn = document.getElementById("akUrl").value.trim();
+    const file  = document.getElementById("akFile").files[0];
 
-    if(!title || !url){
-      alert("Title aur PDF URL zaroori hai.");
+    if(!title){
+      alert("Title zaroori hai.");
+      return;
+    }
+
+    if(!urlIn && !file){
+      alert("Ya to PDF URL daalo, ya PDF file upload karo.");
       return;
     }
 
     showMsg("Saving, please wait...");
 
-    db.collection("answerkeys").add({
-      title: title,
-      examDate: date,
-      url: url,
-      visible: true,
-      createdAt: new Date()
-    }).then(function(){
-      showMsg("Answer key saved successfully!","#22c55e");
-      document.getElementById("akTitle").value = "";
-      document.getElementById("akDate").value = "";
-      document.getElementById("akUrl").value = "";
-      loadAnswerKeys();
-    }).catch(function(err){
-      console.error(err);
-      showMsg("Error: "+err,"#ff8080");
-    });
-  }
+    let finalUrl  = urlIn || "";
+    let filePath  = null;
 
-  function setVisibility(id,current){
-    db.collection("answerkeys").doc(id).update({
-      visible: !current
-    }).then(loadAnswerKeys);
-  }
+    try {
+      // Agar file selected hai to Supabase storage par upload karo
+      if (file) {
+        filePath = "answer_keys/" + Date.now() + "_" + file.name;
 
-  function deleteKey(id){
-    if(!confirm("Sure? Is answer key ko delete karna hai?")) return;
-    db.collection("answerkeys").doc(id).delete().then(loadAnswerKeys);
-  }
+        const { data: uploadData, error: uploadErr } = await sb
+          .storage
+          .from("exam_files")
+          .upload(filePath, file);
 
-  function loadAnswerKeys(){
-    var body = document.getElementById("akTableBody");
-    body.innerHTML = '<tr><td colspan="6" style="text-align:center;">Loading...</td></tr>';
-
-    db.collection("answerkeys").orderBy("createdAt","desc").get()
-      .then(function(snap){
-        body.innerHTML = "";
-        if(snap.empty){
-          body.innerHTML = '<tr><td colspan="6" style="text-align:center;">No answer keys added yet.</td></tr>';
+        if (uploadErr) {
+          console.error(uploadErr);
+          showMsg("File upload error: " + uploadErr.message, "#ff8080");
           return;
         }
-        var i=1;
-        snap.forEach(function(doc){
-          var d = doc.data();
-          var tr = document.createElement("tr");
 
-          tr.innerHTML =
-            "<td>"+(i++)+"</td>"+
-            "<td>"+(d.title || "-")+"</td>"+
-            "<td>"+(d.examDate || "-")+"</td>"+
-            "<td>"+(d.visible===false ? "Hidden" : "Visible")+"</td>"+
-            "<td>"+(d.url ? '<a href="'+d.url+'" target="_blank" style="color:#ffbf00;">Open</a>' : '-')+"</td>"+
-            "<td>"+
-              '<button class="btn-small '+(d.visible===false?'btn-visible':'btn-hide')+'" onclick="setVisibility(\''+doc.id+'\','+(d.visible!==false)+')">'+
-                (d.visible===false ? 'Make Visible' : 'Hide')+
-              '</button> '+
-              '<button class="btn-small btn-delete" onclick="deleteKey(\''+doc.id+'\')">Delete</button>'+
-            "</td>";
+        // Public URL nikaal lo
+        const { data: pub } = sb
+          .storage
+          .from("exam_files")
+          .getPublicUrl(filePath);
 
-          body.appendChild(tr);
-        });
-      })
-      .catch(function(err){
-        console.error(err);
-        body.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#ff8080;">Error: '+err+'</td></tr>';
+        if (pub && pub.publicUrl) {
+          finalUrl = pub.publicUrl;
+        }
+      }
+
+      // Ab table me row insert karo
+      const { error: insertErr } = await sb
+        .from("answer_keys")
+        .insert([{
+          exam_name: title,
+          exam_date: date || null,
+          public_url: finalUrl || null,
+          file_path: filePath,
+          visible: true
+        }]);
+
+      if (insertErr) {
+        console.error(insertErr);
+        showMsg("Error: " + insertErr.message, "#ff8080");
+        return;
+      }
+
+      showMsg("Answer key saved successfully!","#22c55e");
+      document.getElementById("akTitle").value = "";
+      document.getElementById("akDate").value  = "";
+      document.getElementById("akUrl").value   = "";
+      document.getElementById("akFile").value  = "";
+      loadAnswerKeys();
+
+    } catch (err) {
+      console.error(err);
+      showMsg("Error: " + err.message, "#ff8080");
+    }
+  }
+
+  // 🔹 VISIBILITY TOGGLE
+  async function setVisibility(id,currentVisible){
+    try {
+      const { error } = await sb
+        .from("answer_keys")
+        .update({ visible: !currentVisible })
+        .eq("id", id);
+
+      if (error) {
+        console.error(error);
+        alert("Visibility change error: " + error.message);
+        return;
+      }
+      loadAnswerKeys();
+    } catch (err) {
+      console.error(err);
+      alert("Visibility change error: " + err.message);
+    }
+  }
+
+  // 🔹 DELETE ANSWER KEY
+  async function deleteKey(id){
+    if(!confirm("Sure? Is answer key ko delete karna hai?")) return;
+
+    try {
+      const { error } = await sb
+        .from("answer_keys")
+        .delete()
+        .eq("id", id);
+
+      if (error) {
+        console.error(error);
+        alert("Delete error: " + error.message);
+        return;
+      }
+      loadAnswerKeys();
+    } catch (err) {
+      console.error(err);
+      alert("Delete error: " + err.message);
+    }
+  }
+
+  // 🔹 LOAD LIST
+  async function loadAnswerKeys(){
+    const body = document.getElementById("akTableBody");
+    body.innerHTML =
+      '<tr><td colspan="6" style="text-align:center;">Loading...</td></tr>';
+
+    try {
+      const { data, error } = await sb
+        .from("answer_keys")
+        .select("*")
+        .order("id", { ascending: false });
+
+      if (error) {
+        console.error(error);
+        body.innerHTML =
+          '<tr><td colspan="6" style="text-align:center;color:#ff8080;">Error: '+
+          error.message +'</td></tr>';
+        return;
+      }
+
+      if (!data || data.length === 0) {
+        body.innerHTML =
+          '<tr><td colspan="6" style="text-align:center;">No answer keys added yet.</td></tr>';
+        return;
+      }
+
+      body.innerHTML = "";
+      let i = 1;
+      data.forEach(row => {
+        const tr = document.createElement("tr");
+
+        // Final URL decide karo
+        let url = row.public_url || "";
+        if (!url && row.file_path) {
+          const { data: pub } = sb
+            .storage
+            .from("exam_files")
+            .getPublicUrl(row.file_path);
+          if (pub && pub.publicUrl) {
+            url = pub.publicUrl;
+          }
+        }
+
+        const visible = row.visible !== false;
+
+        tr.innerHTML =
+          "<td>"+(i++)+"</td>"+
+          "<td>"+(row.exam_name || "-")+"</td>"+
+          "<td>"+(row.exam_date || "-")+"</td>"+
+          "<td>"+(visible ? "Visible" : "Hidden")+"</td>"+
+          "<td>"+(
+            url
+              ? '<a href="'+url+'" target="_blank" style="color:#ffbf00;">Open</a>'
+              : '-'
+          )+"</td>"+
+          "<td>"+
+            '<button class="btn-small '+(visible?'btn-hide':'btn-visible')+'" '+
+              'onclick="setVisibility('+row.id+','+visible+')">'+
+                (visible ? 'Hide' : 'Make Visible')+
+            '</button> '+
+            '<button class="btn-small btn-delete" onclick="deleteKey('+row.id+')">Delete</button>'+
+          "</td>";
+
+        body.appendChild(tr);
       });
+
+    } catch (err) {
+      console.error(err);
+      body.innerHTML =
+        '<tr><td colspan="6" style="text-align:center;color:#ff8080;">Error: '+
+        err.message +'</td></tr>';
+    }
   }
 
   loadAnswerKeys();
