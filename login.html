@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Student Login | BDS Exam Portal</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f5f5;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 420px;
+      margin: 40px auto;
+      background: #ffffff;
+      padding: 20px 25px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    h2 {
+      margin-top: 0;
+      text-align: center;
+      color: #b20c0c;
+    }
+    label {
+      font-size: 14px;
+      display: block;
+      margin-bottom: 4px;
+    }
+    input {
+      width: 100%;
+      padding: 8px 10px;
+      margin-bottom: 12px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+      font-size: 14px;
+      box-sizing: border-box;
+    }
+    button {
+      width: 100%;
+      padding: 10px;
+      border: none;
+      border-radius: 4px;
+      background: #b20c0c;
+      color: #fff;
+      font-size: 15px;
+      cursor: pointer;
+    }
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    .msg {
+      margin-top: 10px;
+      font-size: 14px;
+    }
+    .small {
+      font-size: 12px;
+      text-align: center;
+      margin-top: 12px;
+    }
+    a {
+      color: #b20c0c;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Student Login</h2>
+
+    <form id="loginForm">
+      <label for="mobile">Mobile Number *</label>
+      <input type="tel" id="mobile" maxlength="10" required placeholder="Registered mobile number">
+
+      <label for="password">Password *</label>
+      <input type="password" id="password" required>
+
+      <button type="submit" id="loginBtn">Login</button>
+    </form>
+
+    <p class="msg" id="msg"></p>
+
+    <p class="small">
+      New student? <a href="register.html">Register here</a>
+    </p>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import {
+      getFirestore, doc, getDoc
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyASkExcBlvX0vijgyT2cWfSuQvZUziM198",
+      authDomain: "bds-exam-portal.firebaseapp.com",
+      projectId: "bds-exam-portal",
+      storageBucket: "bds-exam-portal.firebasestorage.app",
+      messagingSenderId: "937670115018",
+      appId: "1:937670115018:web:226030b502b7fd79487e33"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db  = getFirestore(app);
+
+    const form    = document.getElementById('loginForm');
+    const msgEl   = document.getElementById('msg');
+    const loginBtn= document.getElementById('loginBtn');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      msgEl.textContent = "";
+      msgEl.style.color = "black";
+
+      const mobile   = document.getElementById('mobile').value.trim();
+      const password = document.getElementById('password').value;
+
+      if (mobile.length !== 10 || !/^[0-9]+$/.test(mobile)) {
+        msgEl.textContent = "Please enter valid 10 digit mobile number.";
+        msgEl.style.color = "red";
+        return;
+      }
+
+      loginBtn.disabled = true;
+      msgEl.textContent = "Checking...";
+      msgEl.style.color = "black";
+
+      try {
+        const studentRef = doc(db, "students", mobile);
+        const snap = await getDoc(studentRef);
+
+        if (!snap.exists()) {
+          msgEl.textContent = "Ye mobile number registered nahi hai. Pehle registration karein.";
+          msgEl.style.color = "red";
+          loginBtn.disabled = false;
+          return;
+        }
+
+        const data = snap.data();
+        if (data.password !== password) {
+          msgEl.textContent = "Galat password. Dubara try karein.";
+          msgEl.style.color = "red";
+          loginBtn.disabled = false;
+          return;
+        }
+
+        // Success
+        localStorage.setItem("studentId", mobile);
+        msgEl.textContent = "Login successful!";
+        msgEl.style.color = "green";
+
+        setTimeout(() => {
+          window.location.href = "dashboard.html";
+        }, 1000);
+
+      } catch (err) {
+        console.error(err);
+        msgEl.textContent = "Kuch error aayi, thodi der baad try karein.";
+        msgEl.style.color = "red";
+        loginBtn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
