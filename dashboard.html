@@ -1,160 +1,96 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Student Dashboard | BDS Exam Portal</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>
-    body { font-family: Arial, sans-serif; background:#f5f5f5; margin:0; }
-    .topbar {
-      background:#b20c0c; color:#fff; padding:10px 15px;
-      display:flex; justify-content:space-between; align-items:center;
-    }
-    .container {
-      max-width:800px; margin:20px auto; background:#fff;
-      padding:15px 20px; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,0.1);
-    }
-    h2 { margin-top:0; color:#b20c0c; }
-    button {
-      padding:8px 14px; border:none; border-radius:4px; cursor:pointer;
-      margin-right:10px;
-    }
-    .primary { background:#b20c0c; color:#fff; }
-    .secondary { background:#ddd; }
-    .statusBox {
-      padding:10px; border-radius:6px; background:#eef5ff;
-      border:1px solid #c5d9ff; margin-top:10px; font-size:14px;
-    }
-    .status-label { font-weight:bold; }
-    .status-value { font-weight:bold; }
-  </style>
+<meta charset="UTF-8">
+<title>Student Dashboard | BDS Exam Portal</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+  body { font-family: Arial, sans-serif; background: #eee; margin: 0; }
+  .container {
+    width: 95%;
+    max-width: 600px;
+    background: #fff;
+    margin: 20px auto;
+    padding: 15px;
+    border-radius: 10px;
+    text-align: center;
+    box-shadow: 0 0 10px rgba(0,0,0,0.2);
+  }
+  h1 { margin: 10px 0; color:#900; }
+  .status-box {
+    background: #d9e8ff;
+    padding: 12px;
+    margin: 10px 0;
+    border-radius:6px;
+    color:#000;
+    font-size:14px;
+  }
+  button {
+    background: #d11507;
+    color: #fff;
+    padding: 10px 18px;
+    font-size: 15px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+</style>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
 </head>
+
 <body>
-  <div class="topbar">
-    <div><b>BDS Exam Portal</b></div>
-    <div>
-      <button class="secondary" id="logoutBtn">Logout</button>
-    </div>
+<div class="container">
+
+  <h1>Student Dashboard</h1>
+  <p>Loading student info...</p>
+
+  <div class="status-box">
+    Form Status: <span id="formStatus">Loading...</span><br>
+    Payment Status: <span id="paymentStatus">Loading...</span><br>
+    Roll Number: <span id="rollNo">Loading...</span>
   </div>
 
-  <div class="container">
-    <h2>Student Dashboard</h2>
-    <p id="welcomeText">Loading student info...</p>
+  <button onclick="goToApply()">Apply for Exam</button>
 
-    <!-- 🔔 Notification / Status Bar -->
-    <div class="statusBox">
-      <div id="applicationStatus">
-        Form Status: <span class="status-value">Loading...</span><br>
-        Payment Status: <span class="status-value">Loading...</span><br>
-        Roll Number: <span class="status-value">Loading...</span>
-      </div>
-    </div>
+</div>
 
-    <div style="margin-top:15px;">
-      <button class="primary" id="applyBtn">Apply for Exam</button>
-    </div>
-  </div>
+<script>
+// Firebase Config
+var firebaseConfig = {
+  apiKey: "AIzaSyASkExcBlvX0vijgyT2cWfSuQvZUziM198",
+  authDomain: "bds-exam-portal.firebaseapp.com",
+  projectId: "bds-exam-portal",
+};
+firebase.initializeApp(firebaseConfig);
+var db = firebase.firestore();
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import {
-      getFirestore, doc, getDoc,
-      collection, query, where, orderBy, limit, onSnapshot
-    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+// Check Login
+var studentId = localStorage.getItem("studentId");
+if (!studentId) {
+  window.location.href = "login.html";
+}
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyASkExcBlvX0vijgyT2cWfSuQvZUziM198",
-      authDomain: "bds-exam-portal.firebaseapp.com",
-      projectId: "bds-exam-portal",
-      storageBucket: "bds-exam-portal.firebasestorage.app",
-      messagingSenderId: "937670115018",
-      appId: "1:937670115018:web:226030b502b7fd79487e33"
-    };
+// Load Status
+db.collection("students").doc(studentId).onSnapshot(doc=>{
+  if(doc.exists){
+    let d = doc.data();
+    document.getElementById("formStatus").innerText = d.status || "Not Applied";
+    document.getElementById("paymentStatus").innerText =
+         d.paymentVerified ? "Approved" : "Pending";
+    document.getElementById("rollNo").innerText =
+         d.rollNumber || "--";
+  }
+});
 
-    const app = initializeApp(firebaseConfig);
-    const db  = getFirestore(app);
+// Button Action
+function goToApply(){
+  window.location.href = "apply.html"; // ISSI FILE KA NAAM HAI ✔
+}
+</script>
 
-    const welcomeTextEl = document.getElementById('welcomeText');
-    const logoutBtn     = document.getElementById('logoutBtn');
-    const applyBtn      = document.getElementById('applyBtn');
-    const applicationStatusEl = document.getElementById('applicationStatus');
-
-    // 1) Check login
-    const studentId = localStorage.getItem("studentId"); // yahi mobile number hai
-
-    if (!studentId) {
-      window.location.href = "login.html";
-    } else {
-      loadStudentInfo(studentId);
-      listenApplicationStatus(studentId);
-    }
-
-    // Student basic info (registration wale students doc se)
-    async function loadStudentInfo(id) {
-      try {
-        const ref = doc(db, "students", id);
-        const snap = await getDoc(ref);
-        if (snap.exists()) {
-          const data = snap.data();
-          welcomeTextEl.textContent = Welcome, ${data.name || 'Student'} (Mobile: ${data.mobile || id});
-        } else {
-          welcomeTextEl.textContent = "Student record not found. Please login again.";
-          localStorage.removeItem("studentId");
-        }
-      } catch (err) {
-        console.error(err);
-        welcomeTextEl.textContent = "Error loading student data.";
-      }
-    }
-
-    // 🔔 Application Status Listener
-    function listenApplicationStatus(mobile) {
-      // Yahan hum students collection me se woh documents dhund rahe hain
-      // jo APPLY form se bane (jisme rollNumber + status + paymentVerified hoga)
-      const q = query(
-        collection(db, "students"),
-        where("mobile", "==", mobile),
-        orderBy("createdAt", "desc"),
-        limit(1)
-      );
-
-      onSnapshot(q, (snapshot) => {
-        if (snapshot.empty) {
-          applicationStatusEl.innerHTML =
-            'Form Status: <span class="status-value">Abhi tak form apply nahi kiya.</span><br>' +
-            'Payment Status: <span class="status-value">-</span><br>' +
-            'Roll Number: <span class="status-value">-</span>';
-          return;
-        }
-
-        const docSnap = snapshot.docs[0];
-        const data = docSnap.data();
-
-        const formStatus = data.status || "Pending";
-        const paymentStatus = data.paymentVerified ? "Verified" : "Pending";
-        const rollNumber = data.rollNumber || "Not Generated";
-
-        applicationStatusEl.innerHTML =
-          'Form Status: <span class="status-value">'+ formStatus +'</span><br>' +
-          'Payment Status: <span class="status-value">'+ paymentStatus +'</span><br>' +
-          'Roll Number: <span class="status-value">'+ rollNumber +'</span>';
-      }, (error) => {
-        console.error("Error listening status:", error);
-        applicationStatusEl.innerHTML =
-          'Form Status: <span class="status-value">Error loading status</span><br>' +
-          'Payment Status: <span class="status-value">-</span><br>' +
-          'Roll Number: <span class="status-value">-</span>';
-      });
-    }
-
-    logoutBtn.addEventListener('click', () => {
-      localStorage.removeItem("studentId");
-      window.location.href = "login.html";
-    });
-
-    applyBtn.addEventListener('click', () => {
-      window.location.href = "apply.html";
-    });
-  </script>
 </body>
 </html>
