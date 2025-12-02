@@ -2,299 +2,137 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>BDS Mega Talent Hub | Home</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>
-    *{box-sizing:border-box;margin:0;padding:0;}
-    body{
-      font-family: Arial, sans-serif;
-      background: radial-gradient(circle at top, #003f8f, #000820);
-      color:#fff;
-    }
+  <title>Baba Deep Singh Mega Talent Hub</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    /* TOP BAR + NAV */
-    header{
-      background:rgba(0,0,0,0.7);
-      padding:10px 15px;
-      border-bottom:2px solid #ffb400;
-      text-align:center;
-      font-weight:700;
-      letter-spacing:1px;
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      font-family: Arial, sans-serif;
+      background: #001532;
+      color: #fff;
+    }
+    header {
+      background:#000000dd;
+      padding:10px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      flex-wrap:wrap;
+    }
+    header .logo {
       font-size:18px;
+      font-weight:bold;
+      color:#ffca28;
     }
-    nav{
-      text-align:center;
-      background:rgba(0,0,0,0.5);
-      padding:8px 0;
-    }
-    nav a{
-      color:#ffeb99;
+    nav a {
+      color:#fff;
       text-decoration:none;
+      margin-left:12px;
       font-size:13px;
       font-weight:bold;
-      margin:0 10px;
     }
-    nav a:hover{text-decoration:underline;}
-
-    /* MAIN LAYOUT */
-    .main{
-      max-width:1000px;
-      margin:15px auto 40px;
-      padding:0 10px;
-      display:flex;
-      flex-wrap:wrap;
-      gap:15px;
-      align-items:flex-start;
-      justify-content:center;
-    }
-
-    .left{
-      flex:1 1 260px;
-      text-align:left;
-    }
-    .right{
-      flex:1 1 260px;
-      text-align:center;
-    }
-
-    .headline{
-      font-size:22px;
-      font-weight:700;
-      margin-bottom:5px;
-    }
-    .subline{
-      font-size:13px;
-      margin-bottom:8px;
-    }
-    ul.points{
-      font-size:13px;
-      margin-left:18px;
-      margin-bottom:10px;
-    }
-    ul.points li{margin-bottom:4px;}
-
-    .btn-apply{
-      display:inline-block;
-      background:#ffdd00;
-      color:#000;
-      padding:8px 18px;
-      border-radius:20px;
-      font-weight:700;
-      font-size:13px;
-      text-decoration:none;
-      margin-bottom:10px;
-    }
-    .btn-apply:hover{background:#ffe866;}
-
-    .poster{
-      width:100%;
-      max-width:380px;
-      border-radius:12px;
-      border:2px solid #ffb400;
-      box-shadow:0 0 18px rgba(0,0,0,0.9);
-    }
-
-    /* NOTICES */
-    .notice-wrap{
-      width:100%;
-      margin-top:15px;
-      text-align:center;
-    }
-    .notice-card{
-      max-width:600px;
-      margin:0 auto;
-      background:rgba(0,0,0,0.65);
-      border-radius:12px;
-      padding:8px 12px 12px;
-      border:1px solid rgba(255,255,255,0.2);
-    }
-    .notice-header{
-      background:linear-gradient(90deg,#ff0078,#ffa800);
-      padding:4px 10px;
-      border-radius:999px;
-      display:inline-block;
-      font-size:13px;
-      font-weight:700;
-      margin-bottom:6px;
-    }
-    #noticeList{
-      list-style:none;
-      padding-left:0;
-      text-align:left;
-      font-size:13px;
-    }
-    #noticeList li{
-      padding:3px 0;
-    }
-
-    footer{
-      background:rgba(0,0,0,0.8);
+    nav a:hover { text-decoration:underline; }
+    .poster-box {
       text-align:center;
       padding:10px;
-      font-size:11px;
-      color:#dddddd;
+      background:#000;
     }
-
-    @media(max-width:700px){
-      header{font-size:15px;}
-      .headline{font-size:19px;}
-      nav a{margin:0 6px;}
+    .poster {
+      width:100%;
+      max-width:500px;
+      border-radius:10px;
+      border:2px solid #ffca28;
+      box-shadow:0 0 12px #000;
+    }
+    .section {
+      padding:14px;
+      text-align:center;
+    }
+    .btn {
+      display:inline-block;
+      margin-top:10px;
+      padding:8px 16px;
+      background:#ffbf00;
+      color:#000;
+      font-weight:bold;
+      border-radius:999px;
+      text-decoration:none;
+      font-size:14px;
+    }
+    footer {
+      text-align:center;
+      background:#000000dd;
+      color:#ccc;
+      padding:10px;
+      font-size:12px;
+      margin-top:15px;
     }
   </style>
 
-  <!-- Supabase JS -->
-  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
-<header>BABA DEEP SINGH MEGA TALENT HUB</header>
+<header>
+  <div class="logo">BABA DEEP SINGH MEGA TALENT HUB</div>
+  <nav>
+    <a href="index.html">HOME</a>
+    <a href="apply.html">APPLY</a>
+    <a href="admit.html">ADMIT CARD</a>
+    <a href="result.html">RESULT</a>
+    <a href="download.html">DOWNLOAD</a>
+    <a href="help.html">HELP</a>
+    <a href="admin/login.html">ADMIN</a>
+  </nav>
+</header>
 
-<nav>
-  <a href="index.html">HOME</a>
-  <a href="apply.html">APPLY</a>
-  <a href="admit.html">ADMIT CARD</a>
-  <a href="result.html">RESULT</a>
-  <a href="download.html">DOWNLOAD</a>
-  <a href="help.html">HELP</a>
-  <a href="admin.html">ADMIN</a>
-</nav>
+<!-- HOME POSTER -->
+<div class="poster-box">
+  <img id="homePoster" src="flex.jpg" class="poster" alt="Main Poster">
+</div>
 
-<div class="main">
-  <!-- LEFT TEXT -->
-  <div class="left">
-    <div class="headline">Future Achievers Scholarship Exam 2026</div>
-    <div class="subline">
-      Show your talent & win exciting cash prizes. Eligibility: 10th Pass /
-      Students preparing competition exams.
-    </div>
+<div class="section">
+  <h2>Welcome to Baba Deep Singh Mega Talent Hub</h2>
+  <p style="font-size:13px;margin-top:6px;">
+    Scholarship Exam | Talent Hunt | Multiple Prizes | Future Growth
+  </p>
 
-    <ul class="points">
-      <li>1st Prize ₹51,000 • 2nd Prize ₹21,000 • 3rd Prize ₹9,900</li>
-      <li>Rank 4 to 21: ₹5100 (Consolation Award)</li>
-      <li>First 500 registered students will get a certificate.</li>
-      <li>Exam Date: February 2026</li>
-      <li>Registration Fee: ₹200 Only</li>
-    </ul>
-
-    <a href="apply.html" class="btn-apply">Apply Now</a>
-  </div>
-
-  <!-- RIGHT POSTER + NOTICES -->
-  <div class="right">
-    <!-- Poster image Supabase se aayega -->
-    <img id="mainPoster" src="flex.jpg" alt="Scholarship Poster" class="poster">
-
-    <div class="notice-wrap">
-      <div class="notice-card">
-        <div class="notice-header">📢 Latest Notices</div>
-        <ul id="noticeList">
-          <li>Loading notices...</li>
-        </ul>
-      </div>
-    </div>
-  </div>
+  <a class="btn" href="apply.html">Apply Now</a>
 </div>
 
 <footer>
-  © 2026 Baba Deep Singh Mega Talent Hub • Sangariya, District Hanumangarh (335063)
+  © 2026 Baba Deep Singh Mega Talent Hub
 </footer>
 
+<!-- Supabase Loader Script -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-  // Supabase config
-  const SUPABASE_URL = "https://yyymjhuwjvyykukfzqow.supabase.co";
-  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl5eW1qaHV3anZ5eWt1a2Z6cW93Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2NzMzMjIsImV4cCI6MjA4MDI0OTMyMn0.Ja9Do4cwumTnXx2NGIRW8Ti3rKm4MBiLClQz0xjOtrQ";
-
   const { createClient } = supabase;
-  const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  const SUPABASE_URL = "https://yyymjhuwjvyykukfzqow.supabase.co";
+  const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl5eW1qaHV3anZ5eWt1a2Z6cW93Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2NzMzMjIsImV4cCI6MjA4MDI0OTMyMn0.Ja9Do4cwumTnXx2NGIRW8Ti3rKm4MBiLClQz0xjOtrQ";
 
-  const noticeUl = document.getElementById("noticeList");
-  const posterImg = document.getElementById("mainPoster");
+  const db = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-  // 🔹 Latest Notices from "notices" table
-  async function loadNotices(){
-    noticeUl.innerHTML = "<li>Loading notices...</li>";
-
-    try{
-      const { data, error } = await sb
-        .from("notices")
-        .select("*")
-        .eq("active", true)
-        .order("created_at", { ascending: false });
-
-      if (error) {
-        console.log("Notice load error:", error);
-        noticeUl.innerHTML = "<li>Error loading notices.</li>";
-        return;
-      }
-
-      noticeUl.innerHTML = "";
-      if (!data || data.length === 0) {
-        noticeUl.innerHTML = "<li>No active notices.</li>";
-        return;
-      }
-
-      data.forEach(d => {
-        const li = document.createElement("li");
-        const title = d.title || "Notice";
-        const body  = d.body  || "";
-        li.textContent = title + " — " + body;
-        noticeUl.appendChild(li);
-      });
-
-      if (!noticeUl.innerHTML.trim()) {
-        noticeUl.innerHTML = "<li>No active notices.</li>";
-      }
-    }catch(err){
-      console.log("Notice load error:", err);
-      noticeUl.innerHTML = "<li>Error loading notices.</li>";
-    }
-  }
-
-  // 🔹 Main Poster from "flex_banners" + "flex" bucket
-  async function loadMainPoster() {
+  async function loadPoster(){
     try {
-      const { data, error } = await sb
+      const { data, error } = await db
         .from("flex_banners")
-        .select("*")
-        .eq("visible", true)
-        .order("priority", { ascending: true })
+        .select("image_url, created_at")
         .order("created_at", { ascending: false })
-        .limit(1);
+        .limit(1)
+        .maybeSingle();
 
-      if (error) {
-        console.log("Flex load error:", error);
-        return; // fallback flex.jpg rahega
+      if(error) throw error;
+
+      if(data && data.image_url){
+        document.getElementById("homePoster").src = data.image_url;
       }
-
-      if (!data || data.length === 0) {
-        return; // koi active banner nahi → default flex.jpg hi dikhega
-      }
-
-      const banner = data[0];
-
-      let imgUrl = banner.public_url || "";
-
-      // Agar public_url empty hai par file_path hai, to storage se URL banao
-      if (!imgUrl && banner.file_path) {
-        const { data: pub } = sb
-          .storage
-          .from("flex")
-          .getPublicUrl(banner.file_path);
-        if (pub && pub.publicUrl) {
-          imgUrl = pub.publicUrl;
-        }
-      }
-
-      if (imgUrl) {
-        posterImg.src = imgUrl;
-      }
-    } catch (err) {
-      console.log("Poster load error:", err);
+    } catch(err){
+      console.log("Poster Load Error:", err.message);
     }
   }
 
-  loadNotices();
-  loadMainPoster();
+  loadPoster();
 </script>
 
 </body>
