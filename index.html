@@ -26,13 +26,17 @@
       text-align:center;
       background:rgba(0,0,0,0.5);
       padding:8px 0;
+      display:flex;
+      flex-wrap:wrap;
+      justify-content:center;
+      gap:10px;
     }
     nav a{
       color:#ffeb99;
       text-decoration:none;
       font-size:13px;
       font-weight:bold;
-      margin:0 10px;
+      margin:0 4px;
     }
     nav a:hover{text-decoration:underline;}
 
@@ -94,6 +98,75 @@
       box-shadow:0 0 18px rgba(0,0,0,0.9);
     }
 
+    /* NOTICES */
+    .notice-wrap{
+      width:100%;
+      margin-top:15px;
+      text-align:center;
+    }
+    .notice-card{
+      max-width:600px;
+      margin:0 auto;
+      background:rgba(0,0,0,0.65);
+      border-radius:12px;
+      padding:8px 12px 12px;
+      border:1px solid rgba(255,255,255,0.2);
+    }
+    .notice-header{
+      background:linear-gradient(90deg,#ff0078,#ffa800);
+      padding:4px 10px;
+      border-radius:999px;
+      display:inline-block;
+      font-size:13px;
+      font-weight:700;
+      margin-bottom:6px;
+    }
+    #noticeList{
+      list-style:none;
+      padding-left:0;
+      text-align:left;
+      font-size:13px;
+    }
+    #noticeList li{
+      padding:3px 0;
+    }
+
+    /* HOME GALLERY PREVIEW */
+    .gallery-section{
+      max-width:1000px;
+      margin:0 auto 20px;
+      padding:0 10px;
+    }
+    .gallery-title{
+      font-size:16px;
+      font-weight:700;
+      margin-bottom:6px;
+    }
+    .gallery-grid{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      justify-content:flex-start;
+    }
+    .gallery-item{
+      width:90px;
+      height:90px;
+      border-radius:8px;
+      overflow:hidden;
+      border:1px solid rgba(255,255,255,0.3);
+    }
+    .gallery-item img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      display:block;
+    }
+    .gallery-msg{
+      font-size:12px;
+      opacity:0.9;
+      margin-bottom:6px;
+    }
+
     footer{
       background:rgba(0,0,0,0.8);
       text-align:center;
@@ -105,7 +178,8 @@
     @media(max-width:700px){
       header{font-size:15px;}
       .headline{font-size:19px;}
-      nav a{margin:0 6px;}
+      nav{gap:6px;}
+      nav a{margin:0;}
     }
   </style>
 </head>
@@ -115,10 +189,12 @@
 
 <nav>
   <a href="index.html">HOME</a>
-  <a href="apply.html">APPLY</a>
+  <a href="register.html">REGISTER</a>
+  <a href="login.html">STUDENT LOGIN</a>
   <a href="admit.html">ADMIT CARD</a>
   <a href="result.html">RESULT</a>
   <a href="download.html">DOWNLOAD</a>
+  <a href="gallery.html">GALLERY</a>
   <a href="help.html">HELP</a>
   <a href="admin/login.html">ADMIN</a>
 </nav>
@@ -128,7 +204,7 @@
   <div class="left">
     <div class="headline">Future Achievers Scholarship Exam 2026</div>
     <div class="subline">
-      Show your talent & win exciting cash prizes. Eligibility: 10th Pass /
+      Show your talent &amp; win exciting cash prizes. Eligibility: 10th Pass /
       Students preparing competition exams.
     </div>
 
@@ -140,13 +216,31 @@
       <li>Registration Fee: ₹200 Only</li>
     </ul>
 
-    <a href="apply.html" class="btn-apply">Apply Now</a>
+    <!-- Apply button ab login/registration check karega -->
+    <a href="#" class="btn-apply" id="btnApply">Apply Now</a>
   </div>
 
-  <!-- RIGHT POSTER -->
+  <!-- RIGHT POSTER + NOTICES -->
   <div class="right">
-    <!-- Default flex.jpg, baad me Supabase se latest URL aa jayega -->
-    <img id="homePoster" src="flex.jpg" alt="Scholarship Poster" class="poster">
+    <img id="heroPoster" src="flex.jpg" alt="Scholarship Poster" class="poster">
+
+    <div class="notice-wrap">
+      <div class="notice-card">
+        <div class="notice-header">📢 Latest Notices</div>
+        <ul id="noticeList">
+          <li>Loading notices...</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- HOME GALLERY PREVIEW -->
+<div class="gallery-section">
+  <div class="gallery-title">📸 Exam &amp; Event Gallery (Preview)</div>
+  <div class="gallery-msg">Latest photos yahan dikhengi. Puri gallery dekhne ke liye upar GALLERY par click karein.</div>
+  <div id="homeGallery" class="gallery-grid">
+    <!-- JS se thumbs aayenge -->
   </div>
 </div>
 
@@ -154,36 +248,122 @@
   © 2026 Baba Deep Singh Mega Talent Hub • Sangariya, District Hanumangarh (335063)
 </footer>
 
-<!-- Supabase – Home Poster Loader -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- SUPABASE JS -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.48.0/dist/umd/supabase.min.js"></script>
 <script>
-  const { createClient } = supabase;
+  // 👉 Tumhara Supabase project
   const SUPABASE_URL = "https://yyymjhuwjvyykukfzqow.supabase.co";
-  const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl5eW1qaHV3anZ5eWt1a2Z6cW93Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2NzMzMjIsImV4cCI6MjA4MDI0OTMyMn0.Ja9Do4cwumTnXx2NGIRW8Ti3rKm4MBiLClQz0xjOtrQ";
+  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl5eW1qaHV3anZ5eWt1a2Z6cW93Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2NzMzMjIsImV4cCI6MjA4MDI0OTMyMn0.Ja9Do4cwumTnXx2NGIRW8Ti3rKm4MBiLClQz0xjOtrQ";
 
-  const homeClient = createClient(SUPABASE_URL, SUPABASE_KEY);
+  const { createClient } = supabase;
+  const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-  async function loadHomePoster(){
+  // 🔹 Apply Now button logic: pehle registration / login
+  document.getElementById("btnApply").addEventListener("click", function(e){
+    e.preventDefault();
+    const studentId = localStorage.getItem("studentId");
+    if (studentId) {
+      // already logged in → dashboard
+      window.location.href = "dashboard.html";
+    } else {
+      // pehle registration
+      window.location.href = "register.html";
+    }
+  });
+
+  // 🔹 Home poster (flex_banners table se)
+  async function loadPoster(){
+    const img = document.getElementById("heroPoster");
     try{
-      const { data, error } = await homeClient
+      const { data, error } = await sb
         .from("flex_banners")
-        .select("image_url, created_at")
-        .order("created_at",{ ascending:false })
-        .limit(1)
-        .maybeSingle();
+        .select("public_url")
+        .eq("visible", true)
+        .order("priority", { ascending: true })
+        .order("created_at", { ascending: false })
+        .limit(1);
 
-      if(error) throw error;
-
-      if(data && data.image_url){
-        document.getElementById("homePoster").src = data.image_url;
+      if(error){ console.log("poster error", error); return; }
+      if(data && data.length && data[0].public_url){
+        img.src = data[0].public_url;
       }
-      // agar koi record nahi mila to flex.jpg hi dikhega
     }catch(err){
-      console.log("Home poster load error:", err.message);
+      console.log("poster load error:", err);
     }
   }
 
-  loadHomePoster();
+  // 🔹 Notices (notices table)
+  async function loadNotices(){
+    const ul = document.getElementById("noticeList");
+    ul.innerHTML = "<li>Loading notices...</li>";
+    try{
+      const { data, error } = await sb
+        .from("notices")
+        .select("title, body, active, created_at")
+        .order("created_at", { ascending:false })
+        .limit(10);
+
+      if(error) throw error;
+
+      ul.innerHTML = "";
+      if(!data || !data.length){
+        ul.innerHTML = "<li>No active notices.</li>";
+        return;
+      }
+
+      data.forEach(n=>{
+        if(n.active === false) return;
+        const li = document.createElement("li");
+        li.textContent = (n.title || "Notice") + " — " + (n.body || "");
+        ul.appendChild(li);
+      });
+
+      if(!ul.innerHTML){
+        ul.innerHTML = "<li>No active notices.</li>";
+      }
+    }catch(err){
+      console.log("notice load error:", err);
+      ul.innerHTML = "<li>Error loading notices.</li>";
+    }
+  }
+
+  // 🔹 Home gallery preview (gallery_items table)
+  async function loadHomeGallery(){
+    const wrap = document.getElementById("homeGallery");
+    wrap.innerHTML = "<div class='gallery-msg'>Loading photos...</div>";
+    try{
+      const { data, error } = await sb
+        .from("gallery_items")
+        .select("public_url, caption, visible, created_at")
+        .eq("visible", true)
+        .order("created_at", { ascending:false })
+        .limit(8);
+
+      if(error) throw error;
+
+      wrap.innerHTML = "";
+      if(!data || !data.length){
+        wrap.innerHTML = "<div class='gallery-msg'>Gallery update ke baad yahan photos dikhenge.</div>";
+        return;
+      }
+
+      data.forEach(item=>{
+        if(!item.public_url) return;
+        const div = document.createElement("div");
+        div.className = "gallery-item";
+        div.innerHTML = <img src="${item.public_url}" alt="Gallery">;
+        wrap.appendChild(div);
+      });
+    }catch(err){
+      console.log("gallery load error:", err);
+      wrap.innerHTML = "<div class='gallery-msg'>Gallery load karne me error aaya.</div>";
+    }
+  }
+
+  // 🔽 Sab kuch load
+  loadPoster();
+  loadNotices();
+  loadHomeGallery();
 </script>
 
 </body>
