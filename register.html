@@ -66,9 +66,6 @@
       text-decoration: none;
     }
   </style>
-
-  <!-- Supabase JS -->
-  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 </head>
 <body>
   <div class="container">
@@ -78,7 +75,7 @@
       <label for="name">Full Name *</label>
       <input type="text" id="name" required>
 
-      <label for="mobile">Mobile Number *</label>
+      <label for="mobile">Mobile Number (Login ID) *</label>
       <input type="tel" id="mobile" maxlength="10" required placeholder="10 digit mobile">
 
       <label for="email">Email (optional)</label>
@@ -103,13 +100,16 @@
     </p>
   </div>
 
+  <!-- Supabase JS (CDN) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
-    // Supabase config (tumhara project)
-    const SUPABASE_URL = "https://yyymjhuwjvyykukfzqow.supabase.co";
-    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl5eW1qaHV3anZ5eWt1a2Z6cW93Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2NzMzMjIsImV4cCI6MjA4MDI0OTMyMn0.Ja9Do4cwumTnXx2NGIRW8Ti3rKm4MBiLClQz0xjOtrQ";
-
+    // Supabase client
     const { createClient } = supabase;
-    const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    const SUPABASE_URL = "https://yyymjhuwjvyykukfzqow.supabase.co";
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl5eW1qaHV3anZ5eWt1a2Z6cW93Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2NzMzMjIsImV4cCI6MjA4MDI0OTMyMn0.Ja9Do4cwumTnXx2NGIRW8Ti3rKm4MBiLClQz0xjOtrQ";
+
+    const db = createClient(SUPABASE_URL, SUPABASE_KEY);
 
     const form      = document.getElementById('registerForm');
     const msgEl     = document.getElementById('msg');
@@ -128,24 +128,16 @@
       const cPassword  = document.getElementById('confirmPassword').value;
 
       // Basic checks
-      if (!name || !fatherName) {
-        msgEl.textContent = "Name aur Father Name required hain.";
-        msgEl.style.color = "red";
-        return;
-      }
-
       if (mobile.length !== 10 || !/^[0-9]+$/.test(mobile)) {
         msgEl.textContent = "Please enter valid 10 digit mobile number.";
         msgEl.style.color = "red";
         return;
       }
-
       if (password.length < 6) {
         msgEl.textContent = "Password minimum 6 characters ka hona chahiye.";
         msgEl.style.color = "red";
         return;
       }
-
       if (password !== cPassword) {
         msgEl.textContent = "Password aur Confirm Password match nahi kar rahe.";
         msgEl.style.color = "red";
@@ -157,20 +149,14 @@
       msgEl.style.color = "black";
 
       try {
-        // 1) Pehle check karo ki ye mobile pehle se registered to nahi
-        const { data: existing, error: checkErr } = await sb
+        // 1) Check already registered (mobile unique)
+        const { data: existing, error: checkErr } = await db
           .from("students")
           .select("id")
           .eq("mobile", mobile)
           .maybeSingle();
 
-        if (checkErr) {
-          console.error(checkErr);
-          msgEl.textContent = "Kuch error aayi, thodi der baad phir try karein.";
-          msgEl.style.color = "red";
-          submitBtn.disabled = false;
-          return;
-        }
+        if (checkErr) throw checkErr;
 
         if (existing) {
           msgEl.textContent = "Ye mobile number already registered hai. Please login karein.";
@@ -179,40 +165,35 @@
           return;
         }
 
-        // 2) Naya student record insert karo
-        const { data: inserted, error: insertErr } = await sb
+        // 2) Insert new student
+        const { data: inserted, error: insErr } = await db
           .from("students")
-          .insert([{
+          .insert({
+            // username ko bhi mobile hi rakh rahe
+            username: mobile,
+            password: password,     // NOTE: simple store; baad me hash kar sakte hain
             full_name: name,
             father_name: fatherName,
             mobile: mobile,
             email: email || null,
-            login_password: password,       // simple store (baad me hash bhi kar sakte ho)
-            form_status: "not_applied",     // abhi form fill nahi kiya
-            payment_status: "pending"       // default
-          }])
-          .select("id")
+            form_status: "not_applied",   // agar default laga hai, tab bhi safe
+            payment_status: "pending"
+          })
+          .select("id, username")
           .single();
 
-        if (insertErr) {
-          console.error(insertErr);
-          msgEl.textContent = "Kuch error aayi, thodi der baad phir try karein.";
-          msgEl.style.color = "red";
-          submitBtn.disabled = false;
-          return;
-        }
+        if (insErr) throw insErr;
 
-        // Registration successful
+        // 3) Save login info browser me
+        localStorage.setItem("student_id", inserted.id);
+        localStorage.setItem("student_mobile", mobile);
+
         msgEl.textContent = "Registration successful! Please remember your Mobile & Password.";
         msgEl.style.color = "green";
 
-        // localStorage me student ki identity (mobile) store
-        localStorage.setItem("student_mobile", mobile);
-
-        // 2 second baad dashboard pe bhej do
         setTimeout(() => {
           window.location.href = "dashboard.html";
-        }, 2000);
+        }, 1500);
 
       } catch (err) {
         console.error(err);
