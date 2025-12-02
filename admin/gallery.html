@@ -28,6 +28,10 @@
       background:#1976d2; color:#fff;
       cursor:pointer; font-size:14px;
     }
+    button:disabled {
+      opacity:0.6;
+      cursor:not-allowed;
+    }
     .msg { margin-top:8px; font-size:13px; }
     .preview-list { margin-top:15px; display:flex; flex-wrap:wrap; gap:10px; }
     .preview-item {
@@ -40,10 +44,8 @@
     .topbar-links a { margin-right:8px; font-size:13px; }
   </style>
 
-  <!-- Firebase v8 (app + firestore + storage) -->
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
+  <!-- Supabase JS -->
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
@@ -57,7 +59,7 @@
   <h1>Gallery Photo Upload</h1>
   <p style="font-size:13px;">
     Yahan se jo photo upload karoge, woh <b>gallery.html</b> page par dikhengi.
-    Firestore me <code>gallery</code> collection use ho raha hai.
+    Supabase me <code>gallery_items</code> table aur <code>gallery_photos</code> bucket use ho raha hai.
   </p>
 
   <label>Select Image File</label>
@@ -84,102 +86,148 @@
     window.location.href = "login.html";
   }
 
-  // Same Firebase config
-  var firebaseConfig = {
-    apiKey: "AIzaSyC87KEyqV3BMDeIexM_kom2rR7AMQ67eQ8",
-    authDomain: "bds-exam-portal.firebaseapp.com",
-    projectId: "bds-exam-portal",
-    storageBucket: "bds-exam-portal.appspot.com",
-    messagingSenderId: "376704151840",
-    appId: "1:376704151840:web:1f530924b850e008434883"
-  };
-  if (!firebase.apps.length) {
-    firebase.initializeApp(firebaseConfig);
+  // Supabase config (tumhara project)
+  const SUPABASE_URL = "https://yyymjhuwjvyykukfzqow.supabase.co";
+  const SUPABASE_ANON_KEY =
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl5eW1qaHV3anZ5eWt1a2Z6cW93Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2NzMzMjIsImV4cCI6MjA4MDI0OTMyMn0.Ja9Do4cwumTnXx2NGIRW8Ti3rKm4MBiLClQz0xjOtrQ";
+
+  const { createClient } = supabase;
+  const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  const photoFileInput = document.getElementById("photoFile");
+  const captionInput   = document.getElementById("captionInput");
+  const visibleCheck   = document.getElementById("visibleCheck");
+  const uploadBtn      = document.getElementById("uploadBtn");
+  const msgBox         = document.getElementById("msgBox");
+  const previewList    = document.getElementById("previewList");
+
+  function setMsg(text, color){
+    msgBox.style.color = color || "#000";
+    msgBox.textContent = text;
   }
-  var db = firebase.firestore();
-  var storage = firebase.storage();
 
-  var photoFileInput = document.getElementById("photoFile");
-  var captionInput   = document.getElementById("captionInput");
-  var visibleCheck   = document.getElementById("visibleCheck");
-  var uploadBtn      = document.getElementById("uploadBtn");
-  var msgBox         = document.getElementById("msgBox");
-  var previewList    = document.getElementById("previewList");
-
-  uploadBtn.addEventListener("click", function(){
-    var file = photoFileInput.files[0];
-    var caption = captionInput.value.trim();
-    var visible = visibleCheck.checked;
+  // 🔹 Photo upload function
+  async function uploadPhoto(){
+    const file    = photoFileInput.files[0];
+    const caption = captionInput.value.trim();
+    const visible = visibleCheck.checked;
 
     if (!file) {
-      msgBox.style.color = "red";
-      msgBox.textContent = "Please select an image file.";
+      setMsg("Please select an image file.","red");
       return;
     }
 
-    msgBox.style.color = "#000";
-    msgBox.textContent = "Uploading photo, please wait...";
     uploadBtn.disabled = true;
+    setMsg("Uploading photo, please wait...","#000");
 
-    var path = "gallery/" + Date.now() + "_" + file.name;
+    try {
+      const filePath = "gallery/" + Date.now() + "_" + file.name;
 
-    storage.ref().child(path).put(file)
-      .then(function(snap){
-        return snap.ref.getDownloadURL();
-      })
-      .then(function(url){
-        return db.collection("gallery").add({
-          url: url,
-          caption: caption,
-          visible: visible,
-          createdAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
-      })
-      .then(function(){
-        msgBox.style.color = "green";
-        msgBox.textContent = "Photo uploaded successfully. Gallery page me show ho jayegi.";
-        photoFileInput.value = "";
-        captionInput.value = "";
-        visibleCheck.checked = true;
-        loadLatestPhotos();
-      })
-      .catch(function(err){
-        console.error(err);
-        msgBox.style.color = "red";
-        msgBox.textContent = "Error uploading photo: " + err;
-      })
-      .finally(function(){
+      // 1) Supabase storage me upload
+      const { data: uploadData, error: uploadErr } = await sb
+        .storage
+        .from("gallery_photos")
+        .upload(filePath, file);
+
+      if (uploadErr) {
+        console.error(uploadErr);
+        setMsg("File upload error: " + uploadErr.message, "red");
         uploadBtn.disabled = false;
-      });
-  });
+        return;
+      }
 
-  // Latest photos preview for admin
-  function loadLatestPhotos(){
+      // 2) Public URL nikaalo
+      const { data: pub } = sb
+        .storage
+        .from("gallery_photos")
+        .getPublicUrl(filePath);
+
+      const publicUrl = pub && pub.publicUrl ? pub.publicUrl : null;
+
+      if (!publicUrl) {
+        setMsg("Public URL generate nahi ho payi.", "red");
+        uploadBtn.disabled = false;
+        return;
+      }
+
+      // 3) Table me record insert karo
+      const { error: insertErr } = await sb
+        .from("gallery_items")
+        .insert([{
+          file_path: filePath,
+          public_url: publicUrl,
+          caption: caption || null,
+          visible: visible
+        }]);
+
+      if (insertErr) {
+        console.error(insertErr);
+        setMsg("Database error: " + insertErr.message, "red");
+        uploadBtn.disabled = false;
+        return;
+      }
+
+      setMsg("Photo uploaded successfully. Gallery page me show ho jayegi.","green");
+      photoFileInput.value = "";
+      captionInput.value   = "";
+      visibleCheck.checked = true;
+      loadLatestPhotos();
+
+    } catch (err) {
+      console.error(err);
+      setMsg("Error uploading photo: " + err.message,"red");
+    }
+
+    uploadBtn.disabled = false;
+  }
+
+  uploadBtn.addEventListener("click", uploadPhoto);
+
+  // 🔹 Latest photos preview for admin
+  async function loadLatestPhotos(){
     previewList.innerHTML = "Loading...";
-    db.collection("gallery")
-      .orderBy("createdAt", "desc")
-      .limit(12)
-      .get()
-      .then(function(snapshot){
-        previewList.innerHTML = "";
-        snapshot.forEach(function(doc){
-          var d = doc.data();
-          var div = document.createElement("div");
-          div.className = "preview-item";
-          div.innerHTML = `
-            <img src="${d.url}" alt="img">
-            <div>${d.caption || ""}</div>
-            <div style="font-size:11px; color:${d.visible ? 'green':'red'};">
-              ${d.visible ? 'Visible' : 'Hidden'}
-            </div>
-          `;
-          previewList.appendChild(div);
-        });
-      })
-      .catch(function(err){
-        console.error(err);
-        previewList.innerHTML = "Error loading preview: " + err;
+
+    try {
+      const { data, error } = await sb
+        .from("gallery_items")
+        .select("*")
+        .order("created_at", { ascending:false })
+        .limit(12);
+
+      if (error) {
+        console.error(error);
+        previewList.innerHTML = "Error loading preview: " + error.message;
+        return;
+      }
+
+      if (!data || data.length === 0) {
+        previewList.innerHTML = "No photos uploaded yet.";
+        return;
+      }
+
+      previewList.innerHTML = "";
+      data.forEach(row => {
+        const div = document.createElement("div");
+        div.className = "preview-item";
+
+        const url = row.public_url || "";
+        const cap = row.caption || "";
+        const vis = row.visible !== false;
+
+        div.innerHTML = `
+          <img src="${url}" alt="img">
+          <div>${cap}</div>
+          <div style="font-size:11px; color:${vis ? 'green':'red'};">
+            ${vis ? 'Visible' : 'Hidden'}
+          </div>
+        `;
+        previewList.appendChild(div);
       });
+
+    } catch (err) {
+      console.error(err);
+      previewList.innerHTML = "Error loading preview: " + err.message;
+    }
   }
 
   loadLatestPhotos();
