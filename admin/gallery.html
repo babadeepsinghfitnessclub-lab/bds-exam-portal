@@ -28,10 +28,7 @@
       background:#1976d2; color:#fff;
       cursor:pointer; font-size:14px;
     }
-    button:disabled {
-      opacity:0.6;
-      cursor:not-allowed;
-    }
+    button:disabled { opacity:0.6; cursor:not-allowed; }
     .msg { margin-top:8px; font-size:13px; }
     .preview-list { margin-top:15px; display:flex; flex-wrap:wrap; gap:10px; }
     .preview-item {
@@ -41,11 +38,11 @@
       width:110px; height:110px; object-fit:cover;
       border-radius:6px; border:1px solid #ccc;
     }
-    .topbar-links a { margin-right:8px; font-size:13px; }
+    .topbar-links a { margin-right:8px; font-size:13px; text-decoration:none; color:#1976d2; }
   </style>
 
-  <!-- Supabase JS -->
-  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <!-- Supabase JS (browser) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.48.0/dist/umd/supabase.min.js"></script>
 </head>
 <body>
 
@@ -58,8 +55,8 @@
 
   <h1>Gallery Photo Upload</h1>
   <p style="font-size:13px;">
-    Yahan se jo photo upload karoge, woh <b>gallery.html</b> page par dikhengi.
-    Supabase me <code>gallery_items</code> table aur <code>gallery_photos</code> bucket use ho raha hai.
+    Yahan se jo photo upload karoge, woh <b>gallery.html</b> page par dikhengi.<br>
+    Supabase me <code>gallery_items</code> table aur <code>gallery</code> bucket use ho raha hai.
   </p>
 
   <label>Select Image File</label>
@@ -86,13 +83,12 @@
     window.location.href = "login.html";
   }
 
-  // Supabase config (tumhara project)
+  // 🔧 Supabase config
   const SUPABASE_URL = "https://yyymjhuwjvyykukfzqow.supabase.co";
-  const SUPABASE_ANON_KEY =
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl5eW1qaHV3anZ5eWt1a2Z6cW93Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2NzMzMjIsImV4cCI6MjA4MDI0OTMyMn0.Ja9Do4cwumTnXx2NGIRW8Ti3rKm4MBiLClQz0xjOtrQ";
+  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl5eW1qaHV3anZ5eWt1a2Z6cW93Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2NzMzMjIsImV4cCI6MjA4MDI0OTMyMn0.Ja9Do4cwumTnXx2NGIRW8Ti3rKm4MBiLClQz0xjOtrQ";
+  const BUCKET_NAME = "gallery";
 
-  const { createClient } = supabase;
-  const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
   const photoFileInput = document.getElementById("photoFile");
   const captionInput   = document.getElementById("captionInput");
@@ -101,133 +97,108 @@
   const msgBox         = document.getElementById("msgBox");
   const previewList    = document.getElementById("previewList");
 
-  function setMsg(text, color){
-    msgBox.style.color = color || "#000";
-    msgBox.textContent = text;
-  }
-
-  // 🔹 Photo upload function
-  async function uploadPhoto(){
-    const file    = photoFileInput.files[0];
+  uploadBtn.addEventListener("click", async () => {
+    const file = photoFileInput.files[0];
     const caption = captionInput.value.trim();
     const visible = visibleCheck.checked;
 
     if (!file) {
-      setMsg("Please select an image file.","red");
+      msgBox.style.color = "red";
+      msgBox.textContent = "Please select an image file.";
       return;
     }
 
+    msgBox.style.color = "#000";
+    msgBox.textContent = "Uploading photo, please wait...";
     uploadBtn.disabled = true;
-    setMsg("Uploading photo, please wait...","#000");
 
     try {
-      const filePath = "gallery/" + Date.now() + "_" + file.name;
+      // 1) Storage me file upload
+      const filePath = gallery/${Date.now()}_${file.name};
 
-      // 1) Supabase storage me upload
-      const { data: uploadData, error: uploadErr } = await sb
-        .storage
-        .from("gallery_photos")
-        .upload(filePath, file);
+      const { data: uploadData, error: uploadError } =
+        await supabase.storage.from(BUCKET_NAME).upload(filePath, file, {
+          upsert: true
+        });
 
-      if (uploadErr) {
-        console.error(uploadErr);
-        setMsg("File upload error: " + uploadErr.message, "red");
-        uploadBtn.disabled = false;
-        return;
+      if (uploadError) {
+        console.error(uploadError);
+        throw new Error(uploadError.message || "Upload failed");
       }
 
-      // 2) Public URL nikaalo
-      const { data: pub } = sb
-        .storage
-        .from("gallery_photos")
-        .getPublicUrl(filePath);
+      // 2) Public URL nikalna
+      const { data: publicData } =
+        supabase.storage.from(BUCKET_NAME).getPublicUrl(filePath);
 
-      const publicUrl = pub && pub.publicUrl ? pub.publicUrl : null;
+      const publicUrl = publicData.publicUrl;
 
-      if (!publicUrl) {
-        setMsg("Public URL generate nahi ho payi.", "red");
-        uploadBtn.disabled = false;
-        return;
-      }
-
-      // 3) Table me record insert karo
-      const { error: insertErr } = await sb
+      // 3) gallery_items table me row insert
+      const { error: insertError } = await supabase
         .from("gallery_items")
-        .insert([{
+        .insert({
+          caption: caption || null,
           file_path: filePath,
           public_url: publicUrl,
-          caption: caption || null,
-          visible: visible
-        }]);
+          visible: visible,
+          created_at: new Date().toISOString()
+        });
 
-      if (insertErr) {
-        console.error(insertErr);
-        setMsg("Database error: " + insertErr.message, "red");
-        uploadBtn.disabled = false;
-        return;
+      if (insertError) {
+        console.error(insertError);
+        throw new Error(insertError.message || "DB insert failed");
       }
 
-      setMsg("Photo uploaded successfully. Gallery page me show ho jayegi.","green");
+      msgBox.style.color = "green";
+      msgBox.textContent = "Photo uploaded successfully. Gallery page me show ho jayegi.";
+
       photoFileInput.value = "";
-      captionInput.value   = "";
+      captionInput.value = "";
       visibleCheck.checked = true;
+
       loadLatestPhotos();
 
     } catch (err) {
       console.error(err);
-      setMsg("Error uploading photo: " + err.message,"red");
+      msgBox.style.color = "red";
+      msgBox.textContent = "File upload error: " + err.message;
+    } finally {
+      uploadBtn.disabled = false;
     }
+  });
 
-    uploadBtn.disabled = false;
-  }
-
-  uploadBtn.addEventListener("click", uploadPhoto);
-
-  // 🔹 Latest photos preview for admin
-  async function loadLatestPhotos(){
+  async function loadLatestPhotos() {
     previewList.innerHTML = "Loading...";
 
-    try {
-      const { data, error } = await sb
-        .from("gallery_items")
-        .select("*")
-        .order("created_at", { ascending:false })
-        .limit(12);
+    const { data, error } = await supabase
+      .from("gallery_items")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(12);
 
-      if (error) {
-        console.error(error);
-        previewList.innerHTML = "Error loading preview: " + error.message;
-        return;
-      }
-
-      if (!data || data.length === 0) {
-        previewList.innerHTML = "No photos uploaded yet.";
-        return;
-      }
-
-      previewList.innerHTML = "";
-      data.forEach(row => {
-        const div = document.createElement("div");
-        div.className = "preview-item";
-
-        const url = row.public_url || "";
-        const cap = row.caption || "";
-        const vis = row.visible !== false;
-
-        div.innerHTML = `
-          <img src="${url}" alt="img">
-          <div>${cap}</div>
-          <div style="font-size:11px; color:${vis ? 'green':'red'};">
-            ${vis ? 'Visible' : 'Hidden'}
-          </div>
-        `;
-        previewList.appendChild(div);
-      });
-
-    } catch (err) {
-      console.error(err);
-      previewList.innerHTML = "Error loading preview: " + err.message;
+    if (error) {
+      console.error(error);
+      previewList.textContent = "Error loading preview: " + error.message;
+      return;
     }
+
+    if (!data || data.length === 0) {
+      previewList.textContent = "No photos uploaded yet.";
+      return;
+    }
+
+    previewList.innerHTML = "";
+    data.forEach(row => {
+      const div = document.createElement("div");
+      div.className = "preview-item";
+      div.innerHTML = `
+        <img src="${row.public_url}" alt="img">
+        <div>${row.caption || ""}</div>
+        <div style="font-size:11px; color:${row.visible ? "green" : "red"};">
+          ${row.visible ? "Visible" : "Hidden"}
+        </div>
+      `;
+      previewList.appendChild(div);
+    });
   }
 
   loadLatestPhotos();
