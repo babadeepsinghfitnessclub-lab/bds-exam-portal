@@ -60,6 +60,9 @@
       color: #ff8080;
     }
   </style>
+
+  <!-- Supabase JS -->
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
@@ -71,58 +74,77 @@
   <div id="status">Loading photos...</div>
   <div id="gallery"></div>
 
-  <!-- Firebase compat scripts -->
-  <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-firestore-compat.js"></script>
-
   <script>
-    // 🔹 Same config jo APPLY / ADMIN me use kar rahe ho
-    const firebaseConfig = {
-      apiKey: "AIzaSyC87KEyqV3BMDeIexM_kom2rR7AMQ67eQ8",
-      authDomain: "bds-exam-portal.firebaseapp.com",
-      projectId: "bds-exam-portal",
-      storageBucket: "bds-exam-portal.appspot.com",
-      messagingSenderId: "376704151840",
-      appId: "1:376704151840:web:1f530924b850e008434883"
-    };
+    // Supabase config (tumhara project)
+    const SUPABASE_URL = "https://yyymjhuwjvyykukfzqow.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl5eW1qaHV3anZ5eWt1a2Z6cW93Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2NzMzMjIsImV4cCI6MjA4MDI0OTMyMn0.Ja9Do4cwumTnXx2NGIRW8Ti3rKm4MBiLClQz0xjOtrQ";
 
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
+    const { createClient } = supabase;
+    const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     const statusEl  = document.getElementById("status");
     const galleryEl = document.getElementById("gallery");
 
-    function loadGallery() {
+    async function loadGallery() {
       statusEl.textContent = "Loading photos...";
 
-      db.collection("gallery")
-        .where("visible", "==", true)
-        .orderBy("createdAt", "desc")
-        .get()
-        .then((snapshot) => {
-          galleryEl.innerHTML = "";
-          if (snapshot.empty) {
-            statusEl.textContent = "Koi photo nahi mili. Admin se upload karwaen.";
-            return;
+      try {
+        // gallery_items table se sirf visible = true waale records lao
+        const { data, error } = await sb
+          .from("gallery_items")
+          .select("*")
+          .eq("visible", true)
+          .order("created_at", { ascending: false });
+
+        galleryEl.innerHTML = "";
+
+        if (error) {
+          console.error("Gallery error:", error);
+          statusEl.textContent = "Gallery load karne me error aaya. Thodi der baad try karein.";
+          return;
+        }
+
+        if (!data || data.length === 0) {
+          statusEl.textContent = "Koi photo nahi mili. Admin se upload karwaen.";
+          return;
+        }
+
+        statusEl.textContent = "";
+
+        for (const row of data) {
+          let imgUrl = row.public_url || "";
+
+          // Agar public_url nahi hai lekin file_path hai to bucket se URL banao
+          if (!imgUrl && row.file_path) {
+            const { data: pub } = sb
+              .storage
+              .from("gallery")
+              .getPublicUrl(row.file_path);
+
+            if (pub && pub.publicUrl) {
+              imgUrl = pub.publicUrl;
+            }
           }
 
-          statusEl.textContent = "";
+          if (!imgUrl) continue; // agar phir bhi URL nahi mila to skip
 
-          snapshot.forEach((doc) => {
-            const data = doc.data();
-            const card = document.createElement("div");
-            card.className = "photo-card";
-            card.innerHTML = `
-              <img src="${data.url}" alt="Gallery Image">
-              <div class="caption">${data.caption || ""}</div>
-            `;
-            galleryEl.appendChild(card);
-          });
-        })
-        .catch((err) => {
-          console.error("Gallery error:", err);
-          statusEl.textContent = "Gallery load karne me error aaya. Thodi der baad try karein.";
-        });
+          const card = document.createElement("div");
+          card.className = "photo-card";
+          card.innerHTML = `
+            <img src="${imgUrl}" alt="Gallery Image">
+            <div class="caption">${row.caption || ""}</div>
+          `;
+          galleryEl.appendChild(card);
+        }
+
+        if (!galleryEl.innerHTML.trim()) {
+          statusEl.textContent = "Abhi koi visible photo nahi hai.";
+        }
+
+      } catch (err) {
+        console.error("Gallery error:", err);
+        statusEl.textContent = "Gallery load karne me error aaya. Thodi der baad try karein.";
+      }
     }
 
     loadGallery();
