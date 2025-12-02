@@ -68,9 +68,6 @@
       box-shadow:0 0 15px rgba(0,0,0,.7);
     }
   </style>
-
-  <!-- Supabase JS -->
-  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
@@ -83,18 +80,14 @@
   <div class="card">
     <h1>Change Home Page Poster</h1>
     <p style="font-size:13px;color:#ffeaa7;">
-      Aap ya to <b>direct image URL</b> daal sakte hain, ya phir
-      <b>image file upload</b> kar sakte hain. Home page par poster
-      automatically update ho jayega.
+      Yahan par aap <b>poster image ka direct URL</b> (Supabase Storage / Google Drive / Imgbb / etc.) daal sakte hain.
+      Home page par ye poster automatically update ho jayega.
     </p>
 
     <label>Poster Image URL (https://...)</label>
-    <input type="text" id="posterUrl" placeholder="Direct image link (optional)">
+    <input type="text" id="posterUrl" placeholder="Direct image link">
 
-    <label style="margin-top:8px;">OR Upload Poster Image File</label>
-    <input type="file" id="posterFile" accept="image/*">
-
-    <button class="btn-primary" onclick="savePoster()">Save Poster</button>
+    <button class="btn-primary" id="saveBtn">Save Poster</button>
     <div id="msgBox"></div>
 
     <div id="preview">
@@ -104,151 +97,76 @@
   </div>
 </div>
 
+<!-- Supabase JS -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-  // 🔐 Admin guard
-  if(localStorage.getItem("bdsAdminLoggedIn")!=="yes"){
-    window.location.href="login.html";
-  }
-
-  // Supabase config
-  const SUPABASE_URL = "https://yyymjhuwjvyykukfzqow.supabase.co";
-  const SUPABASE_ANON_KEY =
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl5eW1qaHV3anZ5eWt1a2Z6cW93Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2NzMzMjIsImV4cCI6MjA4MDI0OTMyMn0.Ja9Do4cwumTnXx2NGIRW8Ti3rKm4MBiLClQz0xjOtrQ";
-
   const { createClient } = supabase;
-  const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-  const msgBox        = document.getElementById("msgBox");
-  const urlInput      = document.getElementById("posterUrl");
-  const fileInput     = document.getElementById("posterFile");
-  const previewImg    = document.getElementById("posterPreview");
+  const SUPABASE_URL = "https://yyymjhuwjvyykukfzqow.supabase.co";
+  const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl5eW1qaHV3anZ5eWt1a2Z6cW93Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2NzMzMjIsImV4cCI6MjA4MDI0OTMyMn0.Ja9Do4cwumTnXx2NGIRW8Ti3rKm4MBiLClQz0xjOtrQ";
 
-  let currentPosterId = null;
+  const db = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-  function showMsg(t,c){
-    msgBox.style.color = c || "#fff";
-    msgBox.innerHTML = t;
+  const urlInput = document.getElementById("posterUrl");
+  const previewImg = document.getElementById("posterPreview");
+  const msgBox = document.getElementById("msgBox");
+  const saveBtn = document.getElementById("saveBtn");
+
+  function showMsg(text, color){
+    msgBox.style.color = color || "#fff";
+    msgBox.innerHTML = text;
   }
 
-  // 🔹 Current poster load
   async function loadPoster(){
-    try {
-      const { data, error } = await sb
-        .from("home_poster")
-        .select("*")
-        .order("id", { ascending: true })
-        .limit(1);
+    try{
+      const { data, error } = await db
+        .from("flex_banners")
+        .select("image_url, created_at")
+        .order("created_at",{ ascending:false })
+        .limit(1)
+        .maybeSingle();
 
-      if (error) {
-        console.error(error);
-        return;
-      }
+      if(error) throw error;
 
-      if (data && data.length > 0) {
-        const row = data[0];
-        currentPosterId = row.id;
-        if (row.image_url) {
-          urlInput.value = row.image_url;
-          previewImg.src = row.image_url;
-        } else {
-          previewImg.src = "../flex.jpg";
-        }
-      } else {
-        // koi record nahi ⇒ default flex
+      if(data && data.image_url){
+        urlInput.value = data.image_url;
+        previewImg.src = data.image_url;
+      }else{
+        // table khali ho to default flex.jpg
         previewImg.src = "../flex.jpg";
       }
-    } catch (err) {
-      console.error(err);
+    }catch(err){
+      console.log("Load poster error:", err);
     }
   }
 
-  // 🔹 Save poster (URL ya file se)
   async function savePoster(){
-    const manualUrl = urlInput.value.trim();
-    const file      = fileInput.files[0];
-
-    if (!manualUrl && !file) {
-      alert("Ya to URL daalein, ya image file select karein.");
+    const url = urlInput.value.trim();
+    if(!url){
+      alert("Please enter poster image URL.");
       return;
     }
-
+    saveBtn.disabled = true;
     showMsg("Saving poster...", "#fff");
 
-    let finalUrl = manualUrl;
+    try{
+      const { error } = await db
+        .from("flex_banners")
+        .insert({ image_url: url });
 
-    try {
-      // Agar file diya hai to Supabase storage me upload
-      if (file) {
-        const filePath = "posters/" + Date.now() + "_" + file.name;
-
-        const { error: uploadErr } = await sb
-          .storage
-          .from("gallery_photos")   // same bucket jisme gallery images hai
-          .upload(filePath, file);
-
-        if (uploadErr) {
-          console.error(uploadErr);
-          showMsg("File upload error: " + uploadErr.message, "#ff8080");
-          return;
-        }
-
-        const { data: pub } = sb
-          .storage
-          .from("gallery_photos")
-          .getPublicUrl(filePath);
-
-        if (!pub || !pub.publicUrl) {
-          showMsg("Public URL generate nahi ho payi.", "#ff8080");
-          return;
-        }
-
-        finalUrl = pub.publicUrl;
-      }
-
-      // Extra safety
-      if (!finalUrl) {
-        showMsg("Poster URL empty hai.", "#ff8080");
-        return;
-      }
-
-      // Ab table me update/insert
-      if (currentPosterId) {
-        // update existing row
-        const { error: updErr } = await sb
-          .from("home_poster")
-          .update({ image_url: finalUrl })
-          .eq("id", currentPosterId);
-
-        if (updErr) {
-          console.error(updErr);
-          showMsg("DB update error: " + updErr.message, "#ff8080");
-          return;
-        }
-      } else {
-        // insert new row
-        const { data, error: insErr } = await sb
-          .from("home_poster")
-          .insert([{ image_url: finalUrl }])
-          .select()
-          .single();
-
-        if (insErr) {
-          console.error(insErr);
-          showMsg("DB insert error: " + insErr.message, "#ff8080");
-          return;
-        }
-        currentPosterId = data?.id || null;
-      }
+      if(error) throw error;
 
       showMsg("Poster updated successfully!","#22c55e");
-      previewImg.src = finalUrl;
-
-    } catch (err) {
+      previewImg.src = url;
+    }catch(err){
       console.error(err);
-      showMsg("Error: " + err.message, "#ff8080");
+      showMsg("Error: "+err.message,"#ff8080");
+    }finally{
+      saveBtn.disabled = false;
     }
   }
 
+  saveBtn.addEventListener("click", savePoster);
   loadPoster();
 </script>
 
