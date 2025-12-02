@@ -69,9 +69,8 @@
     }
   </style>
 
-  <!-- Firebase v8 -->
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <!-- Supabase JS -->
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
@@ -84,12 +83,16 @@
   <div class="card">
     <h1>Change Home Page Poster</h1>
     <p style="font-size:13px;color:#ffeaa7;">
-      Yahan par aap <b>poster image ka direct URL</b> (Google Drive / Imgbb / etc.) daal sakte hain.
-      Home page par ye poster automatically update ho jayega.
+      Aap ya to <b>direct image URL</b> daal sakte hain, ya phir
+      <b>image file upload</b> kar sakte hain. Home page par poster
+      automatically update ho jayega.
     </p>
 
     <label>Poster Image URL (https://...)</label>
-    <input type="text" id="posterUrl" placeholder="Direct image link">
+    <input type="text" id="posterUrl" placeholder="Direct image link (optional)">
+
+    <label style="margin-top:8px;">OR Upload Poster Image File</label>
+    <input type="file" id="posterFile" accept="image/*">
 
     <button class="btn-primary" onclick="savePoster()">Save Poster</button>
     <div id="msgBox"></div>
@@ -102,58 +105,148 @@
 </div>
 
 <script>
-  var firebaseConfig = {
-    apiKey: "AIzaSyC87KEyqV3BMDeIexM_kom2rR7AMQ67eQ8",
-    authDomain: "bds-exam-portal.firebaseapp.com",
-    projectId: "bds-exam-portal",
-    storageBucket: "bds-exam-portal.appspot.com",
-    messagingSenderId: "376704151840",
-    appId: "1:376704151840:web:1f530924b850e008434883"
-  };
-  if (!firebase.apps.length) {
-    firebase.initializeApp(firebaseConfig);
+  // 🔐 Admin guard
+  if(localStorage.getItem("bdsAdminLoggedIn")!=="yes"){
+    window.location.href="login.html";
   }
-  var db = firebase.firestore();
+
+  // Supabase config
+  const SUPABASE_URL = "https://yyymjhuwjvyykukfzqow.supabase.co";
+  const SUPABASE_ANON_KEY =
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl5eW1qaHV3anZ5eWt1a2Z6cW93Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2NzMzMjIsImV4cCI6MjA4MDI0OTMyMn0.Ja9Do4cwumTnXx2NGIRW8Ti3rKm4MBiLClQz0xjOtrQ";
+
+  const { createClient } = supabase;
+  const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  const msgBox        = document.getElementById("msgBox");
+  const urlInput      = document.getElementById("posterUrl");
+  const fileInput     = document.getElementById("posterFile");
+  const previewImg    = document.getElementById("posterPreview");
+
+  let currentPosterId = null;
 
   function showMsg(t,c){
-    var m = document.getElementById("msgBox");
-    m.style.color = c || "#fff";
-    m.innerHTML = t;
+    msgBox.style.color = c || "#fff";
+    msgBox.innerHTML = t;
   }
 
-  function loadPoster(){
-    db.collection("meta").doc("homePoster").get()
-      .then(function(doc){
-        if(doc.exists && doc.data().url){
-          document.getElementById("posterUrl").value = doc.data().url;
-          document.getElementById("posterPreview").src = doc.data().url;
-        }else{
-          document.getElementById("posterPreview").src = "../flex.jpg";
+  // 🔹 Current poster load
+  async function loadPoster(){
+    try {
+      const { data, error } = await sb
+        .from("home_poster")
+        .select("*")
+        .order("id", { ascending: true })
+        .limit(1);
+
+      if (error) {
+        console.error(error);
+        return;
+      }
+
+      if (data && data.length > 0) {
+        const row = data[0];
+        currentPosterId = row.id;
+        if (row.image_url) {
+          urlInput.value = row.image_url;
+          previewImg.src = row.image_url;
+        } else {
+          previewImg.src = "../flex.jpg";
         }
-      })
-      .catch(function(err){
-        console.error(err);
-      });
+      } else {
+        // koi record nahi ⇒ default flex
+        previewImg.src = "../flex.jpg";
+      }
+    } catch (err) {
+      console.error(err);
+    }
   }
 
-  function savePoster(){
-    var url = document.getElementById("posterUrl").value.trim();
-    if(!url){
-      alert("Please enter poster image URL.");
+  // 🔹 Save poster (URL ya file se)
+  async function savePoster(){
+    const manualUrl = urlInput.value.trim();
+    const file      = fileInput.files[0];
+
+    if (!manualUrl && !file) {
+      alert("Ya to URL daalein, ya image file select karein.");
       return;
     }
-    showMsg("Saving poster...");
 
-    db.collection("meta").doc("homePoster").set({
-      url: url,
-      updatedAt: new Date()
-    },{merge:true}).then(function(){
+    showMsg("Saving poster...", "#fff");
+
+    let finalUrl = manualUrl;
+
+    try {
+      // Agar file diya hai to Supabase storage me upload
+      if (file) {
+        const filePath = "posters/" + Date.now() + "_" + file.name;
+
+        const { error: uploadErr } = await sb
+          .storage
+          .from("gallery_photos")   // same bucket jisme gallery images hai
+          .upload(filePath, file);
+
+        if (uploadErr) {
+          console.error(uploadErr);
+          showMsg("File upload error: " + uploadErr.message, "#ff8080");
+          return;
+        }
+
+        const { data: pub } = sb
+          .storage
+          .from("gallery_photos")
+          .getPublicUrl(filePath);
+
+        if (!pub || !pub.publicUrl) {
+          showMsg("Public URL generate nahi ho payi.", "#ff8080");
+          return;
+        }
+
+        finalUrl = pub.publicUrl;
+      }
+
+      // Extra safety
+      if (!finalUrl) {
+        showMsg("Poster URL empty hai.", "#ff8080");
+        return;
+      }
+
+      // Ab table me update/insert
+      if (currentPosterId) {
+        // update existing row
+        const { error: updErr } = await sb
+          .from("home_poster")
+          .update({ image_url: finalUrl })
+          .eq("id", currentPosterId);
+
+        if (updErr) {
+          console.error(updErr);
+          showMsg("DB update error: " + updErr.message, "#ff8080");
+          return;
+        }
+      } else {
+        // insert new row
+        const { data, error: insErr } = await sb
+          .from("home_poster")
+          .insert([{ image_url: finalUrl }])
+          .select()
+          .single();
+
+        if (insErr) {
+          console.error(insErr);
+          showMsg("DB insert error: " + insErr.message, "#ff8080");
+          return;
+        }
+        currentPosterId = data?.id || null;
+      }
+
       showMsg("Poster updated successfully!","#22c55e");
-      document.getElementById("posterPreview").src = url;
-    }).catch(function(err){
+      previewImg.src = finalUrl;
+
+    } catch (err) {
       console.error(err);
-      showMsg("Error: "+err,"#ff8080");
-    });
+      showMsg("Error: " + err.message, "#ff8080");
+    }
   }
 
   loadPoster();
