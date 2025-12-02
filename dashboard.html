@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Student Dashboard | BDS Exam Portal</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { font-family: Arial, sans-serif; background:#f5f5f5; margin:0; }
+    .topbar {
+      background:#b20c0c; color:#fff; padding:10px 15px;
+      display:flex; justify-content:space-between; align-items:center;
+    }
+    .container {
+      max-width:800px; margin:20px auto; background:#fff;
+      padding:15px 20px; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,0.1);
+    }
+    h2 { margin-top:0; color:#b20c0c; }
+    button {
+      padding:8px 14px; border:none; border-radius:4px; cursor:pointer;
+      margin-right:10px;
+    }
+    .primary { background:#b20c0c; color:#fff; }
+    .secondary { background:#ddd; }
+    .statusBox {
+      padding:10px; border-radius:6px; background:#eef5ff;
+      border:1px solid #c5d9ff; margin-top:10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <div><b>BDS Exam Portal</b></div>
+    <div>
+      <button class="secondary" id="logoutBtn">Logout</button>
+    </div>
+  </div>
+
+  <div class="container">
+    <h2>Student Dashboard</h2>
+    <p id="welcomeText">Loading student info...</p>
+
+    <div class="statusBox">
+      <p id="applicationStatus">Form Status: (abhi apply page connect nahi kiya)</p>
+    </div>
+
+    <div style="margin-top:15px;">
+      <button class="primary" id="applyBtn">Apply for Exam</button>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import {
+      getFirestore, doc, getDoc
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyASkExcBlvX0vijgyT2cWfSuQvZUziM198",
+      authDomain: "bds-exam-portal.firebaseapp.com",
+      projectId: "bds-exam-portal",
+      storageBucket: "bds-exam-portal.firebasestorage.app",
+      messagingSenderId: "937670115018",
+      appId: "1:937670115018:web:226030b502b7fd79487e33"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db  = getFirestore(app);
+
+    const welcomeTextEl = document.getElementById('welcomeText');
+    const logoutBtn     = document.getElementById('logoutBtn');
+    const applyBtn      = document.getElementById('applyBtn');
+
+    // 1) Check login
+    const studentId = localStorage.getItem("studentId");
+
+    if (!studentId) {
+      // Not logged in → login page
+      window.location.href = "login.html";
+    } else {
+      loadStudentInfo(studentId);
+    }
+
+    async function loadStudentInfo(id) {
+      try {
+        const ref = doc(db, "students", id);
+        const snap = await getDoc(ref);
+        if (snap.exists()) {
+          const data = snap.data();
+          welcomeTextEl.textContent = Welcome, ${data.name} (Mobile: ${data.mobile});
+        } else {
+          welcomeTextEl.textContent = "Student record not found. Please login again.";
+          localStorage.removeItem("studentId");
+        }
+      } catch (err) {
+        console.error(err);
+        welcomeTextEl.textContent = "Error loading student data.";
+      }
+    }
+
+    logoutBtn.addEventListener('click', () => {
+      localStorage.removeItem("studentId");
+      window.location.href = "login.html";
+    });
+
+    applyBtn.addEventListener('click', () => {
+      // baad me yahan apply.html pe bhejenge
+      window.location.href = "apply.html";
+    });
+  </script>
+</body>
+</html>
