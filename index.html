@@ -141,6 +141,9 @@
       nav a{margin:0 6px;}
     }
   </style>
+
+  <!-- Supabase JS -->
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
@@ -153,7 +156,7 @@
   <a href="result.html">RESULT</a>
   <a href="download.html">DOWNLOAD</a>
   <a href="help.html">HELP</a>
-  <a href="admin/login.html">ADMIN</a>
+  <a href="admin.html">ADMIN</a>
 </nav>
 
 <div class="main">
@@ -166,19 +169,20 @@
     </div>
 
     <ul class="points">
-      <li>1st Prize ₹51,000 • 2nd Prize ₹21,000 • 3rd Prize ₹11,000</li>
+      <li>1st Prize ₹51,000 • 2nd Prize ₹21,000 • 3rd Prize ₹9,900</li>
       <li>Rank 4 to 21: ₹5100 (Consolation Award)</li>
       <li>First 500 registered students will get a certificate.</li>
-      <li>Exam Date: 08 February 2026</li>
+      <li>Exam Date: February 2026</li>
       <li>Registration Fee: ₹200 Only</li>
     </ul>
 
     <a href="apply.html" class="btn-apply">Apply Now</a>
   </div>
 
-  <!-- RIGHT POSTER -->
+  <!-- RIGHT POSTER + NOTICES -->
   <div class="right">
-    <img src="flex.jpg" alt="Scholarship Poster" class="poster">
+    <!-- Poster image Supabase se aayega -->
+    <img id="mainPoster" src="flex.jpg" alt="Scholarship Poster" class="poster">
 
     <div class="notice-wrap">
       <div class="notice-card">
@@ -195,58 +199,102 @@
   © 2026 Baba Deep Singh Mega Talent Hub • Sangariya, District Hanumangarh (335063)
 </footer>
 
-<!-- FIREBASE — LOAD NOTICES -->
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-  import { getFirestore, collection, getDocs }
-    from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+<script>
+  // Supabase config
+  const SUPABASE_URL = "https://yyymjhuwjvyykukfzqow.supabase.co";
+  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl5eW1qaHV3anZ5eWt1a2Z6cW93Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2NzMzMjIsImV4cCI6MjA4MDI0OTMyMn0.Ja9Do4cwumTnXx2NGIRW8Ti3rKm4MBiLClQz0xjOtrQ";
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyAxxEcKxI-V8vigjYZ6wFSuQyZUziM198",
-    authDomain: "bds-exam-portal.firebaseapp.com",
-    projectId: "bds-exam-portal",
-    storageBucket: "bds-exam-portal.appspot.com",
-    messagingSenderId: "937670115018",
-    appId: "1:937670115018:web:15392c01586dc8a8407e33"
-  };
+  const { createClient } = supabase;
+  const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-  const app = initializeApp(firebaseConfig);
-  const db  = getFirestore(app);
+  const noticeUl = document.getElementById("noticeList");
+  const posterImg = document.getElementById("mainPoster");
 
+  // 🔹 Latest Notices from "notices" table
   async function loadNotices(){
-    const ul = document.getElementById("noticeList");
-    ul.innerHTML = "<li>Loading notices...</li>";
+    noticeUl.innerHTML = "<li>Loading notices...</li>";
 
     try{
-      // simple: saare documents le rahe hain, koi extra filter nahi
-      const snap = await getDocs(collection(db,"notices"));
+      const { data, error } = await sb
+        .from("notices")
+        .select("*")
+        .eq("active", true)
+        .order("created_at", { ascending: false });
 
-      ul.innerHTML = "";
-      if(snap.empty){
-        ul.innerHTML = "<li>No notices found.</li>";
+      if (error) {
+        console.log("Notice load error:", error);
+        noticeUl.innerHTML = "<li>Error loading notices.</li>";
         return;
       }
 
-      snap.forEach(docu=>{
-        const d = docu.data();
-        // agar active field false hai to skip
-        if(d.active === false) return;
+      noticeUl.innerHTML = "";
+      if (!data || data.length === 0) {
+        noticeUl.innerHTML = "<li>No active notices.</li>";
+        return;
+      }
 
+      data.forEach(d => {
         const li = document.createElement("li");
-        li.textContent = (d.title || "Notice") + " — " + (d.body || "");
-        ul.appendChild(li);
+        const title = d.title || "Notice";
+        const body  = d.body  || "";
+        li.textContent = title + " — " + body;
+        noticeUl.appendChild(li);
       });
 
-      if(!ul.innerHTML){
-        ul.innerHTML = "<li>No active notices.</li>";
+      if (!noticeUl.innerHTML.trim()) {
+        noticeUl.innerHTML = "<li>No active notices.</li>";
       }
     }catch(err){
       console.log("Notice load error:", err);
-      ul.innerHTML = "<li>Error loading notices.</li>";
+      noticeUl.innerHTML = "<li>Error loading notices.</li>";
+    }
+  }
+
+  // 🔹 Main Poster from "flex_banners" + "flex" bucket
+  async function loadMainPoster() {
+    try {
+      const { data, error } = await sb
+        .from("flex_banners")
+        .select("*")
+        .eq("visible", true)
+        .order("priority", { ascending: true })
+        .order("created_at", { ascending: false })
+        .limit(1);
+
+      if (error) {
+        console.log("Flex load error:", error);
+        return; // fallback flex.jpg rahega
+      }
+
+      if (!data || data.length === 0) {
+        return; // koi active banner nahi → default flex.jpg hi dikhega
+      }
+
+      const banner = data[0];
+
+      let imgUrl = banner.public_url || "";
+
+      // Agar public_url empty hai par file_path hai, to storage se URL banao
+      if (!imgUrl && banner.file_path) {
+        const { data: pub } = sb
+          .storage
+          .from("flex")
+          .getPublicUrl(banner.file_path);
+        if (pub && pub.publicUrl) {
+          imgUrl = pub.publicUrl;
+        }
+      }
+
+      if (imgUrl) {
+        posterImg.src = imgUrl;
+      }
+    } catch (err) {
+      console.log("Poster load error:", err);
     }
   }
 
   loadNotices();
+  loadMainPoster();
 </script>
 
 </body>
