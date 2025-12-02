@@ -23,8 +23,10 @@
     .secondary { background:#ddd; }
     .statusBox {
       padding:10px; border-radius:6px; background:#eef5ff;
-      border:1px solid #c5d9ff; margin-top:10px;
+      border:1px solid #c5d9ff; margin-top:10px; font-size:14px;
     }
+    .status-label { font-weight:bold; }
+    .status-value { font-weight:bold; }
   </style>
 </head>
 <body>
@@ -39,8 +41,13 @@
     <h2>Student Dashboard</h2>
     <p id="welcomeText">Loading student info...</p>
 
+    <!-- 🔔 Notification / Status Bar -->
     <div class="statusBox">
-      <p id="applicationStatus">Form Status: (abhi apply page connect nahi kiya)</p>
+      <div id="applicationStatus">
+        Form Status: <span class="status-value">Loading...</span><br>
+        Payment Status: <span class="status-value">Loading...</span><br>
+        Roll Number: <span class="status-value">Loading...</span>
+      </div>
     </div>
 
     <div style="margin-top:15px;">
@@ -51,7 +58,8 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import {
-      getFirestore, doc, getDoc
+      getFirestore, doc, getDoc,
+      collection, query, where, orderBy, limit, onSnapshot
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -69,24 +77,26 @@
     const welcomeTextEl = document.getElementById('welcomeText');
     const logoutBtn     = document.getElementById('logoutBtn');
     const applyBtn      = document.getElementById('applyBtn');
+    const applicationStatusEl = document.getElementById('applicationStatus');
 
     // 1) Check login
-    const studentId = localStorage.getItem("studentId");
+    const studentId = localStorage.getItem("studentId"); // yahi mobile number hai
 
     if (!studentId) {
-      // Not logged in → login page
       window.location.href = "login.html";
     } else {
       loadStudentInfo(studentId);
+      listenApplicationStatus(studentId);
     }
 
+    // Student basic info (registration wale students doc se)
     async function loadStudentInfo(id) {
       try {
         const ref = doc(db, "students", id);
         const snap = await getDoc(ref);
         if (snap.exists()) {
           const data = snap.data();
-          welcomeTextEl.textContent = Welcome, ${data.name} (Mobile: ${data.mobile});
+          welcomeTextEl.textContent = Welcome, ${data.name || 'Student'} (Mobile: ${data.mobile || id});
         } else {
           welcomeTextEl.textContent = "Student record not found. Please login again.";
           localStorage.removeItem("studentId");
@@ -97,13 +107,52 @@
       }
     }
 
+    // 🔔 Application Status Listener
+    function listenApplicationStatus(mobile) {
+      // Yahan hum students collection me se woh documents dhund rahe hain
+      // jo APPLY form se bane (jisme rollNumber + status + paymentVerified hoga)
+      const q = query(
+        collection(db, "students"),
+        where("mobile", "==", mobile),
+        orderBy("createdAt", "desc"),
+        limit(1)
+      );
+
+      onSnapshot(q, (snapshot) => {
+        if (snapshot.empty) {
+          applicationStatusEl.innerHTML =
+            'Form Status: <span class="status-value">Abhi tak form apply nahi kiya.</span><br>' +
+            'Payment Status: <span class="status-value">-</span><br>' +
+            'Roll Number: <span class="status-value">-</span>';
+          return;
+        }
+
+        const docSnap = snapshot.docs[0];
+        const data = docSnap.data();
+
+        const formStatus = data.status || "Pending";
+        const paymentStatus = data.paymentVerified ? "Verified" : "Pending";
+        const rollNumber = data.rollNumber || "Not Generated";
+
+        applicationStatusEl.innerHTML =
+          'Form Status: <span class="status-value">'+ formStatus +'</span><br>' +
+          'Payment Status: <span class="status-value">'+ paymentStatus +'</span><br>' +
+          'Roll Number: <span class="status-value">'+ rollNumber +'</span>';
+      }, (error) => {
+        console.error("Error listening status:", error);
+        applicationStatusEl.innerHTML =
+          'Form Status: <span class="status-value">Error loading status</span><br>' +
+          'Payment Status: <span class="status-value">-</span><br>' +
+          'Roll Number: <span class="status-value">-</span>';
+      });
+    }
+
     logoutBtn.addEventListener('click', () => {
       localStorage.removeItem("studentId");
       window.location.href = "login.html";
     });
 
     applyBtn.addEventListener('click', () => {
-      // baad me yahan apply.html pe bhejenge
       window.location.href = "apply.html";
     });
   </script>
