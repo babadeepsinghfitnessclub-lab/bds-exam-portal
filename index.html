@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <title>BDS Mega Talent Hub | Home</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <style>
     *{box-sizing:border-box;margin:0;padding:0;}
     body{
@@ -11,15 +12,12 @@
       background: radial-gradient(circle at top, #003f8f, #000820);
       color:#fff;
     }
-
-    /* TOP BAR + NAV */
     header{
       background:rgba(0,0,0,0.7);
       padding:10px 15px;
       border-bottom:2px solid #ffb400;
       text-align:center;
       font-weight:700;
-      letter-spacing:1px;
       font-size:18px;
     }
     nav{
@@ -36,11 +34,9 @@
       text-decoration:none;
       font-size:13px;
       font-weight:bold;
-      margin:0 4px;
     }
     nav a:hover{text-decoration:underline;}
 
-    /* MAIN LAYOUT */
     .main{
       max-width:1000px;
       margin:15px auto 40px;
@@ -48,28 +44,14 @@
       display:flex;
       flex-wrap:wrap;
       gap:15px;
-      align-items:flex-start;
       justify-content:center;
     }
+    .left{flex:1 1 260px;text-align:left;}
+    .right{flex:1 1 260px;text-align:center;}
 
-    .left{
-      flex:1 1 260px;
-      text-align:left;
-    }
-    .right{
-      flex:1 1 260px;
-      text-align:center;
-    }
+    .headline{font-size:22px;font-weight:700;margin-bottom:6px;}
+    .subline{font-size:13px;margin-bottom:6px;}
 
-    .headline{
-      font-size:22px;
-      font-weight:700;
-      margin-bottom:5px;
-    }
-    .subline{
-      font-size:13px;
-      margin-bottom:8px;
-    }
     ul.points{
       font-size:13px;
       margin-left:18px;
@@ -85,8 +67,8 @@
       border-radius:20px;
       font-weight:700;
       font-size:13px;
+      margin-top:8px;
       text-decoration:none;
-      margin-bottom:10px;
     }
     .btn-apply:hover{background:#ffe866;}
 
@@ -98,9 +80,7 @@
       box-shadow:0 0 18px rgba(0,0,0,0.9);
     }
 
-    /* NOTICES */
     .notice-wrap{
-      width:100%;
       margin-top:15px;
       text-align:center;
     }
@@ -109,77 +89,54 @@
       margin:0 auto;
       background:rgba(0,0,0,0.65);
       border-radius:12px;
-      padding:8px 12px 12px;
-      border:1px solid rgba(255,255,255,0.2);
+      padding:8px 12px;
     }
     .notice-header{
       background:linear-gradient(90deg,#ff0078,#ffa800);
       padding:4px 10px;
       border-radius:999px;
-      display:inline-block;
       font-size:13px;
-      font-weight:700;
+      font-weight:bold;
       margin-bottom:6px;
+      display:inline-block;
     }
     #noticeList{
       list-style:none;
-      padding-left:0;
-      text-align:left;
       font-size:13px;
+      text-align:left;
     }
-    #noticeList li{
-      padding:3px 0;
-    }
+    #noticeList li{margin:3px 0;}
 
-    /* HOME GALLERY PREVIEW */
     .gallery-section{
       max-width:1000px;
-      margin:0 auto 20px;
+      margin:0 auto 25px;
       padding:0 10px;
     }
     .gallery-title{
-      font-size:16px;
-      font-weight:700;
+      font-size:16px;font-weight:bold;
       margin-bottom:6px;
     }
     .gallery-grid{
       display:flex;
       flex-wrap:wrap;
       gap:8px;
-      justify-content:flex-start;
     }
     .gallery-item{
-      width:90px;
-      height:90px;
+      width:90px;height:90px;
       border-radius:8px;
       overflow:hidden;
-      border:1px solid rgba(255,255,255,0.3);
+      border:1px solid rgba(255,255,255,0.4);
     }
     .gallery-item img{
-      width:100%;
-      height:100%;
-      object-fit:cover;
-      display:block;
-    }
-    .gallery-msg{
-      font-size:12px;
-      opacity:0.9;
-      margin-bottom:6px;
+      width:100%;height:100%;object-fit:cover;
     }
 
     footer{
-      background:rgba(0,0,0,0.8);
+      background:#000c;
       text-align:center;
-      padding:10px;
       font-size:11px;
-      color:#dddddd;
-    }
-
-    @media(max-width:700px){
-      header{font-size:15px;}
-      .headline{font-size:19px;}
-      nav{gap:6px;}
-      nav a{margin:0;}
+      padding:10px;
+      color:#ddd;
     }
   </style>
 </head>
@@ -189,8 +146,7 @@
 
 <nav>
   <a href="index.html">HOME</a>
-  <a href="register.html">REGISTER</a>
-  <a href="login.html">STUDENT LOGIN</a>
+  <a href="apply.html">APPLY</a>
   <a href="admit.html">ADMIT CARD</a>
   <a href="result.html">RESULT</a>
   <a href="download.html">DOWNLOAD</a>
@@ -200,170 +156,112 @@
 </nav>
 
 <div class="main">
-  <!-- LEFT TEXT -->
+
   <div class="left">
     <div class="headline">Future Achievers Scholarship Exam 2026</div>
-    <div class="subline">
-      Show your talent &amp; win exciting cash prizes. Eligibility: 10th Pass /
-      Students preparing competition exams.
-    </div>
-
+    <div class="subline">Show your talent & win exciting prizes.</div>
     <ul class="points">
-      <li>1st Prize ₹51,000 • 2nd Prize ₹21,000 • 3rd Prize ₹9,900</li>
-      <li>Rank 4 to 21: ₹5100 (Consolation Award)</li>
-      <li>First 500 registered students will get a certificate.</li>
-      <li>Exam Date: February 2026</li>
-      <li>Registration Fee: ₹200 Only</li>
+      <li>Huge Cash Prizes</li>
+      <li>500+ Certificates</li>
+      <li>Exam Feb 2026</li>
     </ul>
 
-    <!-- Apply button ab login/registration check karega -->
-    <a href="#" class="btn-apply" id="btnApply">Apply Now</a>
+    <a class="btn-apply" id="btnApply">Apply Now</a>
   </div>
 
-  <!-- RIGHT POSTER + NOTICES -->
   <div class="right">
-    <img id="heroPoster" src="flex.jpg" alt="Scholarship Poster" class="poster">
+    <img id="heroPoster" class="poster" src="flex.jpg">
 
     <div class="notice-wrap">
       <div class="notice-card">
         <div class="notice-header">📢 Latest Notices</div>
-        <ul id="noticeList">
-          <li>Loading notices...</li>
-        </ul>
+        <ul id="noticeList"><li>Loading...</li></ul>
       </div>
     </div>
   </div>
+
 </div>
 
-<!-- HOME GALLERY PREVIEW -->
 <div class="gallery-section">
-  <div class="gallery-title">📸 Exam &amp; Event Gallery (Preview)</div>
-  <div class="gallery-msg">Latest photos yahan dikhengi. Puri gallery dekhne ke liye upar GALLERY par click karein.</div>
-  <div id="homeGallery" class="gallery-grid">
-    <!-- JS se thumbs aayenge -->
-  </div>
+  <div class="gallery-title">📸 Latest Gallery Photos</div>
+  <div id="homeGallery" class="gallery-grid"></div>
 </div>
 
 <footer>
-  © 2026 Baba Deep Singh Mega Talent Hub • Sangariya, District Hanumangarh (335063)
+  © 2026 Baba Deep Singh Mega Talent Hub
 </footer>
 
-<!-- SUPABASE JS -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.48.0/dist/umd/supabase.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-  // 👉 Tumhara Supabase project
-  const SUPABASE_URL = "https://yyymjhuwjvyykukfzqow.supabase.co";
-  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl5eW1qaHV3anZ5eWt1a2Z6cW93Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2NzMzMjIsImV4cCI6MjA4MDI0OTMyMn0.Ja9Do4cwumTnXx2NGIRW8Ti3rKm4MBiLClQz0xjOtrQ";
+const sb = supabase.createClient(
+  "https://yyymjhuwjvyykukfzqow.supabase.co",
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl5eW1qaHV3anZ5eWt1a2Z6cW93Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2NzMzMjIsImV4cCI6MjA4MDI0OTMyMn0.Ja9Do4cwumTnXx2NGIRW8Ti3rKm4MBiLClQz0xjOtrQ"
+);
 
-  const { createClient } = supabase;
-  const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+document.getElementById("btnApply").onclick = ()=>{
+  window.location.href="apply.html";
+};
 
-  // 🔹 Apply Now button logic: pehle registration / login
-  document.getElementById("btnApply").addEventListener("click", function(e){
-    e.preventDefault();
-    const studentId = localStorage.getItem("studentId");
-    if (studentId) {
-      // already logged in → dashboard
-      window.location.href = "dashboard.html";
-    } else {
-      // pehle registration
-      window.location.href = "register.html";
-    }
+async function loadPoster(){
+  const { data } = await sb
+    .from("flex_banners")
+    .select("image_url")
+    .order("created_at",{ ascending:false })
+    .limit(1);
+
+  if(data && data.length && data[0].image_url){
+    document.getElementById("heroPoster").src = data[0].image_url;
+  }
+}
+
+async function loadNotices(){
+  const ul = document.getElementById("noticeList");
+  const { data } = await sb
+    .from("notices")
+    .select("*")
+    .eq("active", true)
+    .order("created_at",{ ascending:false })
+    .limit(6);
+
+  ul.innerHTML = "";
+
+  if(!data || !data.length){
+    ul.innerHTML = "<li>No active notices</li>";
+    return;
+  }
+
+  data.forEach(n=>{
+    ul.innerHTML += `<li>${n.title} - ${n.body}</li>`;
   });
+}
 
-  // 🔹 Home poster (flex_banners table se)
-  async function loadPoster(){
-    const img = document.getElementById("heroPoster");
-    try{
-      const { data, error } = await sb
-        .from("flex_banners")
-        .select("public_url")
-        .eq("visible", true)
-        .order("priority", { ascending: true })
-        .order("created_at", { ascending: false })
-        .limit(1);
+async function loadGallery(){
+  const area = document.getElementById("homeGallery");
+  const { data } = await sb
+    .from("gallery_items")
+    .select("public_url")
+    .eq("visible", true)
+    .order("created_at",{ ascending:false })
+    .limit(8);
 
-      if(error){ console.log("poster error", error); return; }
-      if(data && data.length && data[0].public_url){
-        img.src = data[0].public_url;
-      }
-    }catch(err){
-      console.log("poster load error:", err);
-    }
+  area.innerHTML = "";
+
+  if(!data || !data.length){
+    area.innerHTML = "<div style='font-size:11px'>No photos yet</div>";
+    return;
   }
 
-  // 🔹 Notices (notices table)
-  async function loadNotices(){
-    const ul = document.getElementById("noticeList");
-    ul.innerHTML = "<li>Loading notices...</li>";
-    try{
-      const { data, error } = await sb
-        .from("notices")
-        .select("title, body, active, created_at")
-        .order("created_at", { ascending:false })
-        .limit(10);
+  data.forEach(g=>{
+    area.innerHTML += `
+      <div class="gallery-item">
+          <img src="${g.public_url}">
+      </div>`;
+  });
+}
 
-      if(error) throw error;
-
-      ul.innerHTML = "";
-      if(!data || !data.length){
-        ul.innerHTML = "<li>No active notices.</li>";
-        return;
-      }
-
-      data.forEach(n=>{
-        if(n.active === false) return;
-        const li = document.createElement("li");
-        li.textContent = (n.title || "Notice") + " — " + (n.body || "");
-        ul.appendChild(li);
-      });
-
-      if(!ul.innerHTML){
-        ul.innerHTML = "<li>No active notices.</li>";
-      }
-    }catch(err){
-      console.log("notice load error:", err);
-      ul.innerHTML = "<li>Error loading notices.</li>";
-    }
-  }
-
-  // 🔹 Home gallery preview (gallery_items table)
-  async function loadHomeGallery(){
-    const wrap = document.getElementById("homeGallery");
-    wrap.innerHTML = "<div class='gallery-msg'>Loading photos...</div>";
-    try{
-      const { data, error } = await sb
-        .from("gallery_items")
-        .select("public_url, caption, visible, created_at")
-        .eq("visible", true)
-        .order("created_at", { ascending:false })
-        .limit(8);
-
-      if(error) throw error;
-
-      wrap.innerHTML = "";
-      if(!data || !data.length){
-        wrap.innerHTML = "<div class='gallery-msg'>Gallery update ke baad yahan photos dikhenge.</div>";
-        return;
-      }
-
-      data.forEach(item=>{
-        if(!item.public_url) return;
-        const div = document.createElement("div");
-        div.className = "gallery-item";
-        div.innerHTML = <img src="${item.public_url}" alt="Gallery">;
-        wrap.appendChild(div);
-      });
-    }catch(err){
-      console.log("gallery load error:", err);
-      wrap.innerHTML = "<div class='gallery-msg'>Gallery load karne me error aaya.</div>";
-    }
-  }
-
-  // 🔽 Sab kuch load
-  loadPoster();
-  loadNotices();
-  loadHomeGallery();
+loadPoster();
+loadNotices();
+loadGallery();
 </script>
 
 </body>
