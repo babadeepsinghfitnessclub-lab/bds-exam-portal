@@ -198,8 +198,8 @@
     <h1>Download Admit Card</h1>
     <p style="font-size:13px;color:#ffeaa7;">
       Admit card sirf unhi students ka show hoga jinka payment organizer ki taraf se
-      <b>verify</b> ho chuka hai aur jinke liye exam centre final karke
-      <b>admit card activate</b> kar diya gaya hai.
+      <b>approve</b> ho chuka hai aur jinke liye exam centre final karke admit card
+      activate kar diya gaya hai.
     </p>
 
     <label>Roll Number</label>
@@ -232,13 +232,13 @@
   const { createClient } = supabase;
   const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-  // STATIC EXAM DETAILS (date/time same sabke liye)
+  // Static exam detail (date/time etc.)
   const EXAM_DETAILS = {
     examName: "Future Achievers Scholarship Exam 2026",
     examDate: "08/02/2026",
     reportingTime: "09:00 AM",
     examTime: "10:00 AM – 12:00 PM",
-    defaultCentre: "Baba Deep Singh Mega Talent Hub, Sangariya"
+    fallbackCentre: "Baba Deep Singh Mega Talent Hub, Sangariya"
   };
 
   function showMessage(text, color){
@@ -264,7 +264,7 @@
     }
 
     try {
-      // students table se record
+      // students table se record nikaalo
       const { data: stu, error } = await sb
         .from("students")
         .select(`
@@ -278,7 +278,6 @@
           qualification,
           address,
           payment_status,
-          payment_verified,
           photo_path,
           admit_allowed,
           center_name
@@ -299,18 +298,18 @@
         return;
       }
 
-      // DOB match
+      // DOB match check (Supabase date "YYYY-MM-DD" format deta hai)
       if (!stu.dob || stu.dob !== dob) {
         showMessage("Date of Birth match nahi ho rahi. Sahi DOB enter karein.","#ff8080");
         btn.disabled = false;
         return;
       }
 
-      // Payment verification check (payment_status + payment_verified)
+      // PAYMENT CHECK - sirf payment_status
       const payStatus = (stu.payment_status || "").toLowerCase();
-      const payOk = (payStatus === "approved") || (stu.payment_verified === true);
+      const paymentOk = (payStatus === "approved");
 
-      if (!payOk) {
+      if (!paymentOk) {
         showMessage(
           "Aapka payment abhi <b>verify</b> nahi hua hai. " +
           "Organizer payment approve karne ke baad hi admit card active hoga.",
@@ -320,29 +319,28 @@
         return;
       }
 
-      // Admit allowed check (admin checkbox)
+      // ADMIN ADMIT ALLOWED CHECKBOX
       if (stu.admit_allowed !== true) {
         showMessage(
           "Aapka admit card abhi activate nahi hua hai. " +
-          "Organizer jab aapka exam centre final karega, tab yahan se download ho payega.",
+          "Organizer jab aapka exam centre final karke admit activate karega, tab yahan se download ho payega.",
           "#ffcc66"
         );
         btn.disabled = false;
         return;
       }
 
-      // Centre name check
-      if (!stu.center_name) {
-        showMessage(
-          "Exam centre abhi assign nahi hua. " +
-          "Organizer centre set karne ke baad admit card download hoga.",
-          "#ffcc66"
-        );
-        btn.disabled = false;
-        return;
+      // CENTRE NAME CHECK
+      const centreText = stu.center_name && stu.center_name.trim()
+        ? stu.center_name.trim()
+        : EXAM_DETAILS.fallbackCentre;
+
+      if (!stu.center_name || !stu.center_name.trim()) {
+        // Agar tum chaho to yahan error bhi dikha sakte ho, filhaal fallback dikhayenge
+        console.warn("centre_name empty hai, fallback centre use ho raha hai.");
       }
 
-      // Photo URL (student_docs bucket)
+      // Student photo URL banana (student_docs bucket se)
       let photoUrl = "";
       if (stu.photo_path) {
         const { data: publicData } = sb
@@ -354,10 +352,8 @@
         }
       }
 
-      const finalCentre = stu.center_name || EXAM_DETAILS.defaultCentre;
-
-      // Render admit cards
-      renderAdmitCards(stu, photoUrl, finalCentre);
+      // Sab theek → admit card render karo
+      renderAdmitCards(stu, photoUrl, centreText);
       showMessage("Admit card ready. Aap print / PDF download kar sakte hain.","#7CFC00");
       btn.disabled = false;
 
@@ -410,7 +406,7 @@
       html += '<div class="card-section-title">Exam Instructions</div>';
       html += '<div class="note">';
       html += '• Admit card aur original ID proof (Aadhar / School ID) exam centre par le kar aayen.<br>';
-      html += '• Reporting time se 30 minute pehle centre par pohonchna anivaarya hai.<br>';
+      html += '• Reporting time se 30 minute pehle centre par pohonchna anivarya hai.<br>';
       html += '• Mobile phone, calculator, smart watch, etc. exam hall me allowed nahi hain.';
       html += '</div>';
 
@@ -418,6 +414,7 @@
       return div;
     }
 
+    // 2 copies: Student + Exam Centre
     wrap.appendChild(makeCard("STUDENT"));
     wrap.appendChild(makeCard("EXAM CENTRE"));
 
