@@ -52,6 +52,10 @@
       cursor:pointer;
       font-size:14px;
     }
+    .btn-primary:disabled{
+      opacity:.6;
+      cursor:not-allowed;
+    }
     #msgBox{margin-top:6px;font-size:13px;}
     #preview{
       margin-top:10px;
@@ -83,30 +87,31 @@
     <label>Choose Poster Image (JPG/PNG)</label>
     <input type="file" id="posterFile" accept="image/*">
 
-    <button class="btn-primary" id="uploadBtn">Upload & Save Poster</button>
+    <button class="btn-primary" id="uploadBtn">Upload &amp; Save Poster</button>
     <div id="msgBox"></div>
 
     <div id="preview">
       <p style="font-size:13px;margin-bottom:4px;">Current Preview:</p>
+      <!-- Default flex.jpg, baad me Supabase se latest image_url aa jayega -->
       <img id="posterPreview" src="../flex.jpg" alt="Current Poster">
     </div>
   </div>
 </div>
 
-<!-- Supabase JS -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- Supabase JS v2 (browser) -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.48.0/dist/umd/supabase.min.js"></script>
 <script>
   // 🔐 Admin login guard
   if (localStorage.getItem("bdsAdminLoggedIn") !== "yes") {
     window.location.href = "login.html";
   }
 
-  const { createClient } = supabase;
-
+  // Supabase client
   const SUPABASE_URL = "https://yyymjhuwjvyykukfzqow.supabase.co";
-  const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl5eW1qaHV3anZ5eWt1a2Z6cW93Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2NzMzMjIsImV4cCI6MjA4MDI0OTMyMn0.Ja9Do4cwumTnXx2NGIRW8Ti3rKm4MBiLClQz0xjOtrQ";
+  const SUPABASE_KEY =
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl5eW1qaHV3anZ5eWt1a2Z6cW93Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2NzMzMjIsImV4cCI6MjA4MDI0OTMyMn0.Ja9Do4cwumTnXx2NGIRW8Ti3rKm4MBiLClQz0xjOtrQ";
 
-  const db = createClient(SUPABASE_URL, SUPABASE_KEY);
+  const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
   const fileInput = document.getElementById("posterFile");
   const uploadBtn = document.getElementById("uploadBtn");
@@ -118,25 +123,28 @@
     msgBox.innerHTML = t;
   }
 
-  // 🔄 Latest poster load kar ke preview me dikhao
+  // 🔄 Latest poster load karke preview me dikhao
   async function loadCurrentPoster(){
     try{
-      const { data, error } = await db
+      const { data, error } = await supabaseClient
         .from("flex_banners")
         .select("image_url, created_at")
         .order("created_at",{ ascending:false })
         .limit(1)
         .maybeSingle();
 
-      if(error) throw error;
+      if(error){
+        console.log("Load poster error:", error.message);
+        return;
+      }
 
       if(data && data.image_url){
         preview.src = data.image_url;
       }else{
-        preview.src = "../flex.jpg"; // default
+        preview.src = "../flex.jpg"; // default local flex
       }
     }catch(err){
-      console.log("Load poster error:", err.message);
+      console.log("Load poster error:", err.message || err);
     }
   }
 
@@ -155,36 +163,41 @@
 
     try{
       // 1) Storage me upload (bucket: flex)
-      const filePath = Date.now() + "" + file.name.replace(/\s+/g,"");
+      const cleanName = file.name.replace(/\s+/g,"");
+      const filePath  = Date.now() + "_" + cleanName;
 
-      const { data: uploadData, error: uploadErr } = await db
+      const { data: uploadData, error: uploadErr } = await supabaseClient
         .storage
-        .from("flex")
+        .from("flex")       // ✅ bucket name bilkul same
         .upload(filePath, file, {
           cacheControl: "3600",
           upsert: true
         });
 
-      if(uploadErr) throw uploadErr;
+      if(uploadErr){
+        throw uploadErr;
+      }
 
       // 2) Public URL nikalo
-      const { data: publicData } = db
+      const { data: publicData } = supabaseClient
         .storage
         .from("flex")
         .getPublicUrl(filePath);
 
       const publicUrl = publicData.publicUrl;
 
-      // 3) flex_banners table me entry
-      const { error: insertErr } = await db
+      // 3) flex_banners table me entry (sirf image_url enough hai)
+      const { error: insertErr } = await supabaseClient
         .from("flex_banners")
         .insert({ image_url: publicUrl });
 
-      if(insertErr) throw insertErr;
+      if(insertErr){
+        throw insertErr;
+      }
 
       // 4) Preview update
       preview.src = publicUrl;
-      showMsg("Poster uploaded & saved successfully! Home page par bhi naya poster dikhega.","#22c55e");
+      showMsg("Poster uploaded &amp; saved successfully! Home page par bhi naya poster dikhega.","#22c55e");
       fileInput.value = "";
 
     }catch(err){
