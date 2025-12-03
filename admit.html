@@ -12,10 +12,8 @@
       background:radial-gradient(circle at top,#1a4fff 0%,#000b33 55%,#000316 100%);
       color:#fff;
     }
-
-    /* HEADER + NAV */
     header{
-      background:rgba(0,0,0,0.7);
+      background:rgba(0,0,0,.7);
       padding:8px 14px;
       display:flex;
       align-items:center;
@@ -70,10 +68,8 @@
       font-size:14px;
     }
     .btn-primary:disabled{opacity:.6;cursor:default;}
-
     #msgBox{margin-top:8px;font-size:13px;}
 
-    /* ADMIT CARD DESIGN */
     .cards-wrap{
       display:flex;
       flex-wrap:wrap;
@@ -139,13 +135,11 @@
       flex:1;
       font-size:12px;
     }
-
     .note{
       font-size:11px;
       margin-top:6px;
       color:#ffc;
     }
-
     .btn-print{
       margin-top:14px;
       text-align:center;
@@ -160,22 +154,19 @@
       cursor:pointer;
       font-size:14px;
     }
-
     footer{
       text-align:center;
       font-size:12px;
       padding:10px;
-      background:rgba(0,0,0,0.9);
+      background:rgba(0,0,0,.9);
       margin-top:15px;
     }
-
     @media(max-width:700px){
       .cards-wrap{flex-direction:column;}
     }
   </style>
 
-  <!-- Supabase JS (v2) -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.48.0/dist/umd/supabase.min.js"></script>
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
@@ -188,30 +179,29 @@
     <a href="result.html">RESULT</a>
     <a href="download.html">DOWNLOAD</a>
     <a href="help.html">HELP</a>
-    <a href="admin/login.html">ADMIN</a>
+    <a href="admin.html">ADMIN</a>
   </nav>
 </header>
 
 <div class="container">
-  <!-- SEARCH FORM -->
   <div class="search-card">
     <h1>Download Admit Card</h1>
     <p style="font-size:13px;color:#ffeaa7;">
       Admit card sirf unhi students ka show hoga jinka payment organizer ki taraf se
-      <b>verify</b> ho chuka hai.
+      <b>verify</b> ho chuka hai aur jinke liye exam centre final karke
+      admit card activate kiya gaya hai.
     </p>
 
     <label>Roll Number</label>
-    <input type="text" id="rollInput" placeholder="e.g. BDS26XXXX" />
+    <input type="text" id="rollInput" placeholder="e.g. BDS26XXXX">
 
     <label>Date of Birth</label>
-    <input type="date" id="dobInput" />
+    <input type="date" id="dobInput">
 
     <button class="btn-primary" id="btnGet" onclick="getAdmitCard()">Get Admit Card</button>
     <div id="msgBox"></div>
   </div>
 
-  <!-- ADMIT CARDS RENDER -->
   <div id="cardsArea" style="display:none;">
     <div class="cards-wrap" id="cardsWrap"></div>
 
@@ -224,14 +214,13 @@
 <footer>© 2026 Baba Deep Singh Mega Talent Hub</footer>
 
 <script>
-  // Supabase config (tumhara project)
   const SUPABASE_URL = "https://yyymjhuwjvyykukfzqow.supabase.co";
   const SUPABASE_ANON_KEY =
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl5eW1qaHV3anZ5eWt1a2Z6cW93Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2NzMzMjIsImV4cCI6MjA4MDI0OTMyMn0.Ja9Do4cwumTnXx2NGIRW8Ti3rKm4MBiLClQz0xjOtrQ";
 
-  const supa = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  const { createClient } = supabase;
+  const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-  // === STATIC EXAM DETAILS ===
   const EXAM_DETAILS = {
     examName: "Future Achievers Scholarship Exam 2026",
     examDate: "08/02/2026",
@@ -250,8 +239,8 @@
   async function getAdmitCard(){
     const roll = document.getElementById("rollInput").value.trim().toUpperCase();
     const dob  = document.getElementById("dobInput").value;
+    const btn  = document.getElementById("btnGet");
 
-    const btn = document.getElementById("btnGet");
     btn.disabled = true;
     showMessage("Please wait, searching record...","#fff");
     document.getElementById("cardsArea").style.display = "none";
@@ -263,65 +252,61 @@
       return;
     }
 
-    try {
-      // Supabase se students table se record nikaalo
-      const { data: stu, error } = await supa
+    try{
+      const { data: stu, error } = await sb
         .from("students")
-        .select(
-          "roll_number, full_name, father_name, dob, gender, mobile, whatsapp, qualification, address, payment_status, photo_path"
-        )
+        .select("roll_number, full_name, father_name, dob, gender, mobile, whatsapp, qualification, address, payment_status, photo_path, exam_center, admit_allowed")
         .eq("roll_number", roll)
         .maybeSingle();
 
-      if (error) {
+      if(error){
         console.error(error);
         showMessage("Error: " + error.message, "#ff8080");
         btn.disabled = false;
         return;
       }
-
-      if (!stu) {
+      if(!stu){
         showMessage("Record nahi mila. Roll number check karein.","#ff8080");
         btn.disabled = false;
         return;
       }
-
-      // DOB match check (Supabase date "YYYY-MM-DD" format deta hai)
-      if (!stu.dob || stu.dob !== dob) {
+      if(!stu.dob || stu.dob !== dob){
         showMessage("Date of Birth match nahi ho rahi. Sahi DOB enter karein.","#ff8080");
         btn.disabled = false;
         return;
       }
 
-      // Payment verification check (payment_status text column)
-      if (stu.payment_status !== "approved") {
+      if(stu.payment_status !== "approved"){
         showMessage(
-          "Aapki registration abhi <b>PENDING</b> hai. " +
-          "Organizer payment verify karne ke baad admit card active hoga.",
+          "Aapka payment abhi <b>verify</b> nahi hua hai. " +
+          "Organizer payment approve karne ke baad hi admit card active hoga.",
           "#ffcc66"
         );
         btn.disabled = false;
         return;
       }
 
-      // Photo URL banana (student_docs bucket se)
-      let photoUrl = "";
-      if (stu.photo_path) {
-        const { data: publicData } = supa
-          .storage
-          .from("student_docs")
-          .getPublicUrl(stu.photo_path);
-        if (publicData && publicData.publicUrl) {
-          photoUrl = publicData.publicUrl;
-        }
+      if(stu.admit_allowed !== true){
+        showMessage(
+          "Aapka exam centre abhi final nahi hua ya admit card abhi activate nahi kiya gaya hai. " +
+          "Kripya kuch din baad dubara check karein.",
+          "#ffcc66"
+        );
+        btn.disabled = false;
+        return;
       }
 
-      // Everything OK → render admit card
+      let photoUrl = "";
+      if(stu.photo_path){
+        const { data: p } = sb.storage.from("student_docs").getPublicUrl(stu.photo_path);
+        if(p && p.publicUrl) photoUrl = p.publicUrl;
+      }
+
       renderAdmitCards(stu, photoUrl);
       showMessage("Admit card ready. Aap print / PDF download kar sakte hain.","#7CFC00");
       btn.disabled = false;
 
-    } catch (e) {
+    }catch(e){
       console.error(e);
       showMessage("Unexpected error: " + e.message, "#ff8080");
       btn.disabled = false;
@@ -336,6 +321,10 @@
       const div = document.createElement("div");
       div.className = "admit-card";
 
+      const centreLine = stu.exam_center
+        ? stu.exam_center
+        : EXAM_DETAILS.centreName + ", " + EXAM_DETAILS.centreAddress;
+
       let html = "";
       html += '<div class="card-title">'+EXAM_DETAILS.examName+'</div>';
       html += '<div class="card-subtitle">ADMIT CARD – '+copyType+' COPY</div>';
@@ -343,30 +332,28 @@
       html += '<div class="top-line">';
       html += '  <div class="top-text">';
       html += '    <div style="font-size:13px;font-weight:bold;">Exam Date: '+EXAM_DETAILS.examDate+'</div>';
-      html += '    <div style="font-size:12px;">Reporting Time: '+EXAM_DETAILS.reportingTime+
-              ' | Exam Time: '+EXAM_DETAILS.examTime+'</div>';
-      html += '    <div style="font-size:12px;margin-top:3px;">Centre: '+EXAM_DETAILS.centreName+
-              ', '+EXAM_DETAILS.centreAddress+'</div>';
+      html += '    <div style="font-size:12px;">Reporting Time: '+EXAM_DETAILS.reportingTime+' | Exam Time: '+EXAM_DETAILS.examTime+'</div>';
+      html += '    <div style="font-size:12px;margin-top:3px;">Centre: '+centreLine+'</div>';
       html += '  </div>';
       html += '  <div class="photo-box">';
       if(photoUrl){
-        html += '    <img src="'+photoUrl+'" alt="Student Photo">';
-      }else{
-        html += '    <div style="font-size:10px;padding:4px;text-align:center;">Photo<br>Not<br>Available</div>';
+        html += '<img src="'+photoUrl+'" alt="Student Photo">';
+      } else {
+        html += '<div style="font-size:10px;padding:4px;text-align:center;">Photo<br>Not<br>Available</div>';
       }
       html += '  </div>';
       html += '</div>';
 
       html += '<div class="card-section-title">Student Details</div>';
-      html += '<div class="card-row"><span class="label">Roll No:</span> <span>'+ (stu.roll_number || "") +'</span></div>';
-      html += '<div class="card-row"><span class="label">Name:</span> <span>'+ (stu.full_name || "") +'</span></div>';
-      html += '<div class="card-row"><span class="label">Father\'s Name:</span> <span>'+ (stu.father_name || "") +'</span></div>';
-      html += '<div class="card-row"><span class="label">DOB:</span> <span>'+ (stu.dob || "") +'</span></div>';
-      html += '<div class="card-row"><span class="label">Gender:</span> <span>'+ (stu.gender || "") +'</span></div>';
-      html += '<div class="card-row"><span class="label">Mobile:</span> <span>'+ (stu.mobile || "") +'</span></div>';
-      html += '<div class="card-row"><span class="label">Whatsapp:</span> <span>'+ (stu.whatsapp || "-") +'</span></div>';
-      html += '<div class="card-row"><span class="label">Qualification:</span> <span>'+ (stu.qualification || "") +'</span></div>';
-      html += '<div class="card-row"><span class="label">Address:</span> <span>'+ (stu.address || "") +'</span></div>';
+      html += '<div class="card-row"><span class="label">Roll No:</span><span>'+ (stu.roll_number||"") +'</span></div>';
+      html += '<div class="card-row"><span class="label">Name:</span><span>'+ (stu.full_name||"") +'</span></div>';
+      html += '<div class="card-row"><span class="label">Father\'s Name:</span><span>'+ (stu.father_name||"") +'</span></div>';
+      html += '<div class="card-row"><span class="label">DOB:</span><span>'+ (stu.dob||"") +'</span></div>';
+      html += '<div class="card-row"><span class="label">Gender:</span><span>'+ (stu.gender||"") +'</span></div>';
+      html += '<div class="card-row"><span class="label">Mobile:</span><span>'+ (stu.mobile||"") +'</span></div>';
+      html += '<div class="card-row"><span class="label">Whatsapp:</span><span>'+ (stu.whatsapp||"-") +'</span></div>';
+      html += '<div class="card-row"><span class="label">Qualification:</span><span>'+ (stu.qualification||"") +'</span></div>';
+      html += '<div class="card-row"><span class="label">Address:</span><span>'+ (stu.address||"") +'</span></div>';
 
       html += '<div class="card-section-title">Exam Instructions</div>';
       html += '<div class="note">';
@@ -381,7 +368,6 @@
 
     wrap.appendChild(makeCard("STUDENT"));
     wrap.appendChild(makeCard("EXAM CENTRE"));
-
     document.getElementById("cardsArea").style.display = "block";
   }
 </script>
