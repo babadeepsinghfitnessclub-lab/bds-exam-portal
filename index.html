@@ -1,216 +1,258 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="UTF-8">
-  <title>Baba Deep Singh Mega Talent Hub</title>
+  <title>BDS Mega Talent Hub | Home</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <style>
-    body {
-      margin: 0;
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{
       font-family: Arial, sans-serif;
-      background: #00214d;
-      color: #fff;
+      background: radial-gradient(circle at top, #003f8f, #000820);
+      color:#fff;
+    }
+    header{
+      background:rgba(0,0,0,0.7);
+      padding:10px 15px;
+      border-bottom:2px solid #ffb400;
+      text-align:center;
+      font-weight:700;
+      font-size:18px;
+    }
+    nav{
+      text-align:center;
+      background:rgba(0,0,0,0.5);
+      padding:8px 0;
+      display:flex;
+      flex-wrap:wrap;
+      justify-content:center;
+      gap:10px;
+    }
+    nav a{
+      color:#ffeb99;
+      text-decoration:none;
+      font-size:13px;
+      font-weight:bold;
+    }
+    nav a:hover{text-decoration:underline;}
+
+    .main{
+      max-width:1000px;
+      margin:15px auto 40px;
+      padding:0 10px;
+      display:flex;
+      flex-wrap:wrap;
+      gap:15px;
+      justify-content:center;
+    }
+    .left{flex:1 1 260px;text-align:left;}
+    .right{flex:1 1 260px;text-align:center;}
+
+    /* 👇 Highlighted Section Updated */
+    .headline{
+      font-size:26px;
+      font-weight:900;
+      margin-bottom:10px;
+      color:#ffcd00;
+    }
+    .subline{
+      font-size:16px;
+      font-weight:700;
+      margin-bottom:10px;
+      color:#f7e6a0;
+    }
+    ul.points{
+      font-size:15px;
+      font-weight:700;
+      margin-left:18px;
+      margin-bottom:10px;
+      line-height:1.45;
+    }
+    ul.points li{margin-bottom:6px;}
+
+    .poster{
+      width:100%;
+      max-width:380px;
+      border-radius:12px;
+      border:2px solid #ffb400;
+      box-shadow:0 0 18px rgba(0,0,0,0.9);
     }
 
-    header {
-      background: #011a3d;
-      padding: 10px 0;
-      text-align: center;
-      font-size: 18px;
-      font-weight: 700;
-      color: #ffdf66;
+    .notice-wrap{
+      margin-top:15px;
+      text-align:center;
+    }
+    .notice-card{
+      max-width:600px;
+      margin:0 auto;
+      background:rgba(0,0,0,0.65);
+      border-radius:12px;
+      padding:8px 12px;
+    }
+    .notice-header{
+      background:linear-gradient(90deg,#ff0078,#ffa800);
+      padding:4px 10px;
+      border-radius:999px;
+      font-size:13px;
+      font-weight:bold;
+      margin-bottom:6px;
+      display:inline-block;
+    }
+    #noticeList{
+      list-style:none;
+      font-size:13px;
+      text-align:left;
+    }
+    #noticeList li{margin:3px 0;}
+
+    .gallery-section{
+      max-width:1000px;
+      margin:0 auto 25px;
+      padding:0 10px;
+    }
+    .gallery-title{
+      font-size:16px;font-weight:bold;
+      margin-bottom:6px;
+    }
+    .gallery-grid{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+    }
+    .gallery-item{
+      width:90px;height:90px;
+      border-radius:8px;
+      overflow:hidden;
+      border:1px solid rgba(255,255,255,0.4);
+    }
+    .gallery-item img{
+      width:100%;height:100%;object-fit:cover;
     }
 
-    nav {
-      background: rgba(0, 0, 0, 0.6);
-      text-align: center;
-      padding: 10px 0;
-    }
-
-    nav a {
-      text-decoration: none;
-      color: #fff;
-      margin: 0 10px;
-      font-size: 14px;
-      font-weight: 600;
-    }
-
-    .hero-section {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 50px 20px;
-    }
-
-    /* 🔥 Hero Left Text - Upgraded */
-    .headline {
-      font-size: 34px;
-      font-weight: 900;
-      margin-bottom: 10px;
-      color: #ffe066;
-      text-shadow: 0 3px 12px rgba(0, 0, 0, 0.8);
-      border-left: 6px solid #ffdd33;
-      padding-left: 10px;
-    }
-
-    .subline {
-      font-size: 18px;
-      font-weight: 600;
-      margin-bottom: 12px;
-      color: #ffffff;
-      line-height: 1.45;
-    }
-
-    ul.points {
-      font-size: 18px;
-      font-weight: 700;
-      line-height: 1.5;
-      margin-left: 20px;
-      color: #fff;
-    }
-
-    ul.points li {
-      margin-bottom: 6px;
-      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.7);
-    }
-
-    /* Poster */
-    .poster-img {
-      width: 330px;
-      border-radius: 8px;
-      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.7);
-    }
-
-    /* Gallery */
-    .gallery-section {
-      padding: 20px;
-      text-align: center;
-    }
-
-    .gallery-grid {
-      display: flex;
-      justify-content: center;
-      gap: 10px;
-      flex-wrap: wrap;
-      margin-top: 10px;
-    }
-
-    .gallery-grid img {
-      width: 130px;
-      height: 130px;
-      border-radius: 8px;
-      object-fit: cover;
-      box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
-    }
-
-    footer {
-      background: #011a3d;
-      text-align: center;
-      padding: 10px 0;
-      font-size: 13px;
-      margin-top: 30px;
-      color: #ccc;
-    }
-
-    @media(max-width:700px) {
-      .hero-section {
-        flex-direction: column;
-        text-align: center;
-      }
-
-      .headline {
-        font-size: 26px;
-      }
-
-      .subline {
-        font-size: 16px;
-      }
-
-      ul.points {
-        font-size: 15px;
-      }
-
-      .poster-img {
-        width: 85%;
-        margin-top: 20px;
-      }
+    footer{
+      background:#000c;
+      text-align:center;
+      font-size:11px;
+      padding:10px;
+      color:#ddd;
     }
   </style>
-
-  <!-- Supabase -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
-
 <body>
 
-  <header>
-    BABA DEEP SINGH MEGA TALENT HUB
-  </header>
+<header>BABA DEEP SINGH MEGA TALENT HUB</header>
 
-  <nav>
-    <a href="apply.html">APPLY</a>
-    <a href="admit.html">ADMIT CARD</a>
-    <a href="result.html">RESULT</a>
-    <a href="download.html">DOWNLOAD</a>
-    <a href="gallery.html">GALLERY</a>
-    <a href="help.html">HELP</a>
-    <a href="admin/login.html">ADMIN</a>
-  </nav>
+<nav>
+  <a href="index.html">HOME</a>
+  <a href="apply.html">APPLY</a>
+  <a href="admit.html">ADMIT CARD</a>
+  <a href="result.html">RESULT</a>
+  <a href="download.html">DOWNLOAD</a>
+  <a href="gallery.html">GALLERY</a>
+  <a href="help.html">HELP</a>
+  <a href="admin/login.html">ADMIN</a>
+</nav>
 
-  <!-- ⭐ MAIN HERO SECTION -->
-  <section class="hero-section">
+<div class="main">
 
-    <!-- LEFT TEXT -->
-    <div class="hero-text">
-      <div class="headline">Mega Talent Hub Scholarship Exam FEB 2026</div>
+  <div class="left">
+    <div class="headline">Mega Talent Hub Scholarship Exam FEB 2026</div>
+    <div class="subline">Show your talent & win exciting prizes.</div>
+    
+    <ul class="points">
+      <li>Huge Cash Prizes</li>
+      <li>1st Prize: ₹51,000</li>
+      <li>2nd Prize: ₹21,000</li>
+      <li>3rd Prize: ₹9,900</li>
+      <li>500+ Certificates</li>
+      <li>Exam in February 2026</li>
+    </ul>
 
-      <div class="subline">Show your talent & win exciting prizes.</div>
-
-      <ul class="points">
-        <li>1st Prize ₹51,000/-</li>
-        <li>2nd Prize ₹21,000/-</li>
-        <li>3rd Prize ₹9,900/-</li>
-        <li>500+ Certificates</li>
-        <li>Exam date — February 2026</li>
-      </ul>
-    </div>
-
-    <!-- RIGHT POSTER -->
-    <img src="poster.jpg" class="poster-img" alt="Exam Poster">
-
-  </section>
-
-  <!-- LATEST GALLERY -->
-  <div class="gallery-section">
-    <h3>🖼 Latest Gallery Photos</h3>
-    <div class="gallery-grid" id="latestGallery"></div>
+    <!-- ❌ Apply Button Removed -->
   </div>
 
-  <footer>
-    © 2026 Baba Deep Singh Mega Talent Hub
-  </footer>
+  <div class="right">
+    <img id="heroPoster" class="poster" src="flex.jpg">
 
-  <script>
-    const supabaseUrl = "https://yyymjhuwjvyykukfzqow.supabase.co";
-    const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl5eW1qaHV3anZ5eWt1a2Z6cW93Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2NzMzMjIsImV4cCI6MjA4MDI0OTMyMn0.Ja9Do4cwumTnXx2NGIRW8Ti3rKm4MBiLClQz0xjOtrQ";
-    const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+    <div class="notice-wrap">
+      <div class="notice-card">
+        <div class="notice-header">📢 Latest Notices</div>
+        <ul id="noticeList"><li>Loading...</li></ul>
+      </div>
+    </div>
+  </div>
 
-    async function loadGallery() {
-      const { data } = await supabase
-        .from("gallery_items")
-        .select("public_url")
-        .order("created_at", { ascending: false })
-        .limit(6);
+</div>
 
-      const box = document.getElementById("latestGallery");
-      box.innerHTML = data
-        .map(x => `<img src="${x.public_url}">`)
-        .join("");
-    }
-    loadGallery();
-  </script>
+<div class="gallery-section">
+  <div class="gallery-title">📸 Latest Gallery Photos</div>
+  <div id="homeGallery" class="gallery-grid"></div>
+</div>
+
+<footer>
+  © 2026 Baba Deep Singh Mega Talent Hub
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const sb = supabase.createClient(
+  "https://yyymjhuwjvyykukfzqow.supabase.co",
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl5eW1qaHV3anZ5eWt1a2Z6cW93Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2NzMzMjIsImV4cCI6MjA4MDI0OTMyMn0.Ja9Do4cwumTnXx2NGIRW8Ti3rKm4MBiLClQz0xjOtrQ"
+);
+
+async function loadPoster(){
+  const { data } = await sb
+    .from("flex_banners")
+    .select("image_url")
+    .order("created_at",{ ascending:false })
+    .limit(1);
+  if(data && data.length && data[0].image_url){
+    document.getElementById("heroPoster").src = data[0].image_url;
+  }
+}
+async function loadNotices(){
+  const ul=document.getElementById("noticeList");
+  const { data } = await sb
+    .from("notices")
+    .select("*")
+    .eq("active",true)
+    .order("created_at",{ ascending:false })
+    .limit(6);
+  ul.innerHTML="";
+  if(!data || !data.length){
+    ul.innerHTML="<li>No active notices</li>";
+    return;
+  }
+  data.forEach(n=>{
+    ul.innerHTML+=`<li>${n.title} - ${n.body}</li>`;
+  });
+}
+async function loadGallery(){
+  const area=document.getElementById("homeGallery");
+  const { data } = await sb
+    .from("gallery_items")
+    .select("public_url")
+    .eq("visible",true)
+    .order("created_at",{ ascending:false })
+    .limit(8);
+  area.innerHTML="";
+  if(!data || !data.length){
+    area.innerHTML="<div style='font-size:11px'>No photos yet</div>";
+    return;
+  }
+  data.forEach(g=>{
+    area.innerHTML+=`
+      <div class="gallery-item">
+        <img src="${g.public_url}">
+      </div>`;
+  });
+}
+
+loadPoster();
+loadNotices();
+loadGallery();
+</script>
 
 </body>
 </html>
