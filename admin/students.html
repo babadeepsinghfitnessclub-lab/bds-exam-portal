@@ -16,14 +16,6 @@
     box-shadow:0 2px 8px rgba(0,0,0,0.2);
   }
   h1 { margin-top:0; color:#b20c0c; }
-
-  .topbar-links a {
-    margin-right:8px;
-    font-size:13px;
-    text-decoration:none;
-    color:#1976d2;
-  }
-
   table {
     width:100%; border-collapse: collapse; margin-top:10px; font-size:13px;
   }
@@ -32,7 +24,6 @@
   }
   th { background:#eee; }
   tr:nth-child(even){ background:#fafafa; }
-
   button {
     padding:5px 8px; border:none; border-radius:4px;
     cursor:pointer; font-size:12px; margin:2px;
@@ -41,9 +32,7 @@
   .btn-approve { background:#2e7d32; color:#fff; }
   .btn-pending { background:#ffa000; color:#000; }
   .btn-reject { background:#c62828; color:#fff; }
-
   .msg { margin-top:6px; font-size:13px; }
-
   .detail-card {
     margin-top:12px;
     padding:10px;
@@ -53,13 +42,10 @@
     font-size:14px;
   }
   .field-label { font-weight:bold; }
-  a { color:#1976d2; text-decoration:none; }
-  a:hover { text-decoration:underline; }
-
-  .doc-links p { margin:3px 0; }
+  a { color:#1976d2; }
+  .topbar-links a { margin-right:8px; font-size:13px; }
 </style>
 
-<!-- Supabase JS -->
 <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 </head>
 <body>
@@ -71,6 +57,7 @@
   </div>
 
   <h1>Student Applications</h1>
+
   <p class="msg" id="listMsg">Loading...</p>
 
   <table id="appsTable">
@@ -82,56 +69,33 @@
         <th>Mobile</th>
         <th>Form Status</th>
         <th>Payment</th>
-        <th>Created</th>
         <th>Action</th>
       </tr>
     </thead>
     <tbody id="appsBody"></tbody>
   </table>
 
-  <!-- DETAIL CARD -->
   <div id="detailBox" class="detail-card" style="display:none;">
-    <h3>Application Details</h3>
-
     <p><span class="field-label">Name:</span> <span id="dName"></span></p>
     <p><span class="field-label">Father:</span> <span id="dFather"></span></p>
     <p><span class="field-label">Mobile:</span> <span id="dMobile"></span></p>
-    <p><span class="field-label">WhatsApp:</span> <span id="dWhatsapp"></span></p>
-    <p><span class="field-label">Email:</span> <span id="dEmail"></span></p>
-
     <p><span class="field-label">Roll No:</span> <span id="dRoll"></span></p>
     <p><span class="field-label">Form Status:</span> <span id="dStatus"></span></p>
     <p><span class="field-label">Payment Status:</span> <span id="dPayment"></span></p>
     <p><span class="field-label">UPI Txn ID:</span> <span id="dTxn"></span></p>
-
-    <p><span class="field-label">DOB:</span> <span id="dDob"></span></p>
-    <p><span class="field-label">Gender:</span> <span id="dGender"></span></p>
+    <p><span class="field-label">Address:</span> <span id="dAddress"></span></p    >
     <p><span class="field-label">Qualification:</span> <span id="dQual"></span></p>
-    <p><span class="field-label">Aadhar No:</span> <span id="dAadhar"></span></p>
-    <p><span class="field-label">Address:</span> <span id="dAddress"></span></p>
-
-    <div class="doc-links">
-      <p><span class="field-label">Photo:</span>
-        <a id="dPhoto" href="#" target="_blank">Open</a>
-      </p>
-      <p><span class="field-label">Aadhaar Front:</span>
-        <a id="dAadharF" href="#" target="_blank">Open</a>
-      </p>
-      <p><span class="field-label">Aadhaar Back:</span>
-        <a id="dAadharB" href="#" target="_blank">Open</a>
-      </p>
-      <p><span class="field-label">Marksheet:</span>
-        <a id="dMarksheet" href="#" target="_blank">Open</a>
-      </p>
-      <p><span class="field-label">Payment Screenshot:</span>
-        <a id="dPaymentSS" href="#" target="_blank">Open</a>
-      </p>
-    </div>
+    
+    <p><span class="field-label">Photo:</span> <a id="dPhoto" target="_blank">Open</a></p>
+    <p><span class="field-label">Aadhaar Front:</span> <a id="dAadharF" target="_blank">Open</a></p>
+    <p><span class="field-label">Aadhaar Back:</span> <a id="dAadharB" target="_blank">Open</a></p>
+    <p><span class="field-label">Marksheet:</span> <a id="dMarksheet" target="_blank">Open</a></p>
+    <p><span class="field-label">Payment Screenshot:</span> <a id="dPaymentSS" target="_blank">Open</a></p>
 
     <div style="margin-top:10px;">
-      <button class="btn-approve" onclick="updateStatus('Approved','Approved')">Approve</button>
-      <button class="btn-pending" onclick="updateStatus('Pending','Pending')">Pending</button>
-      <button class="btn-reject" onclick="updateStatus('Rejected','Failed')">Reject</button>
+      <button class="btn-approve" onclick="updateStatus('approved', true)">Approve</button>
+      <button class="btn-pending" onclick="updateStatus('pending', false)">Pending</button>
+      <button class="btn-reject" onclick="updateStatus('rejected', false)">Reject</button>
     </div>
 
     <p class="msg" id="detailMsg"></p>
@@ -140,159 +104,153 @@
 </div>
 
 <script>
-  // 🔐 Admin guard
-  if(localStorage.getItem("bdsAdminLoggedIn")!=="yes"){
-    window.location.href="login.html";
+if(localStorage.getItem("bdsAdminLoggedIn")!=="yes"){
+  window.location.href="login.html";
+}
+
+const SUPABASE_URL = "https://yyymjhuwjvyykukfzqow.supabase.co";
+const SUPABASE_KEY =
+"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl5eW1qaHV3anZ5eWt1a2Z6cW93Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2NzMzMjIsImV4cCI6MjA4MDI0OTMyMn0.Ja9Do4cwumTnXx2NGIRW8Ti3rKm4MBiLClQz0xjOtrQ";
+
+const { createClient } = supabase;
+const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let currentId = null;
+
+// ---- helper: path → public URL from student_docs bucket ----
+function fileUrl(path){
+  if(!path) return "";
+  const { data } = sb.storage.from("student_docs").getPublicUrl(path);
+  return data && data.publicUrl ? data.publicUrl : "";
+}
+
+function setDocLink(anchorId, path){
+  const a = document.getElementById(anchorId);
+  if(!path){
+    a.textContent = "Not uploaded";
+    a.removeAttribute("href");
+    a.style.pointerEvents = "none";
+    a.style.opacity = "0.6";
+    return;
+  }
+  const url = fileUrl(path);
+  if(url){
+    a.href = url;
+    a.target = "_blank";
+    a.textContent = "Open";
+    a.style.pointerEvents = "auto";
+    a.style.opacity = "1";
+  }else{
+    a.textContent = "Error";
+    a.removeAttribute("href");
+    a.style.pointerEvents = "none";
+    a.style.opacity = "0.6";
+  }
+}
+
+// ---- list load ----
+async function loadStudents(){
+  const listMsg = document.getElementById("listMsg");
+  listMsg.textContent = "Loading...";
+
+  const { data, error } = await sb
+    .from("students")
+    .select("*")
+    .order("created_at",{ ascending: false });
+
+  if(error){
+    listMsg.textContent = "Error: "+error.message;
+    return;
   }
 
-  const SUPABASE_URL = "https://yyymjhuwjvyykukfzqow.supabase.co";
-  const SUPABASE_KEY =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl5eW1qaHV3anZ5eWt1a2Z6cW93Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2NzMzMjIsImV4cCI6MjA4MDI0OTMyMn0.Ja9Do4cwumTnXx2NGIRW8Ti3rKm4MBiLClQz0xjOtrQ";
+  const body = document.getElementById("appsBody");
+  body.innerHTML = "";
+  let i=1;
 
-  const { createClient } = supabase;
-  const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+  data.forEach(st=>{
+    if(!st.roll_number) return;
+    const tr = document.createElement("tr");
 
-  const listMsg  = document.getElementById("listMsg");
-  const appsBody = document.getElementById("appsBody");
+    const formStatus = st.form_status || st.status || "pending";
+    const paymentStatus = st.payment_status || (st.payment_verified ? "approved" : "pending");
 
-  let currentId   = null;
-  let currentData = null;
+    tr.innerHTML =
+      `<td>${i++}</td>
+       <td>${st.roll_number}</td>
+       <td>${st.full_name || st.name || ""}</td>
+       <td>${st.mobile || ""}</td>
+       <td>${formStatus}</td>
+       <td>${paymentStatus}</td>
+       <td><button class='btn-view'>View</button></td>`;
 
-  // 🧾 Students list load
-  async function loadStudents(){
-    listMsg.textContent = "Loading...";
-    appsBody.innerHTML = "";
+    tr.querySelector("button").onclick = ()=>openDetails(st);
+    body.appendChild(tr);
+  });
 
-    const { data, error } = await sb
-      .from("students")
-      .select("*")
-      .order("created_at",{ ascending: false });
+  listMsg.textContent = "Loaded successfully.";
+}
+loadStudents();
 
-    if(error){
-      listMsg.textContent = "Error: " + error.message;
-      console.error(error);
-      return;
-    }
+// ---- details panel ----
+function openDetails(st){
+  currentId = st.id;
 
-    if(!data || data.length === 0){
-      listMsg.textContent = "No applications found.";
-      return;
-    }
+  document.getElementById("detailBox").style.display="block";
+  document.getElementById("detailMsg").textContent = "";
 
-    let i=1;
-    data.forEach(st=>{
-      // Sirf wahi dikhao jinke paas roll_number hai
-      if(!st.roll_number) return;
+  document.getElementById("dName").textContent   = st.full_name || st.name || "";
+  document.getElementById("dFather").textContent = st.father_name || "";
+  document.getElementById("dMobile").textContent = st.mobile || "";
+  document.getElementById("dRoll").textContent   = st.roll_number || "";
 
-      const tr = document.createElement("tr");
+  const formStatus = st.form_status || st.status || "pending";
+  const payApproved =
+    (st.payment_status && st.payment_status.toLowerCase()==="approved") ||
+    st.payment_verified === true;
 
-      // created_at ko readable bana do
-      let createdText = "";
-      if(st.created_at){
-        const dt = new Date(st.created_at);
-        if(!isNaN(dt.getTime())){
-          createdText = dt.toLocaleString();
-        }
-      }
+  document.getElementById("dStatus").textContent   = formStatus;
+  document.getElementById("dPayment").textContent  = payApproved ? "approved" : "pending";
+  document.getElementById("dTxn").textContent      = st.upi_txn || st.txn_id || "";
+  document.getElementById("dAddress").textContent  = st.address || "";
+  document.getElementById("dQual").textContent     = st.qualification || "";
 
-      tr.innerHTML =
-        `<td>${i++}</td>
-         <td>${st.roll_number || ""}</td>
-         <td>${st.name || ""}</td>
-         <td>${st.mobile || ""}</td>
-         <td>${st.form_status || "Pending"}</td>
-         <td>${st.payment_status || "Pending"}</td>
-         <td>${createdText}</td>
-         <td><button class="btn-view">View</button></td>`;
+  // documents – correct columns
+  setDocLink("dPhoto",     st.photo_path);
+  setDocLink("dAadharF",   st.aadhar_front_path);
+  setDocLink("dAadharB",   st.aadhar_back_path);
+  setDocLink("dMarksheet", st.marksheet_path);
+  setDocLink("dPaymentSS", st.payment_screenshot_path);
+}
 
-      tr.querySelector(".btn-view").onclick = ()=>openDetails(st);
-      appsBody.appendChild(tr);
-    });
+// ---- status buttons ----
+async function updateStatus(newStatus,payFlag){
+  if(!currentId) return;
+  const msg = document.getElementById("detailMsg");
+  msg.textContent="Updating...";
 
-    listMsg.textContent = "Loaded successfully.";
+  const updateObj = {
+    form_status: newStatus,
+    payment_status: payFlag ? "approved" :
+      (newStatus === "rejected" ? "rejected" : "pending")
+  };
+
+  const { error } = await sb
+    .from("students")
+    .update(updateObj)
+    .eq("id",currentId);
+
+  if(error){
+    msg.style.color="red";
+    msg.textContent="Error: "+error.message;
+    return;
   }
+  msg.style.color="green";
+  msg.textContent="Updated successfully.";
   loadStudents();
-
-  // 🔍 Detail view
-  function safeText(v){
-    return v || "";
-  }
-  function safeHref(v){
-    return v || "#";
-  }
-
-  function openDetails(st){
-    currentId = st.id;
-    currentData = st;
-
-    document.getElementById("detailBox").style.display="block";
-    document.getElementById("detailMsg").textContent = "";
-
-    document.getElementById("dName").textContent      = safeText(st.name);
-    document.getElementById("dFather").textContent    = safeText(st.father_name);
-    document.getElementById("dMobile").textContent    = safeText(st.mobile);
-    document.getElementById("dWhatsapp").textContent  = safeText(st.whatsapp);
-    document.getElementById("dEmail").textContent     = safeText(st.email);
-    document.getElementById("dRoll").textContent      = safeText(st.roll_number);
-    document.getElementById("dStatus").textContent    = safeText(st.form_status || "Pending");
-    document.getElementById("dPayment").textContent   = safeText(st.payment_status || "Pending");
-    document.getElementById("dTxn").textContent       = safeText(st.upi_txn);
-
-    document.getElementById("dDob").textContent       = safeText(st.dob);
-    document.getElementById("dGender").textContent    = safeText(st.gender);
-    document.getElementById("dQual").textContent      = safeText(st.qualification);
-    document.getElementById("dAadhar").textContent    = safeText(st.aadhar_no);
-    document.getElementById("dAddress").textContent   = safeText(st.address);
-
-    document.getElementById("dPhoto").href       = safeHref(st.photo_url);
-    document.getElementById("dAadharF").href     = safeHref(st.aadhar_front_url);
-    document.getElementById("dAadharB").href     = safeHref(st.aadhar_back_url);
-    document.getElementById("dMarksheet").href   = safeHref(st.marksheet_url);
-    document.getElementById("dPaymentSS").href   = safeHref(st.payment_screenshot_url);
-  }
-
-  // ✅ Status update (form_status + payment_status)
-  async function updateStatus(newFormStatus, newPaymentStatus){
-    const msg = document.getElementById("detailMsg");
-
-    if(!currentId){
-      msg.style.color = "red";
-      msg.textContent = "Please select any application from the list first.";
-      return;
-    }
-
-    msg.style.color = "#000";
-    msg.textContent = "Updating...";
-
-    const { error } = await sb
-      .from("students")
-      .update({
-        form_status: newFormStatus,
-        payment_status: newPaymentStatus
-      })
-      .eq("id", currentId);
-
-    if(error){
-      console.error(error);
-      msg.style.color = "red";
-      msg.textContent = "Error: " + error.message;
-      return;
-    }
-
-    msg.style.color = "green";
-    msg.textContent = "Updated successfully.";
-
-    // Local detail update
-    if(currentData){
-      currentData.form_status    = newFormStatus;
-      currentData.payment_status = newPaymentStatus;
-      openDetails(currentData);
-    }
-
-    // List reload
-    loadStudents();
-  }
+  document.getElementById("dStatus").textContent=newStatus;
+  document.getElementById("dPayment").textContent=payFlag?"approved":"pending";
+}
 </script>
 
 </body>
-</html>
+</html>s
