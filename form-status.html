@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Form Status | BDS Mega Talent Hub</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{
+      font-family:Arial, sans-serif;
+      background:radial-gradient(circle at top,#1a4fff 0%,#000b33 55%,#000316 100%);
+      color:#fff;
+    }
+    header{
+      background:rgba(0,0,0,.7);
+      padding:8px 14px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      flex-wrap:wrap;
+      border-bottom:2px solid #ffbf00;
+    }
+    .logo-text{font-size:18px;font-weight:bold;letter-spacing:1px;}
+    nav a{
+      color:#fff;
+      text-decoration:none;
+      margin-left:10px;
+      font-size:13px;
+      font-weight:bold;
+    }
+    nav a:hover{text-decoration:underline;}
+
+    .container{max-width:900px;margin:18px auto;padding:0 10px;}
+    .card{
+      background:rgba(0,0,0,0.65);
+      padding:14px;
+      border-radius:10px;
+      margin-bottom:15px;
+    }
+    h1{font-size:22px;margin-bottom:6px;}
+    label{display:block;font-size:14px;margin-top:6px;}
+    input{
+      width:100%;
+      padding:7px;
+      border-radius:6px;
+      border:none;
+      margin-top:3px;
+      font-size:14px;
+    }
+    .btn-primary{
+      margin-top:10px;
+      padding:9px 20px;
+      border-radius:999px;
+      border:none;
+      background:#ffbf00;
+      color:#000;
+      font-weight:bold;
+      cursor:pointer;
+      font-size:14px;
+    }
+    .btn-primary:disabled{opacity:.6;cursor:default;}
+    #msgBox{margin-top:8px;font-size:13px;}
+
+    .status-box{
+      background:#001129;
+      border-radius:10px;
+      border:1px solid #ffbf00;
+      padding:12px;
+      margin-top:10px;
+      font-size:14px;
+    }
+    .status-row{
+      display:flex;
+      justify-content:space-between;
+      margin-bottom:4px;
+    }
+    .status-row span.label{font-weight:bold;}
+
+    footer{
+      text-align:center;
+      font-size:12px;
+      padding:10px;
+      background:rgba(0,0,0,.9);
+      margin-top:15px;
+    }
+  </style>
+
+  <!-- Supabase JS -->
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<header>
+  <div class="logo-text">BABA DEEP SINGH MEGA TALENT HUB</div>
+  <nav>
+    <a href="index.html">HOME</a>
+    <a href="apply.html">APPLY</a>
+    <a href="admit.html">ADMIT CARD</a>
+    <a href="form-status.html">FORM STATUS</a>
+    <a href="result.html">RESULT</a>
+    <a href="download.html">DOWNLOAD</a>
+    <a href="gallery.html">GALLERY</a>
+    <a href="help.html">HELP</a>
+    <a href="admin/login.html">ADMIN</a>
+  </nav>
+</header>
+
+<div class="container">
+  <div class="card">
+    <h1>Check Form Status</h1>
+    <p style="font-size:13px;color:#ffeaa7;">
+      Yahaan aap apna <b>Roll Number</b> aur <b>Date of Birth</b> daal kar
+      form ka status dekh sakte hain (Pending / Approved / Rejected),
+      payment status, aur exam centre.
+    </p>
+
+    <label>Roll Number</label>
+    <input type="text" id="rollInput" placeholder="e.g. BDS26XXXX">
+
+    <label>Date of Birth</label>
+    <input type="date" id="dobInput">
+
+    <button class="btn-primary" id="btnCheck">Check Status</button>
+    <div id="msgBox"></div>
+
+    <div id="statusArea" style="display:none;">
+      <div class="status-box" id="statusBox"></div>
+    </div>
+  </div>
+</div>
+
+<footer>© 2026 Baba Deep Singh Mega Talent Hub</footer>
+
+<script>
+  // Supabase config (same project)
+  const SUPABASE_URL = "https://yyymjhuwjvyykukfzqow.supabase.co";
+  const SUPABASE_ANON_KEY =
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl5eW1qaHV3anZ5eWt1a2Z6cW93Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2NzMzMjIsImV4cCI6MjA4MDI0OTMyMn0.Ja9Do4cwumTnXx2NGIRW8Ti3rKm4MBiLClQz0xjOtrQ";
+
+  const { createClient } = supabase;
+  const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  function showMsg(text,color){
+    const box = document.getElementById("msgBox");
+    box.style.color = color || "#fff";
+    box.innerHTML = text;
+  }
+
+  async function checkStatus(){
+    const roll = document.getElementById("rollInput").value.trim().toUpperCase();
+    const dob  = document.getElementById("dobInput").value;
+    const btn  = document.getElementById("btnCheck");
+
+    document.getElementById("statusArea").style.display = "none";
+    document.getElementById("statusBox").innerHTML = "";
+
+    if(!roll || !dob){
+      showMsg("Roll number aur Date of Birth dono fill karein.","#ff8080");
+      return;
+    }
+
+    btn.disabled = true;
+    showMsg("Please wait, record search ho raha hai...","#fff");
+
+    try{
+      // students table se record
+      const { data: stu, error } = await sb
+        .from("students")
+        .select("full_name, father_name, roll_number, dob, form_status, payment_status, exam_centre, admit_active, result_published")
+        .eq("roll_number", roll)
+        .maybeSingle();
+
+      if(error){
+        console.error(error);
+        showMsg("Error: "+error.message,"#ff8080");
+        btn.disabled = false;
+        return;
+      }
+
+      if(!stu){
+        showMsg("Record nahi mila. Roll number check karein.","#ff8080");
+        btn.disabled = false;
+        return;
+      }
+
+      // DOB match (Supabase date = YYYY-MM-DD)
+      if(!stu.dob || stu.dob !== dob){
+        showMsg("DOB match nahi ho rahi. Sahi Date of Birth enter karein.","#ff8080");
+        btn.disabled = false;
+        return;
+      }
+
+      // Status text
+      const formStatus    = stu.form_status    || "not_applied";
+      const paymentStatus = stu.payment_status || "pending";
+      const centre        = stu.exam_centre    || "Not allotted yet";
+      const admitActive   = stu.admit_active   ? "Active / Download available" : "Not active yet";
+      const resultInfo    = stu.result_published ? "Result published or soon visible on RESULT page." : "Result not published yet.";
+
+      let html = "";
+      html += '<div class="status-row"><span class="label">Name:</span><span>'+(stu.full_name || "")+'</span></div>';
+      html += '<div class="status-row"><span class="label">Roll No:</span><span>'+(stu.roll_number || "")+'</span></div>';
+      html += '<div class="status-row"><span class="label">Father\'s Name:</span><span>'+(stu.father_name || "")+'</span></div>';
+
+      html += '<hr style="border:none;border-top:1px solid rgba(255,255,255,.2);margin:6px 0;">';
+
+      html += '<div class="status-row"><span class="label">Form Status:</span><span>'+formStatus.toUpperCase()+'</span></div>';
+      html += '<div class="status-row"><span class="label">Payment Status:</span><span>'+paymentStatus.toUpperCase()+'</span></div>';
+      html += '<div class="status-row"><span class="label">Exam Centre:</span><span>'+centre+'</span></div>';
+      html += '<div class="status-row"><span class="label">Admit Card:</span><span>'+admitActive+'</span></div>';
+      html += '<div class="status-row"><span class="label">Result:</span><span>'+resultInfo+'</span></div>';
+
+      html += '<p style="font-size:11px;margin-top:8px;color:#ffeaa7;">';
+      html += 'Note: Form status, payment verification, centre allotment aur admit card organizer ke update ke according change hote rahenge.';
+      html += '</p>';
+
+      document.getElementById("statusBox").innerHTML = html;
+      document.getElementById("statusArea").style.display = "block";
+      showMsg("Status loaded successfully.","#7CFC00");
+      btn.disabled = false;
+
+    }catch(err){
+      console.error(err);
+      showMsg("Error: "+err.message,"#ff8080");
+      btn.disabled = false;
+    }
+  }
+
+  document.getElementById("btnCheck").addEventListener("click", checkStatus);
+</script>
+
+</body>
+</html>
