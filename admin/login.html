@@ -17,12 +17,12 @@
       min-height:100vh;
     }
     .card{
-      background:rgba(0,0,0,0.8);
+      background:rgba(0,0,0,0.85);
       padding:24px;
       border-radius:14px;
       width:320px;
-      box-shadow:0 0 18px #000;
       text-align:center;
+      box-shadow:0 0 20px #000;
     }
     h1{
       margin:0 0 8px;
@@ -37,40 +37,37 @@
     input{
       width:100%;
       padding:9px;
-      margin-top:8px;
       border-radius:6px;
       border:none;
+      margin-top:8px;
       font-size:14px;
-      box-sizing:border-box;
     }
     button{
       width:100%;
-      margin-top:12px;
       padding:9px;
-      border-radius:999px;
+      margin-top:12px;
       border:none;
+      border-radius:999px;
       background:#ffbf00;
       color:#000;
+      font-size:14px;
       font-weight:bold;
       cursor:pointer;
-      font-size:14px;
     }
-    button:hover{
-      filter:brightness(1.05);
-    }
+    button:hover{ filter:brightness(1.05); }
     label{
       display:block;
-      margin-top:6px;
       font-size:12px;
+      margin-top:6px;
       text-align:left;
     }
     #msg{
-      margin-top:8px;
       font-size:13px;
+      margin-top:8px;
     }
     a.back-link{
       display:inline-block;
-      margin-top:10px;
+      margin-top:8px;
       font-size:12px;
       color:#9ecbff;
       text-decoration:none;
@@ -86,10 +83,7 @@
 
   <input type="password" id="adminPass" placeholder="Enter Admin Password">
 
-  <label>
-    <input type="checkbox" onclick="togglePass()">
-    Show Password
-  </label>
+  <label><input type="checkbox" onclick="togglePass()"> Show Password</label>
 
   <button onclick="adminLogin()">Login</button>
 
@@ -99,28 +93,25 @@
 </div>
 
 <script>
-  // 🔐 Admin password yahi hai (Ajeet ne diya hua)
-  var ADMIN_PASSWORD = "Ajeet@1993";
+  const ADMIN_PASSWORD = "Ajeet@1993"; // ⛔ Yeh sirf local protection hai
 
   function togglePass(){
-    var input = document.getElementById("adminPass");
-    input.type = (input.type === "password") ? "text" : "password";
+    const inp = document.getElementById("adminPass");
+    inp.type = inp.type === "password" ? "text" : "password";
   }
 
   function adminLogin(){
-    var pass = document.getElementById("adminPass").value.trim();
-    var msg  = document.getElementById("msg");
+    const pass = document.getElementById("adminPass").value.trim();
+    const msg  = document.getElementById("msg");
 
     if(pass === ADMIN_PASSWORD){
-      msg.style.color = "#0f0";
-      msg.textContent = "Access granted… opening dashboard.";
-      // Local storage me ek flag save kar dete hain:
+      msg.style.color = "lightgreen";
+      msg.textContent = "Login successful… redirecting";
       localStorage.setItem("bdsAdminLoggedIn", "yes");
-      // Dashboard pe bhej do
-      window.location.href = "dashboard.html";
-    }else{
+      setTimeout(() => window.location.href = "dashboard.html", 600);
+    } else {
       msg.style.color = "red";
-      msg.textContent = "Wrong password.";
+      msg.textContent = "Wrong password!";
     }
   }
 </script>
