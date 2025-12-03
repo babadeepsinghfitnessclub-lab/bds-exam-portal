@@ -41,7 +41,7 @@
     .topbar-links a { margin-right:8px; font-size:13px; text-decoration:none; color:#1976d2; }
   </style>
 
-  <!-- Supabase JS (browser) -->
+  <!-- Supabase JS -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.48.0/dist/umd/supabase.min.js"></script>
 </head>
 <body>
@@ -83,11 +83,12 @@
     window.location.href = "login.html";
   }
 
-  // 🔧 Supabase config
+  // Supabase config
   const SUPABASE_URL = "https://yyymjhuwjvyykukfzqow.supabase.co";
-  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl5eW1qaHV3anZ5eWt1a2Z6cW93Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2NzMzMjIsImV4cCI6MjA4MDI0OTMyMn0.Ja9Do4cwumTnXx2NGIRW8Ti3rKm4MBiLClQz0xjOtrQ";
-  const BUCKET_NAME = "gallery";
+  const SUPABASE_ANON_KEY =
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl5eW1qaHV3anZ5eWt1a2Z6cW93Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2NzMzMjIsImV4cCI6MjA4MDI0OTMyMn0.Ja9Do4cwumTnXx2NGIRW8Ti3rKm4MBiLClQz0xjOtrQ";
 
+  const BUCKET_NAME = "gallery";
   const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
   const photoFileInput = document.getElementById("photoFile");
@@ -113,26 +114,24 @@
     uploadBtn.disabled = true;
 
     try {
-      // 1) Storage me file upload
-      const filePath = gallery/${Date.now()}_${file.name};
+      // Upload file to storage
+      const filePath = `gallery/${Date.now()}_${file.name}`;
 
-      const { data: uploadData, error: uploadError } =
-        await supabase.storage.from(BUCKET_NAME).upload(filePath, file, {
-          upsert: true
-        });
+      const { error: uploadError } = await supabase
+        .storage
+        .from(BUCKET_NAME)
+        .upload(filePath, file);
 
-      if (uploadError) {
-        console.error(uploadError);
-        throw new Error(uploadError.message || "Upload failed");
-      }
+      if (uploadError) throw uploadError;
 
-      // 2) Public URL nikalna
-      const { data: publicData } =
-        supabase.storage.from(BUCKET_NAME).getPublicUrl(filePath);
+      // Get public URL
+      const { data: pub } = supabase.storage
+        .from(BUCKET_NAME)
+        .getPublicUrl(filePath);
 
-      const publicUrl = publicData.publicUrl;
+      const publicUrl = pub.publicUrl;
 
-      // 3) gallery_items table me row insert
+      // Insert row into DB
       const { error: insertError } = await supabase
         .from("gallery_items")
         .insert({
@@ -143,13 +142,10 @@
           created_at: new Date().toISOString()
         });
 
-      if (insertError) {
-        console.error(insertError);
-        throw new Error(insertError.message || "DB insert failed");
-      }
+      if (insertError) throw insertError;
 
       msgBox.style.color = "green";
-      msgBox.textContent = "Photo uploaded successfully. Gallery page me show ho jayegi.";
+      msgBox.textContent = "Photo uploaded successfully!";
 
       photoFileInput.value = "";
       captionInput.value = "";
@@ -158,9 +154,8 @@
       loadLatestPhotos();
 
     } catch (err) {
-      console.error(err);
       msgBox.style.color = "red";
-      msgBox.textContent = "File upload error: " + err.message;
+      msgBox.textContent = "Error: " + err.message;
     } finally {
       uploadBtn.disabled = false;
     }
@@ -176,13 +171,7 @@
       .limit(12);
 
     if (error) {
-      console.error(error);
       previewList.textContent = "Error loading preview: " + error.message;
-      return;
-    }
-
-    if (!data || data.length === 0) {
-      previewList.textContent = "No photos uploaded yet.";
       return;
     }
 
