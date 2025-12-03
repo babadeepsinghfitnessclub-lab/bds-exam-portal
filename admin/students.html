@@ -44,6 +44,32 @@
   .field-label { font-weight:bold; }
   a { color:#1976d2; }
   .topbar-links a { margin-right:8px; font-size:13px; }
+
+  .section-title{
+    margin-top:10px;
+    font-weight:bold;
+    border-bottom:1px solid #ccc;
+    padding-bottom:3px;
+    margin-bottom:4px;
+  }
+  .row-2col{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+  }
+  .row-2col > div{
+    flex:1 1 160px;
+  }
+  input[type="text"], input[type="number"]{
+    width:100%;
+    padding:4px 6px;
+    margin-top:2px;
+    box-sizing:border-box;
+    border-radius:4px;
+    border:1px solid #ccc;
+    font-size:13px;
+  }
+  label{font-size:13px;}
 </style>
 
 <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
@@ -76,6 +102,7 @@
   </table>
 
   <div id="detailBox" class="detail-card" style="display:none;">
+    <div class="section-title">Student Details</div>
     <p><span class="field-label">Name:</span> <span id="dName"></span></p>
     <p><span class="field-label">Father:</span> <span id="dFather"></span></p>
     <p><span class="field-label">Mobile:</span> <span id="dMobile"></span></p>
@@ -83,19 +110,44 @@
     <p><span class="field-label">Form Status:</span> <span id="dStatus"></span></p>
     <p><span class="field-label">Payment Status:</span> <span id="dPayment"></span></p>
     <p><span class="field-label">UPI Txn ID:</span> <span id="dTxn"></span></p>
-    <p><span class="field-label">Address:</span> <span id="dAddress"></span></p    >
+    <p><span class="field-label">Address:</span> <span id="dAddress"></span></p>
     <p><span class="field-label">Qualification:</span> <span id="dQual"></span></p>
-    
+
+    <div class="section-title">Documents</div>
     <p><span class="field-label">Photo:</span> <a id="dPhoto" target="_blank">Open</a></p>
     <p><span class="field-label">Aadhaar Front:</span> <a id="dAadharF" target="_blank">Open</a></p>
     <p><span class="field-label">Aadhaar Back:</span> <a id="dAadharB" target="_blank">Open</a></p>
     <p><span class="field-label">Marksheet:</span> <a id="dMarksheet" target="_blank">Open</a></p>
     <p><span class="field-label">Payment Screenshot:</span> <a id="dPaymentSS" target="_blank">Open</a></p>
 
-    <div style="margin-top:10px;">
+    <div class="section-title">Payment / Form Status</div>
+    <div>
       <button class="btn-approve" onclick="updateStatus('approved', true)">Approve</button>
       <button class="btn-pending" onclick="updateStatus('pending', false)">Pending</button>
       <button class="btn-reject" onclick="updateStatus('rejected', false)">Reject</button>
+    </div>
+
+    <div class="section-title">Result Update</div>
+    <div class="row-2col">
+      <div>
+        <label>Marks</label>
+        <input type="number" id="rMarks" placeholder="e.g. 87">
+      </div>
+      <div>
+        <label>Rank</label>
+        <input type="number" id="rRank" placeholder="e.g. 12">
+      </div>
+    </div>
+    <label style="display:block;margin-top:6px;">Result Status</label>
+    <input type="text" id="rStatus" placeholder="Pass / Fail / Scholarship etc.">
+
+    <label style="margin-top:6px;display:inline-flex;align-items:center;gap:4px;">
+      <input type="checkbox" id="rPublish">
+      Result publish kare? (website par show hoga)
+    </label>
+
+    <div style="margin-top:8px;">
+      <button class="btn-approve" onclick="saveResult()">Save Result</button>
     </div>
 
     <p class="msg" id="detailMsg"></p>
@@ -172,7 +224,8 @@ async function loadStudents(){
     const tr = document.createElement("tr");
 
     const formStatus = st.form_status || st.status || "pending";
-    const paymentStatus = st.payment_status || (st.payment_verified ? "approved" : "pending");
+    const paymentStatus = st.payment_status
+      || (st.payment_verified ? "approved" : "pending");
 
     tr.innerHTML =
       `<td>${i++}</td>
@@ -220,13 +273,19 @@ function openDetails(st){
   setDocLink("dAadharB",   st.aadhar_back_path);
   setDocLink("dMarksheet", st.marksheet_path);
   setDocLink("dPaymentSS", st.payment_screenshot_path);
+
+  // result fields
+  document.getElementById("rMarks").value  = st.marks ?? "";
+  document.getElementById("rRank").value   = st.rank ?? "";
+  document.getElementById("rStatus").value = st.result_status || "";
+  document.getElementById("rPublish").checked = st.result_published === true;
 }
 
 // ---- status buttons ----
 async function updateStatus(newStatus,payFlag){
   if(!currentId) return;
   const msg = document.getElementById("detailMsg");
-  msg.textContent="Updating...";
+  msg.textContent="Updating status...";
 
   const updateObj = {
     form_status: newStatus,
@@ -245,12 +304,44 @@ async function updateStatus(newStatus,payFlag){
     return;
   }
   msg.style.color="green";
-  msg.textContent="Updated successfully.";
+  msg.textContent="Status updated.";
   loadStudents();
   document.getElementById("dStatus").textContent=newStatus;
   document.getElementById("dPayment").textContent=payFlag?"approved":"pending";
 }
+
+// ---- save result ----
+async function saveResult(){
+  if(!currentId) return;
+  const msg = document.getElementById("detailMsg");
+  msg.style.color = "#000";
+  msg.textContent = "Saving result...";
+
+  const marksVal  = document.getElementById("rMarks").value.trim();
+  const rankVal   = document.getElementById("rRank").value.trim();
+  const statusVal = document.getElementById("rStatus").value.trim();
+  const publish   = document.getElementById("rPublish").checked;
+
+  const { error } = await sb
+    .from("students")
+    .update({
+      marks: marksVal === "" ? null : marksVal,
+      rank:  rankVal === "" ? null : rankVal,
+      result_status: statusVal || null,
+      result_published: publish
+    })
+    .eq("id", currentId);
+
+  if(error){
+    msg.style.color="red";
+    msg.textContent="Error saving result: "+error.message;
+    return;
+  }
+
+  msg.style.color="green";
+  msg.textContent="Result saved successfully.";
+}
 </script>
 
 </body>
-</html>s
+</html>
