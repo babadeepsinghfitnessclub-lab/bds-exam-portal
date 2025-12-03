@@ -93,6 +93,7 @@
         <th>Roll</th>
         <th>Name</th>
         <th>Mobile</th>
+        <th>Centre</th>
         <th>Form Status</th>
         <th>Payment</th>
         <th>Action</th>
@@ -110,7 +111,7 @@
     <p><span class="field-label">Form Status:</span> <span id="dStatus"></span></p>
     <p><span class="field-label">Payment Status:</span> <span id="dPayment"></span></p>
     <p><span class="field-label">UPI Txn ID:</span> <span id="dTxn"></span></p>
-    <p><span class="field-label">Address:</span> <span id="dAddress"></span></p>
+    <p><span class="field-label">Address:</span> <span id="dAddress"></span></p    >
     <p><span class="field-label">Qualification:</span> <span id="dQual"></span></p>
 
     <div class="section-title">Documents</div>
@@ -125,6 +126,19 @@
       <button class="btn-approve" onclick="updateStatus('approved', true)">Approve</button>
       <button class="btn-pending" onclick="updateStatus('pending', false)">Pending</button>
       <button class="btn-reject" onclick="updateStatus('rejected', false)">Reject</button>
+    </div>
+
+    <div class="section-title">Exam Centre & Admit Card</div>
+    <label>Exam Centre (school / city etc.)</label>
+    <input type="text" id="centerInput" placeholder="e.g. Govt Sr Sec School, Sangariya">
+
+    <label style="margin-top:6px;display:inline-flex;align-items:center;gap:4px;">
+      <input type="checkbox" id="admitAllow">
+      Admit card active kare? (payment approved + ye tick ⇒ student admit card download kar sakta hai)
+    </label>
+
+    <div style="margin-top:8px;">
+      <button class="btn-approve" onclick="saveCentreAdmit()">Save Centre / Admit</button>
     </div>
 
     <div class="section-title">Result Update</div>
@@ -156,6 +170,7 @@
 </div>
 
 <script>
+// Admin login check
 if(localStorage.getItem("bdsAdminLoggedIn")!=="yes"){
   window.location.href="login.html";
 }
@@ -169,7 +184,6 @@ const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let currentId = null;
 
-// ---- helper: path → public URL from student_docs bucket ----
 function fileUrl(path){
   if(!path) return "";
   const { data } = sb.storage.from("student_docs").getPublicUrl(path);
@@ -200,7 +214,6 @@ function setDocLink(anchorId, path){
   }
 }
 
-// ---- list load ----
 async function loadStudents(){
   const listMsg = document.getElementById("listMsg");
   listMsg.textContent = "Loading...";
@@ -232,6 +245,7 @@ async function loadStudents(){
        <td>${st.roll_number}</td>
        <td>${st.full_name || st.name || ""}</td>
        <td>${st.mobile || ""}</td>
+       <td>${st.exam_center || "-"}</td>
        <td>${formStatus}</td>
        <td>${paymentStatus}</td>
        <td><button class='btn-view'>View</button></td>`;
@@ -244,7 +258,6 @@ async function loadStudents(){
 }
 loadStudents();
 
-// ---- details panel ----
 function openDetails(st){
   currentId = st.id;
 
@@ -267,21 +280,21 @@ function openDetails(st){
   document.getElementById("dAddress").textContent  = st.address || "";
   document.getElementById("dQual").textContent     = st.qualification || "";
 
-  // documents – correct columns
   setDocLink("dPhoto",     st.photo_path);
   setDocLink("dAadharF",   st.aadhar_front_path);
   setDocLink("dAadharB",   st.aadhar_back_path);
   setDocLink("dMarksheet", st.marksheet_path);
   setDocLink("dPaymentSS", st.payment_screenshot_path);
 
-  // result fields
+  document.getElementById("centerInput").value = st.exam_center || "";
+  document.getElementById("admitAllow").checked = st.admit_allowed === true;
+
   document.getElementById("rMarks").value  = st.marks ?? "";
   document.getElementById("rRank").value   = st.rank ?? "";
   document.getElementById("rStatus").value = st.result_status || "";
   document.getElementById("rPublish").checked = st.result_published === true;
 }
 
-// ---- status buttons ----
 async function updateStatus(newStatus,payFlag){
   if(!currentId) return;
   const msg = document.getElementById("detailMsg");
@@ -310,7 +323,34 @@ async function updateStatus(newStatus,payFlag){
   document.getElementById("dPayment").textContent=payFlag?"approved":"pending";
 }
 
-// ---- save result ----
+async function saveCentreAdmit(){
+  if(!currentId) return;
+  const msg = document.getElementById("detailMsg");
+  msg.style.color = "#000";
+  msg.textContent = "Saving centre / admit...";
+
+  const centre = document.getElementById("centerInput").value.trim();
+  const allow  = document.getElementById("admitAllow").checked;
+
+  const { error } = await sb
+    .from("students")
+    .update({
+      exam_center: centre || null,
+      admit_allowed: allow
+    })
+    .eq("id", currentId);
+
+  if(error){
+    msg.style.color="red";
+    msg.textContent="Error saving centre/admit: "+error.message;
+    return;
+  }
+
+  msg.style.color="green";
+  msg.textContent="Centre / admit updated.";
+  loadStudents();
+}
+
 async function saveResult(){
   if(!currentId) return;
   const msg = document.getElementById("detailMsg");
