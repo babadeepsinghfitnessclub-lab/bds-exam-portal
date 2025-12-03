@@ -87,7 +87,7 @@ th{
 }
 </style>
 
-<!-- Supabase JS -->
+<!-- Supabase JS v2 (browser UMD) -->
 <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 </head>
 <body>
@@ -126,8 +126,8 @@ th{
 
 <script>
   // 🔐 Admin guard
-  if(localStorage.getItem("bdsAdminLoggedIn")!=="yes"){
-    window.location.href="login.html";
+  if (localStorage.getItem("bdsAdminLoggedIn") !== "yes") {
+    window.location.href = "login.html";
   }
   function logout(){
     localStorage.removeItem("bdsAdminLoggedIn");
@@ -135,7 +135,7 @@ th{
   }
   window.logout = logout;
 
-  // Supabase config
+  // 🔗 Supabase config (tumhara project)
   const SUPABASE_URL = "https://yyymjhuwjvyykukfzqow.supabase.co";
   const SUPABASE_ANON_KEY =
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl5eW1qaHV3anZ5eWt1a2Z6cW93Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2NzMzMjIsImV4cCI6MjA4MDI0OTMyMn0.Ja9Do4cwumTnXx2NGIRW8Ti3rKm4MBiLClQz0xjOtrQ";
@@ -160,10 +160,10 @@ th{
     const { error } = await sb
       .from("notices")
       .insert([{
-        title: title,
-        body: body,
-        active: true
-        // created_at Supabase me default now() rakha hai to auto ho jayega
+        title:  title,   // ✅ column name
+        body:   body,    // ✅ column name
+        active: true     // ✅ boolean column
+        // created_at column me default now() laga hua hai (auto)
       }]);
 
     if (error) {
@@ -214,15 +214,15 @@ th{
           <td>${row.title || ""}</td>
           <td>${row.body || ""}</td>
           <td>
-            <span class="badge ${active?"badge-on":"badge-off"}">
-              ${active?"Visible":"Hidden"}
+            <span class="badge ${active ? "badge-on" : "badge-off"}">
+              ${active ? "Visible" : "Hidden"}
             </span><br>
             <span style="font-size:11px;opacity:.8;">${createdText}</span>
           </td>
           <td>
             <button class="small-btn"
               onclick="toggleNotice(${row.id},${active})">
-              ${active?"Hide":"Show"}
+              ${active ? "Hide" : "Show"}
             </button>
             <button class="small-btn" style="background:#ff5252;color:#fff;"
               onclick="deleteNotice(${row.id})">
@@ -234,7 +234,7 @@ th{
     tbody.innerHTML = html;
   }
 
-  // 👁 Hide/Show
+  // 👁 Hide / Show
   async function toggleNotice(id,current){
     const { error } = await sb
       .from("notices")
@@ -268,6 +268,7 @@ th{
   }
   window.deleteNotice = deleteNotice;
 
+  // First load
   loadNotices();
 </script>
 
