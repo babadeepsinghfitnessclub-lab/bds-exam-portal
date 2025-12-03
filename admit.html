@@ -175,7 +175,7 @@
   </style>
 
   <!-- Supabase JS (v2) -->
-  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.48.0/dist/umd/supabase.min.js"></script>
 </head>
 <body>
 
@@ -188,7 +188,7 @@
     <a href="result.html">RESULT</a>
     <a href="download.html">DOWNLOAD</a>
     <a href="help.html">HELP</a>
-    <a href="admin.html">ADMIN</a>
+    <a href="admin/login.html">ADMIN</a>
   </nav>
 </header>
 
@@ -226,10 +226,10 @@
 <script>
   // Supabase config (tumhara project)
   const SUPABASE_URL = "https://yyymjhuwjvyykukfzqow.supabase.co";
-  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl5eW1qaHV3anZ5eWt1a2Z6cW93Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2NzMzMjIsImV4cCI6MjA4MDI0OTMyMn0.Ja9Do4cwumTnXx2NGIRW8Ti3rKm4MBiLClQz0xjOtrQ";
+  const SUPABASE_ANON_KEY =
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl5eW1qaHV3anZ5eWt1a2Z6cW93Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2NzMzMjIsImV4cCI6MjA4MDI0OTMyMn0.Ja9Do4cwumTnXx2NGIRW8Ti3rKm4MBiLClQz0xjOtrQ";
 
-  const { createClient } = supabase;
-  const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  const supa = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
   // === STATIC EXAM DETAILS ===
   const EXAM_DETAILS = {
@@ -265,9 +265,11 @@
 
     try {
       // Supabase se students table se record nikaalo
-      const { data: stu, error } = await sb
+      const { data: stu, error } = await supa
         .from("students")
-        .select("roll_number, full_name, father_name, dob, gender, mobile, whatsapp, qualification, address, payment_status, photo_path")
+        .select(
+          "roll_number, full_name, father_name, dob, gender, mobile, whatsapp, qualification, address, payment_status, photo_path"
+        )
         .eq("roll_number", roll)
         .maybeSingle();
 
@@ -291,7 +293,7 @@
         return;
       }
 
-      // Payment verification check (humne payment_status use kiya hai)
+      // Payment verification check (payment_status text column)
       if (stu.payment_status !== "approved") {
         showMessage(
           "Aapki registration abhi <b>PENDING</b> hai. " +
@@ -305,7 +307,7 @@
       // Photo URL banana (student_docs bucket se)
       let photoUrl = "";
       if (stu.photo_path) {
-        const { data: publicData } = sb
+        const { data: publicData } = supa
           .storage
           .from("student_docs")
           .getPublicUrl(stu.photo_path);
