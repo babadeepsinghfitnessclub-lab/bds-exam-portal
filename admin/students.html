@@ -32,6 +32,7 @@
   .btn-approve { background:#2e7d32; color:#fff; }
   .btn-pending { background:#ffa000; color:#000; }
   .btn-reject { background:#c62828; color:#fff; }
+  .btn-delete { background:#b71c1c; color:#fff; }
   .msg { margin-top:6px; font-size:13px; }
   .detail-card {
     margin-top:12px;
@@ -102,285 +103,341 @@
     <tbody id="appsBody"></tbody>
   </table>
 
+  <!-- DETAIL CARD -->
   <div id="detailBox" class="detail-card" style="display:none;">
     <div class="section-title">Student Details</div>
     <p><span class="field-label">Name:</span> <span id="dName"></span></p>
     <p><span class="field-label">Father:</span> <span id="dFather"></span></p>
     <p><span class="field-label">Mobile:</span> <span id="dMobile"></span></p>
     <p><span class="field-label">Roll No:</span> <span id="dRoll"></span></p>
-    <p><span class="field-label">Form Status:</span> <span id="dStatus"></span></p>
-    <p><span class="field-label">Payment Status:</span> <span id="dPayment"></span></p>
-    <p><span class="field-label">UPI Txn ID:</span> <span id="dTxn"></span></p>
-    <p><span class="field-label">Address:</span> <span id="dAddress"></span></p    >
+    <p><span class="field-label">Form Status:</span> <span id="dFormStatus"></span></p>
+    <p><span class="field-label">Payment Status:</span> <span id="dPayStatus"></span></p>
+    <p><span class="field-label">UPI Txn ID:</span> <span id="dUpi"></span></p>
+    <p><span class="field-label">Address:</span> <span id="dAddress"></span></p>
     <p><span class="field-label">Qualification:</span> <span id="dQual"></span></p>
 
     <div class="section-title">Documents</div>
-    <p><span class="field-label">Photo:</span> <a id="dPhoto" target="_blank">Open</a></p>
-    <p><span class="field-label">Aadhaar Front:</span> <a id="dAadharF" target="_blank">Open</a></p>
-    <p><span class="field-label">Aadhaar Back:</span> <a id="dAadharB" target="_blank">Open</a></p>
-    <p><span class="field-label">Marksheet:</span> <a id="dMarksheet" target="_blank">Open</a></p>
-    <p><span class="field-label">Payment Screenshot:</span> <a id="dPaymentSS" target="_blank">Open</a></p>
+    <p>Photo: <a href="#" id="docPhoto" target="_blank">Open</a></p>
+    <p>Aadhaar Front: <a href="#" id="docAf" target="_blank">Open</a></p>
+    <p>Aadhaar Back: <a href="#" id="docAb" target="_blank">Open</a></p>
+    <p>Marksheet: <a href="#" id="docMark" target="_blank">Open</a></p>
+    <p>Payment Screenshot: <a href="#" id="docPay" target="_blank">Open</a></p>
 
     <div class="section-title">Payment / Form Status</div>
-    <div>
-      <button class="btn-approve" onclick="updateStatus('approved', true)">Approve</button>
-      <button class="btn-pending" onclick="updateStatus('pending', false)">Pending</button>
-      <button class="btn-reject" onclick="updateStatus('rejected', false)">Reject</button>
-    </div>
+    <button class="btn-approve" onclick="setStatus('approved')">Approve</button>
+    <button class="btn-pending" onclick="setStatus('pending')">Pending</button>
+    <button class="btn-reject" onclick="setStatus('rejected')">Reject</button>
 
     <div class="section-title">Exam Centre & Admit Card</div>
     <label>Exam Centre (school / city etc.)</label>
-    <input type="text" id="centerInput" placeholder="e.g. Govt Sr Sec School, Sangariya">
-
-    <label style="margin-top:6px;display:inline-flex;align-items:center;gap:4px;">
-      <input type="checkbox" id="admitAllow">
+    <input type="text" id="centreInput" placeholder="Exam centre">
+    <label style="margin-top:6px;">
+      <input type="checkbox" id="admitCheck">
       Admit card active kare? (payment approved + ye tick ⇒ student admit card download kar sakta hai)
     </label>
-
-    <div style="margin-top:8px;">
-      <button class="btn-approve" onclick="saveCentreAdmit()">Save Centre / Admit</button>
-    </div>
+    <button onclick="saveCentreAdmit()">Save Centre / Admit</button>
 
     <div class="section-title">Result Update</div>
     <div class="row-2col">
       <div>
         <label>Marks</label>
-        <input type="number" id="rMarks" placeholder="e.g. 87">
+        <input type="number" id="marksInput" placeholder="Marks">
       </div>
       <div>
         <label>Rank</label>
-        <input type="number" id="rRank" placeholder="e.g. 12">
+        <input type="number" id="rankInput" placeholder="Rank">
       </div>
     </div>
-    <label style="display:block;margin-top:6px;">Result Status</label>
-    <input type="text" id="rStatus" placeholder="Pass / Fail / Scholarship etc.">
-
-    <label style="margin-top:6px;display:inline-flex;align-items:center;gap:4px;">
-      <input type="checkbox" id="rPublish">
+    <label style="margin-top:6px;">Result Status</label>
+    <input type="text" id="resultStatusInput" placeholder="Jaise: Pass / Fail / Absent">
+    <label style="margin-top:6px;">
+      <input type="checkbox" id="resultPublishCheck">
       Result publish kare? (website par show hoga)
     </label>
+    <button onclick="saveResult()">Save Result</button>
 
-    <div style="margin-top:8px;">
-      <button class="btn-approve" onclick="saveResult()">Save Result</button>
-    </div>
+    <div class="section-title">Danger Zone</div>
+    <p style="font-size:12px;color:#b71c1c;">
+      Yahan se pura student application delete ho jayega (saare documents ke saath). Dhyan se use karein.
+    </p>
+    <button class="btn-delete" onclick="deleteCurrentStudent()">Delete Application</button>
 
     <p class="msg" id="detailMsg"></p>
   </div>
-
 </div>
 
 <script>
-// Admin login check
-if(localStorage.getItem("bdsAdminLoggedIn")!=="yes"){
-  window.location.href="login.html";
-}
+  // ---------- CONFIG ----------
+  const SUPABASE_URL = "https://yyymjhuwjvyykukfzqow.supabase.co";
+  const SUPABASE_ANON_KEY =
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl5eW1qaHV3anZ5eWt1a2Z6cW93Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2NzMzMjIsImV4cCI6MjA4MDI0OTMyMn0.Ja9Do4cwumTnXx2NGIRW8Ti3rKm4MBiLClQz0xjOtrQ";
 
-const SUPABASE_URL = "https://yyymjhuwjvyykukfzqow.supabase.co";
-const SUPABASE_KEY =
-"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl5eW1qaHV3anZ5eWt1a2Z6cW93Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2NzMzMjIsImV4cCI6MjA4MDI0OTMyMn0.Ja9Do4cwumTnXx2NGIRW8Ti3rKm4MBiLClQz0xjOtrQ";
+  const STUDENT_DOC_BUCKET = "student_docs"; // agar bucket ka naam kuch aur hai to yahan change karo
 
-const { createClient } = supabase;
-const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+  const { createClient } = supabase;
+  const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-let currentId = null;
-
-function fileUrl(path){
-  if(!path) return "";
-  const { data } = sb.storage.from("student_docs").getPublicUrl(path);
-  return data && data.publicUrl ? data.publicUrl : "";
-}
-
-function setDocLink(anchorId, path){
-  const a = document.getElementById(anchorId);
-  if(!path){
-    a.textContent = "Not uploaded";
-    a.removeAttribute("href");
-    a.style.pointerEvents = "none";
-    a.style.opacity = "0.6";
-    return;
-  }
-  const url = fileUrl(path);
-  if(url){
-    a.href = url;
-    a.target = "_blank";
-    a.textContent = "Open";
-    a.style.pointerEvents = "auto";
-    a.style.opacity = "1";
-  }else{
-    a.textContent = "Error";
-    a.removeAttribute("href");
-    a.style.pointerEvents = "none";
-    a.style.opacity = "0.6";
-  }
-}
-
-async function loadStudents(){
-  const listMsg = document.getElementById("listMsg");
-  listMsg.textContent = "Loading...";
-
-  const { data, error } = await sb
-    .from("students")
-    .select("*")
-    .order("created_at",{ ascending: false });
-
-  if(error){
-    listMsg.textContent = "Error: "+error.message;
-    return;
+  // admin login check
+  if (localStorage.getItem("bdsAdminLoggedIn") !== "yes") {
+    window.location.href = "login.html";
   }
 
-  const body = document.getElementById("appsBody");
-  body.innerHTML = "";
-  let i=1;
+  const listMsg    = document.getElementById("listMsg");
+  const appsBody   = document.getElementById("appsBody");
+  const detailBox  = document.getElementById("detailBox");
+  const detailMsg  = document.getElementById("detailMsg");
 
-  data.forEach(st=>{
-    if(!st.roll_number) return;
-    const tr = document.createElement("tr");
+  let allStudents = [];
+  let currentStudent = null;
 
-    const formStatus = st.form_status || st.status || "pending";
-    const paymentStatus = st.payment_status
-      || (st.payment_verified ? "approved" : "pending");
+  // ---------- LOAD LIST ----------
+  async function loadApplications() {
+    listMsg.textContent = "Loading...";
+    appsBody.innerHTML = "";
 
-    tr.innerHTML =
-      `<td>${i++}</td>
-       <td>${st.roll_number}</td>
-       <td>${st.full_name || st.name || ""}</td>
-       <td>${st.mobile || ""}</td>
-       <td>${st.exam_center || "-"}</td>
-       <td>${formStatus}</td>
-       <td>${paymentStatus}</td>
-       <td><button class='btn-view'>View</button></td>`;
+    const { data, error } = await sb
+      .from("students")
+      .select("id, roll_number, full_name, father_name, mobile, upi_txn, address, qualification, form_status, payment_status, exam_centre, admit_active, photo_path, aadhar_front_path, aadhar_back_path, marksheet_path, payment_screenshot_path, marks, rank, result_status, result_published")
+      .order("id", { ascending: true });
 
-    tr.querySelector("button").onclick = ()=>openDetails(st);
-    body.appendChild(tr);
-  });
+    if (error) {
+      console.error(error);
+      listMsg.textContent = "Error loading applications: " + error.message;
+      return;
+    }
 
-  listMsg.textContent = "Loaded successfully.";
-}
-loadStudents();
+    allStudents = data;
+    listMsg.textContent = "Loaded successfully.";
 
-function openDetails(st){
-  currentId = st.id;
+    data.forEach((row, idx) => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${idx + 1}</td>
+        <td>${row.roll_number || "-"}</td>
+        <td>${row.full_name || ""}</td>
+        <td>${row.mobile || ""}</td>
+        <td>${row.exam_centre || "-"}</td>
+        <td>${row.form_status || "-"}</td>
+        <td>${row.payment_status || "-"}</td>
+        <td><button class="btn-view" onclick="viewStudent(${row.id})">View</button></td>
+      `;
+      appsBody.appendChild(tr);
+    });
+  }
 
-  document.getElementById("detailBox").style.display="block";
-  document.getElementById("detailMsg").textContent = "";
+  // ---------- DETAIL FILL ----------
+  window.viewStudent = function(id) {
+    const row = allStudents.find(s => s.id === id);
+    if (!row) return;
 
-  document.getElementById("dName").textContent   = st.full_name || st.name || "";
-  document.getElementById("dFather").textContent = st.father_name || "";
-  document.getElementById("dMobile").textContent = st.mobile || "";
-  document.getElementById("dRoll").textContent   = st.roll_number || "";
+    currentStudent = row;
+    detailMsg.textContent = "";
 
-  const formStatus = st.form_status || st.status || "pending";
-  const payApproved =
-    (st.payment_status && st.payment_status.toLowerCase()==="approved") ||
-    st.payment_verified === true;
+    document.getElementById("dName").textContent   = row.full_name || "";
+    document.getElementById("dFather").textContent = row.father_name || "";
+    document.getElementById("dMobile").textContent = row.mobile || "";
+    document.getElementById("dRoll").textContent   = row.roll_number || "";
+    document.getElementById("dFormStatus").textContent = row.form_status || "";
+    document.getElementById("dPayStatus").textContent  = row.payment_status || "";
+    document.getElementById("dUpi").textContent    = row.upi_txn || "";
+    document.getElementById("dAddress").textContent= row.address || "";
+    document.getElementById("dQual").textContent   = row.qualification || "";
 
-  document.getElementById("dStatus").textContent   = formStatus;
-  document.getElementById("dPayment").textContent  = payApproved ? "approved" : "pending";
-  document.getElementById("dTxn").textContent      = st.upi_txn || st.txn_id || "";
-  document.getElementById("dAddress").textContent  = st.address || "";
-  document.getElementById("dQual").textContent     = st.qualification || "";
+    // docs – agar path nahi hai to link disable
+    setDocLink("docPhoto", row.photo_path);
+    setDocLink("docAf", row.aadhar_front_path);
+    setDocLink("docAb", row.aadhar_back_path);
+    setDocLink("docMark", row.marksheet_path);
+    setDocLink("docPay", row.payment_screenshot_path);
 
-  setDocLink("dPhoto",     st.photo_path);
-  setDocLink("dAadharF",   st.aadhar_front_path);
-  setDocLink("dAadharB",   st.aadhar_back_path);
-  setDocLink("dMarksheet", st.marksheet_path);
-  setDocLink("dPaymentSS", st.payment_screenshot_path);
+    // centre / admit
+    document.getElementById("centreInput").value = row.exam_centre || "";
+    document.getElementById("admitCheck").checked = row.admit_active === true;
 
-  document.getElementById("centerInput").value = st.exam_center || "";
-  document.getElementById("admitAllow").checked = st.admit_allowed === true;
+    // result
+    document.getElementById("marksInput").value = row.marks ?? "";
+    document.getElementById("rankInput").value  = row.rank ?? "";
+    document.getElementById("resultStatusInput").value = row.result_status || "";
+    document.getElementById("resultPublishCheck").checked = row.result_published === true;
 
-  document.getElementById("rMarks").value  = st.marks ?? "";
-  document.getElementById("rRank").value   = st.rank ?? "";
-  document.getElementById("rStatus").value = st.result_status || "";
-  document.getElementById("rPublish").checked = st.result_published === true;
-}
-
-async function updateStatus(newStatus,payFlag){
-  if(!currentId) return;
-  const msg = document.getElementById("detailMsg");
-  msg.textContent="Updating status...";
-
-  const updateObj = {
-    form_status: newStatus,
-    payment_status: payFlag ? "approved" :
-      (newStatus === "rejected" ? "rejected" : "pending")
+    detailBox.style.display = "block";
+    detailBox.scrollIntoView({ behavior:"smooth" });
   };
 
-  const { error } = await sb
-    .from("students")
-    .update(updateObj)
-    .eq("id",currentId);
-
-  if(error){
-    msg.style.color="red";
-    msg.textContent="Error: "+error.message;
-    return;
-  }
-  msg.style.color="green";
-  msg.textContent="Status updated.";
-  loadStudents();
-  document.getElementById("dStatus").textContent=newStatus;
-  document.getElementById("dPayment").textContent=payFlag?"approved":"pending";
-}
-
-async function saveCentreAdmit(){
-  if(!currentId) return;
-  const msg = document.getElementById("detailMsg");
-  msg.style.color = "#000";
-  msg.textContent = "Saving centre / admit...";
-
-  const centre = document.getElementById("centerInput").value.trim();
-  const allow  = document.getElementById("admitAllow").checked;
-
-  const { error } = await sb
-    .from("students")
-    .update({
-      exam_center: centre || null,
-      admit_allowed: allow
-    })
-    .eq("id", currentId);
-
-  if(error){
-    msg.style.color="red";
-    msg.textContent="Error saving centre/admit: "+error.message;
-    return;
+  function setDocLink(id, path) {
+    const a = document.getElementById(id);
+    if (path) {
+      // public URL banane ki zarurat nahi, tumhare paths already public_url ho sakte
+      // yahan assume kar rahe hain ki path me full URL stored nahi hai,
+      // agar full URL hai to directly use karo.
+      if (path.startsWith("http")) {
+        a.href = path;
+      } else {
+        const { data } = sb.storage.from(STUDENT_DOC_BUCKET).getPublicUrl(path);
+        a.href = data.publicUrl;
+      }
+      a.textContent = "Open";
+    } else {
+      a.href = "#";
+      a.textContent = "N/A";
+    }
   }
 
-  msg.style.color="green";
-  msg.textContent="Centre / admit updated.";
-  loadStudents();
-}
+  // ---------- STATUS UPDATE ----------
+  window.setStatus = async function(status){
+    if (!currentStudent) return;
+    detailMsg.style.color = "#000";
+    detailMsg.textContent = "Saving status...";
 
-async function saveResult(){
-  if(!currentId) return;
-  const msg = document.getElementById("detailMsg");
-  msg.style.color = "#000";
-  msg.textContent = "Saving result...";
+    const { error } = await sb
+      .from("students")
+      .update({
+        form_status: status,
+        payment_status: status
+      })
+      .eq("id", currentStudent.id);
 
-  const marksVal  = document.getElementById("rMarks").value.trim();
-  const rankVal   = document.getElementById("rRank").value.trim();
-  const statusVal = document.getElementById("rStatus").value.trim();
-  const publish   = document.getElementById("rPublish").checked;
+    if (error) {
+      console.error(error);
+      detailMsg.style.color = "red";
+      detailMsg.textContent = "Error updating status: " + error.message;
+      return;
+    }
 
-  const { error } = await sb
-    .from("students")
-    .update({
-      marks: marksVal === "" ? null : marksVal,
-      rank:  rankVal === "" ? null : rankVal,
-      result_status: statusVal || null,
+    detailMsg.style.color = "green";
+    detailMsg.textContent = "Status updated.";
+    await loadApplications();
+    // refresh currentStudent from list
+    const fresh = allStudents.find(s => s.id === currentStudent.id);
+    if (fresh) currentStudent = fresh;
+    document.getElementById("dFormStatus").textContent = currentStudent.form_status;
+    document.getElementById("dPayStatus").textContent  = currentStudent.payment_status;
+  };
+
+  // ---------- CENTRE / ADMIT ----------
+  window.saveCentreAdmit = async function() {
+    if (!currentStudent) return;
+    const centre = document.getElementById("centreInput").value.trim();
+    const admit  = document.getElementById("admitCheck").checked;
+
+    detailMsg.style.color = "#000";
+    detailMsg.textContent = "Saving centre / admit...";
+
+    const { error } = await sb
+      .from("students")
+      .update({
+        exam_centre: centre || null,
+        admit_active: admit
+      })
+      .eq("id", currentStudent.id);
+
+    if (error) {
+      console.error(error);
+      detailMsg.style.color = "red";
+      detailMsg.textContent = "Error saving centre: " + error.message;
+      return;
+    }
+
+    detailMsg.style.color = "green";
+    detailMsg.textContent = "Centre / Admit saved.";
+    await loadApplications();
+  };
+
+  // ---------- RESULT ----------
+  window.saveResult = async function() {
+    if (!currentStudent) return;
+    const marks  = document.getElementById("marksInput").value;
+    const rank   = document.getElementById("rankInput").value;
+    const status = document.getElementById("resultStatusInput").value.trim();
+    const publish= document.getElementById("resultPublishCheck").checked;
+
+    detailMsg.style.color = "#000";
+    detailMsg.textContent = "Saving result...";
+
+    const payload = {
+      result_status: status || null,
       result_published: publish
-    })
-    .eq("id", currentId);
+    };
+    payload.marks = marks !== "" ? Number(marks) : null;
+    payload.rank  = rank  !== "" ? Number(rank)  : null;
 
-  if(error){
-    msg.style.color="red";
-    msg.textContent="Error saving result: "+error.message;
-    return;
-  }
+    const { error } = await sb
+      .from("students")
+      .update(payload)
+      .eq("id", currentStudent.id);
 
-  msg.style.color="green";
-  msg.textContent="Result saved successfully.";
-}
+    if (error) {
+      console.error(error);
+      detailMsg.style.color = "red";
+      detailMsg.textContent = "Error saving result: " + error.message;
+      return;
+    }
+
+    detailMsg.style.color = "green";
+    detailMsg.textContent = "Result updated.";
+    await loadApplications();
+  };
+
+  // ---------- DELETE APPLICATION ----------
+  window.deleteCurrentStudent = async function() {
+    if (!currentStudent) return;
+
+    const sure = confirm(
+      "Kya aap pakka is student ka pura application delete karna chahte hain?\n" +
+      "Saare documents bhi delete ho jayenge."
+    );
+    if (!sure) return;
+
+    detailMsg.style.color = "#000";
+    detailMsg.textContent = "Deleting application...";
+
+    try {
+      // 1) delete documents from storage (best-effort)
+      const paths = [
+        currentStudent.photo_path,
+        currentStudent.aadhar_front_path,
+        currentStudent.aadhar_back_path,
+        currentStudent.marksheet_path,
+        currentStudent.payment_screenshot_path
+      ].filter(p => !!p && !p.startsWith("http")); // sirf path wale
+
+      if (paths.length > 0) {
+        const { error: delErr } = await sb
+          .storage
+          .from(STUDENT_DOC_BUCKET)
+          .remove(paths);
+
+        if (delErr) {
+          console.warn("Doc delete error:", delErr.message);
+          // yaha par sirf warn kar rahe, process rok nahi rahe
+        }
+      }
+
+      // 2) delete row from students
+      const { error: rowErr } = await sb
+        .from("students")
+        .delete()
+        .eq("id", currentStudent.id);
+
+      if (rowErr) {
+        throw rowErr;
+      }
+
+      detailMsg.style.color = "green";
+      detailMsg.textContent = "Application deleted.";
+      detailBox.style.display = "none";
+      currentStudent = null;
+      await loadApplications();
+
+    } catch (err) {
+      console.error(err);
+      detailMsg.style.color = "red";
+      detailMsg.textContent = "Error deleting application: " + err.message;
+    }
+  };
+
+  // initial load
+  loadApplications();
 </script>
 
 </body>
