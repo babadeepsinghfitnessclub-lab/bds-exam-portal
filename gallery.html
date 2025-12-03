@@ -15,9 +15,7 @@
       text-align: center;
     }
 
-    h2 {
-      margin-top: 20px;
-    }
+    h2 { margin-top: 20px; }
 
     .subtitle {
       font-size: 14px;
@@ -49,6 +47,7 @@
       border-radius: 8px;
       display: block;
       margin: 0 auto;
+      background: #000;
     }
 
     .caption {
@@ -63,14 +62,13 @@
     }
   </style>
 
-  <!-- Supabase JS -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.48.0/dist/umd/supabase.min.js"></script>
 </head>
 <body>
 
   <h2>📸 Exam & Event Gallery</h2>
   <div class="subtitle">
-    Yahan par aap scholarship exam se related photos dekh sakte hain.
+    Scholarship exam & events ki real photos dekhein 👇
   </div>
 
   <div id="status">Loading photos...</div>
@@ -78,7 +76,8 @@
 
   <script>
     const SUPABASE_URL = "https://yyymjhuwjvyykukfzqow.supabase.co";
-    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl5eW1qaHV3anZ5eWt1a2Z6cW93Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2NzMzMjIsImV4cCI6MjA4MDI0OTMyMn0.Ja9Do4cwumTnXx2NGIRW8Ti3rKm4MBiLClQz0xjOtrQ";
+    const SUPABASE_ANON_KEY =
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl5eW1qaHV3anZ5eWt1a2Z6cW93Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2NzMzMjIsImV4cCI6MjA4MDI0OTMyMn0.Ja9Do4cwumTnXx2NGIRW8Ti3rKm4MBiLClQz0xjOtrQ";
 
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -96,26 +95,30 @@
 
       if (error) {
         console.error(error);
-        statusEl.textContent = "Gallery load karne me error aaya. Thodi der baad try karein.";
+        statusEl.textContent = "Error loading gallery. Please try again.";
         return;
       }
 
       galleryEl.innerHTML = "";
 
       if (!data || data.length === 0) {
-        statusEl.textContent = "Koi photo nahi mili. Admin se upload karwaen.";
+        statusEl.textContent = "No photos available yet.";
         return;
       }
 
       statusEl.textContent = "";
 
-      data.forEach(row => {
+      data.forEach(item => {
         const card = document.createElement("div");
         card.className = "photo-card";
+
+        const imgSrc = item.public_url || "";
+
         card.innerHTML = `
-          <img src="${row.public_url}" alt="Gallery Image">
-          <div class="caption">${row.caption || ""}</div>
+          <img src="${imgSrc}" alt="Image">
+          <div class="caption">${item.caption || ""}</div>
         `;
+
         galleryEl.appendChild(card);
       });
     }
