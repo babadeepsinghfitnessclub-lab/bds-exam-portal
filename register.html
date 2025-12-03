@@ -107,7 +107,8 @@
     const { createClient } = supabase;
 
     const SUPABASE_URL = "https://yyymjhuwjvyykukfzqow.supabase.co";
-    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl5eW1qaHV3anZ5eWt1a2Z6cW93Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2NzMzMjIsImV4cCI6MjA4MDI0OTMyMn0.Ja9Do4cwumTnXx2NGIRW8Ti3rKm4MBiLClQz0xjOtrQ";
+    const SUPABASE_KEY =
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl5eW1qaHV3anZ5eWt1a2Z6cW93Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2NzMzMjIsImV4cCI6MjA4MDI0OTMyMn0.Ja9Do4cwumTnXx2NGIRW8Ti3rKm4MBiLClQz0xjOtrQ";
 
     const db = createClient(SUPABASE_URL, SUPABASE_KEY);
 
@@ -128,6 +129,12 @@
       const cPassword  = document.getElementById('confirmPassword').value;
 
       // Basic checks
+      if (!name || !fatherName) {
+        msgEl.textContent = "Name aur Father Name required hain.";
+        msgEl.style.color = "red";
+        return;
+      }
+
       if (mobile.length !== 10 || !/^[0-9]+$/.test(mobile)) {
         msgEl.textContent = "Please enter valid 10 digit mobile number.";
         msgEl.style.color = "red";
@@ -165,28 +172,27 @@
           return;
         }
 
-        // 2) Insert new student
+        // 2) Insert new student (login ke liye basic data + password)
         const { data: inserted, error: insErr } = await db
           .from("students")
           .insert({
-            // username ko bhi mobile hi rakh rahe
-            username: mobile,
-            password: password,     // NOTE: simple store; baad me hash kar sakte hain
             full_name: name,
             father_name: fatherName,
             mobile: mobile,
             email: email || null,
-            form_status: "not_applied",   // agar default laga hai, tab bhi safe
-            payment_status: "pending"
+            login_password: password,      // ✅ students table ka password column
+            form_status: "not_applied",    // default stage
+            payment_status: "pending"      // abhi payment nahi hua
           })
-          .select("id, username")
+          .select("id")
           .single();
 
         if (insErr) throw insErr;
 
-        // 3) Save login info browser me
-        localStorage.setItem("student_id", inserted.id);
+        // 3) Save login info browser me (index + dashboard ke liye)
         localStorage.setItem("student_mobile", mobile);
+        // Apply button (index.html) ke liye (yahi check ho raha tha)
+        localStorage.setItem("studentId", mobile);
 
         msgEl.textContent = "Registration successful! Please remember your Mobile & Password.";
         msgEl.style.color = "green";
