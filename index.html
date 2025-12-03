@@ -49,7 +49,6 @@
     .left{flex:1 1 260px;text-align:left;}
     .right{flex:1 1 260px;text-align:center;}
 
-    /* 👇 Highlighted Section Updated */
     .headline{
       font-size:26px;
       font-weight:900;
@@ -70,6 +69,22 @@
       line-height:1.45;
     }
     ul.points li{margin-bottom:6px;}
+
+    /* ⭐ Apply Button */
+    .btn-apply{
+      display:inline-block;
+      background:#ffdd00;
+      color:#000;
+      padding:10px 22px;
+      border-radius:25px;
+      font-weight:700;
+      font-size:15px;
+      margin-top:12px;
+      text-decoration:none;
+    }
+    .btn-apply:hover{
+      background:#ffe866;
+    }
 
     .poster{
       width:100%;
@@ -170,7 +185,8 @@
       <li>Exam in February 2026</li>
     </ul>
 
-    <!-- ❌ Apply Button Removed -->
+    <!-- ⭐ Apply Button Added -->
+    <a class="btn-apply" href="apply.html">Apply Now</a>
   </div>
 
   <div class="right">
@@ -212,6 +228,7 @@ async function loadPoster(){
     document.getElementById("heroPoster").src = data[0].image_url;
   }
 }
+
 async function loadNotices(){
   const ul=document.getElementById("noticeList");
   const { data } = await sb
@@ -229,6 +246,7 @@ async function loadNotices(){
     ul.innerHTML+=`<li>${n.title} - ${n.body}</li>`;
   });
 }
+
 async function loadGallery(){
   const area=document.getElementById("homeGallery");
   const { data } = await sb
@@ -257,5 +275,3 @@ loadGallery();
 
 </body>
 </html>
-
-
