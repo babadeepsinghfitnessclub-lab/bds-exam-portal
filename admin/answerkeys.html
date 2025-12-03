@@ -87,7 +87,7 @@
     #msgBox{margin-top:6px;font-size:13px;}
   </style>
 
-  <!-- Supabase JS -->
+  <!-- Supabase JS v2 (CDN) -->
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 </head>
 <body>
@@ -112,7 +112,8 @@
     <input type="text" id="akTitle" placeholder="e.g. Scholarship Exam 2026 - Answer Key">
 
     <label>Exam Date</label>
-    <input type="text" id="akDate" placeholder="e.g. 08/02/2026">
+    <!-- table me exam_date = date type hai, isliye date input -->
+    <input type="date" id="akDate">
 
     <label>PDF URL (https://...) – optional</label>
     <input type="text" id="akUrl" placeholder="Agar file upload nahi karni ho to direct link yahan daalein">
@@ -147,7 +148,12 @@
 </div>
 
 <script>
-  // Supabase config
+  // 🔐 Simple admin guard (same key jo baaki admin files me use ho rahi hai)
+  if (localStorage.getItem("bdsAdminLoggedIn") !== "yes") {
+    window.location.href = "login.html";
+  }
+
+  // 🔗 Supabase config
   const SUPABASE_URL = "https://yyymjhuwjvyykukfzqow.supabase.co";
   const SUPABASE_ANON_KEY =
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl5eW1qaHV3anZ5eWt1a2Z6cW93Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2NzMzMjIsImV4cCI6MjA4MDI0OTMyMn0.Ja9Do4cwumTnXx2NGIRW8Ti3rKm4MBiLClQz0xjOtrQ";
@@ -155,7 +161,7 @@
   const { createClient } = supabase;
   const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-  function showMsg(text,color){
+  function showMsg(text, color){
     const m = document.getElementById("msgBox");
     m.style.color = color || "#fff";
     m.innerHTML = text;
@@ -164,7 +170,7 @@
   // 🔹 SAVE / UPLOAD ANSWER KEY
   async function saveAnswerKey(){
     const title = document.getElementById("akTitle").value.trim();
-    const date  = document.getElementById("akDate").value.trim();
+    const date  = document.getElementById("akDate").value.trim();   // YYYY-MM-DD aayega
     const urlIn = document.getElementById("akUrl").value.trim();
     const file  = document.getElementById("akFile").files[0];
 
@@ -186,6 +192,7 @@
     try {
       // Agar file selected hai to Supabase storage par upload karo
       if (file) {
+        // BUCKET NAME EXACT: exam_files
         filePath = "answer_keys/" + Date.now() + "_" + file.name;
 
         const { data: uploadData, error: uploadErr } = await sb
@@ -214,11 +221,11 @@
       const { error: insertErr } = await sb
         .from("answer_keys")
         .insert([{
-          exam_name: title,
-          exam_date: date || null,
+          exam_name:  title,          // ✅ column name
+          exam_date:  date || null,   // ✅ date type
           public_url: finalUrl || null,
-          file_path: filePath,
-          visible: true
+          file_path:  filePath,
+          visible:    true            // ✅ boolean column
         }]);
 
       if (insertErr) {
