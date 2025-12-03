@@ -82,7 +82,7 @@
     <a href="result.html">RESULT</a>
     <a href="download.html">DOWNLOAD</a>
     <a href="help.html">HELP</a>
-    <a href="admin.html">ADMIN</a>
+    <a href="admin/login.html">ADMIN</a>
   </nav>
 </header>
 
@@ -192,7 +192,8 @@
 <script>
   // Supabase config (tumhara project)
   const SUPABASE_URL = "https://yyymjhuwjvyykukfzqow.supabase.co";
-  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl5eW1qaHV3anZ5eWt1a2Z6cW93Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2NzMzMjIsImV4cCI6MjA4MDI0OTMyMn0.Ja9Do4cwumTnXx2NGIRW8Ti3rKm4MBiLClQz0xjOtrQ";
+  const SUPABASE_ANON_KEY =
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl5eW1qaHV3anZ5eWt1a2Z6cW93Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2NzMzMjIsImV4cCI6MjA4MDI0OTMyMn0.Ja9Do4cwumTnXx2NGIRW8Ti3rKm4MBiLClQz0xjOtrQ";
 
   const { createClient } = supabase;
   const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -314,11 +315,11 @@
 
       const basePath = roll + "/";  // folder per student
 
-      const photoPath      = basePath + "photo." + getExt(photoFile);
-      const aadharFrontPath= basePath + "aadhar_front." + getExt(aadharFile);
-      const aadharBackPath = basePath + "aadhar_back." + getExt(aadharBackFile);
-      const marksheetPath  = basePath + "marksheet." + getExt(marksheetFile);
-      const paymentPath    = basePath + "payment_ss." + getExt(paymentFile);
+      const photoPath       = basePath + "photo." + getExt(photoFile);
+      const aadharFrontPath = basePath + "aadhar_front." + getExt(aadharFile);
+      const aadharBackPath  = basePath + "aadhar_back." + getExt(aadharBackFile);
+      const marksheetPath   = basePath + "marksheet." + getExt(marksheetFile);
+      const paymentPath     = basePath + "payment_ss." + getExt(paymentFile);
 
       async function uploadToBucket(path, file){
         const { error } = await sb
