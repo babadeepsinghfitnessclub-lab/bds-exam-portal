@@ -85,6 +85,39 @@
     }
     .admit-header div{font-size:12px;}
 
+    /* top area: left details + right photo */
+    .top-area{
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      margin:6px 0;
+      align-items:flex-start;
+    }
+    .top-left{
+      flex:1 1 auto;
+    }
+    .photo-box{
+      width:90px;
+      height:110px;
+      border:1px solid #000;
+      border-radius:4px;
+      overflow:hidden;
+      background:#eee;
+      flex:0 0 auto;
+    }
+    .photo-box img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      display:block;
+    }
+    .photo-placeholder{
+      font-size:10px;
+      text-align:center;
+      padding:4px;
+      color:#333;
+    }
+
     .admit-row{
       display:flex;
       justify-content:space-between;
@@ -123,8 +156,7 @@
     <a href="result.html">RESULT</a>
     <a href="download.html">DOWNLOAD</a>
     <a href="help.html">HELP</a>
-    <!-- yahan se direct admin login khulega -->
-  
+    <!-- admin link hataya hua hai -->
   </nav>
 </header>
 
@@ -160,7 +192,7 @@
 <footer>© 2026 Baba Deep Singh Mega Talent Hub</footer>
 
 <script>
-  // ==== Supabase config (tumhara project) ====
+  // ==== Supabase config ====
   const SUPABASE_URL = "https://yyymjhuwjvyykukfzqow.supabase.co";
   const SUPABASE_ANON_KEY =
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl5eW1qaHV3anZ5eWt1a2Z6cW93Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2NzMzMjIsImV4cCI6MjA4MDI0OTMyMn0.Ja9Do4cwumTnXx2NGIRW8Ti3rKm4MBiLClQz0xjOtrQ";
@@ -168,7 +200,7 @@
   const { createClient } = supabase;
   const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-  // Exam static info (yahan se change kar sakte ho)
+  // Exam static info
   const EXAM_NAME   = "Future Achievers Scholarship Exam 2026";
   const EXAM_DATE   = "08-02-2026";
   const EXAM_TIME   = "11:00 AM – 12:30 PM";
@@ -179,6 +211,8 @@
     box.style.color = color || "#fff";
     box.innerHTML = text;
   }
+
+  document.getElementById("btnGet").addEventListener("click", getAdmit);
 
   async function getAdmit(){
     const roll = document.getElementById("rollInput").value.trim().toUpperCase();
@@ -197,10 +231,10 @@
     showMsg("Please wait, record search ho raha hai...","#fff");
 
     try{
-      // sirf required fields
+      // ✅ photo_path bhi select kar rahe hain
       const { data: stu, error } = await sb
         .from("students")
-        .select("full_name, father_name, roll_number, dob, mobile, qualification, address, payment_status, exam_center, admit_allowed")
+        .select("full_name, father_name, roll_number, dob, mobile, qualification, address, payment_status, exam_center, admit_allowed, photo_path")
         .eq("roll_number", roll)
         .maybeSingle();
 
@@ -238,7 +272,7 @@
         return;
       }
 
-      // Admit allowed + centre check (ye dono column tumne students table me banaye hain)
+      // Admit allowed + centre check
       if (!stu.admit_allowed) {
         showMsg(
           "Aapka exam centre / admit card abhi activate nahi hua. Organizer se sampark karein.",
@@ -257,6 +291,18 @@
         return;
       }
 
+      // ✅ Photo URL banana (student_docs bucket se)
+      let photoUrl = "";
+      if (stu.photo_path) {
+        const { data: pub } = sb
+          .storage
+          .from("student_docs")
+          .getPublicUrl(stu.photo_path);
+        if (pub && pub.publicUrl) {
+          photoUrl = pub.publicUrl;
+        }
+      }
+
       // ==== Admit card HTML ====
       const box = document.getElementById("admitBox");
 
@@ -267,29 +313,41 @@
           <div>Sangariya, District Hanumangarh (Raj.)</div>
         </div>
 
-        <div class="admit-row">
-          <span class="label">Candidate Name:</span>
-          <span>${stu.full_name || ""}</span>
-        </div>
-        <div class="admit-row">
-          <span class="label">Father's Name:</span>
-          <span>${stu.father_name || ""}</span>
-        </div>
-        <div class="admit-row">
-          <span class="label">Roll No:</span>
-          <span>${stu.roll_number || ""}</span>
-        </div>
-        <div class="admit-row">
-          <span class="label">Mobile:</span>
-          <span>${stu.mobile || ""}</span>
-        </div>
-        <div class="admit-row">
-          <span class="label">Qualification:</span>
-          <span>${stu.qualification || ""}</span>
-        </div>
-        <div class="admit-row">
-          <span class="label">Address:</span>
-          <span>${stu.address || ""}</span>
+        <div class="top-area">
+          <div class="top-left">
+            <div class="admit-row">
+              <span class="label">Candidate Name:</span>
+              <span>${stu.full_name || ""}</span>
+            </div>
+            <div class="admit-row">
+              <span class="label">Father's Name:</span>
+              <span>${stu.father_name || ""}</span>
+            </div>
+            <div class="admit-row">
+              <span class="label">Roll No:</span>
+              <span>${stu.roll_number || ""}</span>
+            </div>
+            <div class="admit-row">
+              <span class="label">Mobile:</span>
+              <span>${stu.mobile || ""}</span>
+            </div>
+            <div class="admit-row">
+              <span class="label">Qualification:</span>
+              <span>${stu.qualification || ""}</span>
+            </div>
+            <div class="admit-row">
+              <span class="label">Address:</span>
+              <span>${stu.address || ""}</span>
+            </div>
+          </div>
+
+          <div class="photo-box">
+            ${
+              photoUrl
+                ? `<img src="${photoUrl}" alt="Student Photo">`
+                : `<div class="photo-placeholder">Photo Not Available</div>`
+            }
+          </div>
         </div>
 
         <hr style="margin:6px 0;">
@@ -315,7 +373,7 @@
           <b>Important Instructions:</b>
           <ol style="padding-left:18px;margin-top:4px;">
             <li>Admit card aur valid photo ID (Aadhaar) exam centre par saath lekar aayen.</li>
-            <li>Exam start hone se कम से कम 30 minute pehle centre par pahunch jaayen.</li>
+            <li>Exam start hone se kam se kam 30 minute pehle centre par pahunch jaayen.</li>
             <li>Mobile, calculator, smart watch jaise electronic items allowed nahi hain.</li>
           </ol>
         </div>
@@ -332,10 +390,7 @@
       btn.disabled = false;
     }
   }
-
-  document.getElementById("btnGet").addEventListener("click", getAdmit);
 </script>
 
 </body>
 </html>
-
