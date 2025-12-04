@@ -6,223 +6,539 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <style>
-    *{margin:0;padding:0;box-sizing:border-box;}
-
+    *{box-sizing:border-box;margin:0;padding:0;}
     body{
       font-family:Arial, sans-serif;
       background:radial-gradient(circle at top,#1a4fff 0%,#000b33 55%,#000316 100%);
       color:#fff;
     }
-
     header{
       background:rgba(0,0,0,.7);
       padding:8px 14px;
       display:flex;
-      justify-content:space-between;
       align-items:center;
+      justify-content:space-between;
+      flex-wrap:wrap;
       border-bottom:2px solid #ffbf00;
     }
-    header a{color:#fff;text-decoration:none;font-size:13px;font-weight:bold;}
-
-    .container{
-      max-width:900px;
-      margin:20px auto;
-      padding:0 10px;
+    .logo-text{font-size:18px;font-weight:bold;letter-spacing:1px;}
+    nav a{
+      color:#fff;
+      text-decoration:none;
+      margin-left:10px;
+      font-size:13px;
+      font-weight:bold;
     }
+    nav a:hover{text-decoration:underline;}
+
+    .container{max-width:900px;margin:18px auto;padding:0 10px;}
+
     .card{
       background:rgba(0,0,0,0.65);
       padding:14px;
       border-radius:10px;
+      margin-bottom:15px;
     }
-
-    label{font-size:14px;margin-top:6px;display:block;}
+    h1{font-size:22px;margin-bottom:6px;}
+    label{display:block;font-size:14px;margin-top:6px;}
     input{
-      width:100%;padding:7px;
-      border:none;border-radius:6px;
-      margin-top:4px;font-size:14px;
+      width:100%;
+      padding:7px;
+      border-radius:6px;
+      border:none;
+      margin-top:3px;
+      font-size:14px;
     }
-
-    .btn {
+    .btn-primary{
       margin-top:10px;
       padding:9px 20px;
+      border-radius:999px;
       border:none;
       background:#ffbf00;
       color:#000;
-      font-weight:700;
-      border-radius:999px;
+      font-weight:bold;
       cursor:pointer;
+      font-size:14px;
     }
-    .btn:disabled{opacity:0.6;}
-
+    .btn-primary:disabled{opacity:.6;cursor:default;}
     #msgBox{margin-top:8px;font-size:13px;}
 
-    /* 🔵 A4 PDF Layout */
+    /* Admit card area */
+    #admitArea{display:none;margin-top:12px;}
+    .admit-pdf-wrapper{
+      background:#eee;
+      padding:8px;
+    }
     .admit-page{
-      width:21cm;
-      min-height:29.7cm;
+      width:100%;
+      max-width:800px;
+      margin:0 auto 12px;
       background:#fff;
-      color:#000;
-      padding:18px;
-      border:2px solid #000;
       position:relative;
-      margin-bottom:20px;
+      padding:10px 14px;
+      border-radius:10px;
+      border:3px solid #333;
+      box-shadow:0 0 8px rgba(0,0,0,0.25);
     }
-
-    .admit-header{text-align:center;margin-bottom:10px;}
-    .admit-header h2{color:#b20c0c;font-size:20px;}
-
-    .stu-photo{
-      width:110px;
-      height:130px;
-      border:2px solid #000;
+    .watermark{
       position:absolute;
-      top:25px; right:25px;
-      background-size:cover;
-      background-position:center;
+      inset:0;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:60px;
+      font-weight:900;
+      color:#000;
+      opacity:0.05;
+      transform:rotate(-25deg);
+      pointer-events:none;
+      user-select:none;
+    }
+    .admit-inner{
+      position:relative;
+      z-index:2;
+    }
+    .admit-header{
+      text-align:center;
+      border-bottom:1px solid #ddd;
+      padding-bottom:6px;
+      margin-bottom:6px;
+    }
+    .admit-header h2{
+      font-size:18px;
+      margin-bottom:3px;
+      color:#b20c0c;
+      text-transform:uppercase;
+    }
+    .admit-header .org-name{
+      font-weight:bold;
+      font-size:14px;
+    }
+    .admit-header .session-line{
+      font-size:13px;
+      margin-top:2px;
+    }
+    .copy-type{
+      font-size:12px;
+      font-weight:bold;
+      margin-top:4px;
     }
 
-    .row{display:flex;justify-content:space-between;font-size:14px;margin:5px 0;}
-    .label{font-weight:bold;}
-
-    /* Signature Boxes */
-    .sign-area{
-      margin-top:20px;
+    .top-row{
       display:flex;
       justify-content:space-between;
+      gap:10px;
+      margin-top:6px;
+    }
+    .left-details{
+      flex:2;
+      font-size:13px;
+    }
+    .detail-line{
+      margin:2px 0;
+    }
+    .detail-label{
+      font-weight:bold;
+      display:inline-block;
+      min-width:90px;
+    }
+    .photo-box{
+      flex:1;
+      text-align:center;
+    }
+    .photo-frame{
+      width:120px;
+      height:140px;
+      border:2px solid #444;
+      margin-left:auto;
+      border-radius:4px;
+      overflow:hidden;
+    }
+    .photo-frame img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+    }
+    .photo-caption{
+      font-size:11px;
+      margin-top:3px;
+    }
+
+    .exam-block{
+      border-top:1px solid #ccc;
+      border-bottom:1px solid #ccc;
+      margin:8px 0;
+      padding:6px 0;
+      font-size:13px;
+    }
+    .exam-row{
+      display:flex;
+      justify-content:space-between;
+      margin:2px 0;
+    }
+    .exam-label{font-weight:bold;}
+
+    .sign-row{
+      display:flex;
+      justify-content:space-between;
+      margin-top:14px;
+      font-size:12px;
     }
     .sign-box{
-      width:40%;
+      width:45%;
       text-align:center;
-      font-size:14px;
-      border-top:2px solid #000;
-      padding-top:6px;
     }
-    .footer-note{
-      margin-top:15px;
+    .sign-line{
+      margin-top:30px;
+      border-top:1px solid #000;
+      padding-top:2px;
+    }
+
+    .inst-text{
+      margin-top:6px;
       font-size:11px;
     }
 
-    /* 🔘 Watermark */
-    .watermark{
-      position:absolute;
-      top:40%;
-      left:15%;
-      font-size:60px;
-      color:rgba(200,0,0,0.06);
-      transform:rotate(-25deg);
-      pointer-events:none;
+    footer{
+      text-align:center;
+      font-size:12px;
+      padding:10px;
+      background:rgba(0,0,0,.9);
+      margin-top:15px;
     }
-
-    #admitArea{display:none;margin-top:12px;text-align:center;}
-
   </style>
 
-  <!-- CDN for PDF download -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <!-- Supabase + html2canvas + jsPDF -->
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
 
 <header>
-  <div><b>BABA DEEP SINGH MEGA TALENT HUB</b></div>
-  <div>
+  <div class="logo-text">BABA DEEP SINGH MEGA TALENT HUB</div>
+  <nav>
     <a href="index.html">HOME</a>
+    <a href="apply.html">APPLY</a>
+    <a href="admit.html">ADMIT CARD</a>
+    <a href="result.html">RESULT</a>
+    <a href="download.html">DOWNLOAD</a>
     <a href="help.html">HELP</a>
-  </div>
+  </nav>
 </header>
 
 <div class="container">
   <div class="card">
-    <h2>Download Admit Card</h2>
+    <h1>Download Admit Card</h1>
+    <p style="font-size:13px;color:#ffeaa7;margin-bottom:4px;">
+      Admit card sirf unhi students ka show hoga jinka payment organizer
+      ki taraf se <b>verify</b> ho chuka hai aur jinhe exam centre allot kar
+      diya gaya hai.
+    </p>
 
     <label>Roll Number</label>
-    <input id="rollInput" type="text">
+    <input type="text" id="rollInput" placeholder="e.g. BDS26XXXX">
 
     <label>Date of Birth</label>
-    <input id="dobInput" type="date">
+    <input type="date" id="dobInput">
 
-    <button id="btnGet" class="btn">Get Admit Card</button>
+    <button class="btn-primary" id="btnGet">Get Admit Card</button>
+    <button class="btn-primary" id="btnDownload" style="display:none;">Download PDF (A4)</button>
 
     <div id="msgBox"></div>
 
     <div id="admitArea">
-      <div id="admitWrap"></div>
-      <button class="btn" onclick="downloadPDF()">Download Admit Card PDF</button>
+      <div class="admit-pdf-wrapper" id="admitPdfWrapper">
+        <!-- yahan JS se 2 copies ka HTML inject hoga -->
+      </div>
     </div>
 
+    <p id="pendingNote" style="margin-top:8px;font-size:12px;color:#ffeaa7;">
+      Aapki registration abhi <b>PENDING / FAILED</b> hai to organizer payment
+      verify karne ke baad hi admit card active hoga.
+    </p>
   </div>
 </div>
+
+<footer>© 2026 Baba Deep Singh Mega Talent Hub</footer>
 
 <script>
-const sb = supabase.createClient(
-  "https://yyymjhuwjvyykukfzqow.supabase.co",
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl5eW1qaHV3anZ5eWt1a2Z6cW93Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2NzMzMjIsImV4cCI6MjA4MDI0OTMyMn0.Ja9Do4cwumTnXx2NGIRW8Ti3rKm4MBiLClQz0xjOtrQ"
-);
+  // ==== Supabase config ====
+  const SUPABASE_URL = "https://yyymjhuwjvyykukfzqow.supabase.co";
+  const SUPABASE_ANON_KEY =
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl5eW1qaHV3anZ5eWt1a2Z6cW93Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2NzMzMjIsImV4cCI6MjA4MDI0OTMyMn0.Ja9Do4cwumTnXx2NGIRW8Ti3rKm4MBiLClQz0xjOtrQ";
 
-async function getAdmit(){
-  let roll = rollInput.value.trim();
-  let dob = dobInput.value;
+  const { createClient } = supabase;
+  const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-  admitArea.style.display="none";
-  msgBox.innerHTML="Searching...";
+  // DEFAULT exam info (agar table me null ho to)
+  const DEFAULT_EXAM_DATE   = "08-02-2026";
+  const DEFAULT_START_TIME  = "11:00 AM";
+  const DEFAULT_END_TIME    = "12:30 PM";
+  const DEFAULT_REPORT_TIME = "10:00 AM";
 
-  const { data: st } = await sb
-  .from("students")
-  .select("*")
-  .eq("roll_number", roll)
-  .maybeSingle();
+  function showMsg(text, color){
+    const box = document.getElementById("msgBox");
+    box.style.color = color || "#fff";
+    box.innerHTML = text;
+  }
 
-  if(!st){ msgBox.innerHTML="Invalid Roll"; return; }
-  if(st.dob !== dob){ msgBox.innerHTML="DOB Wrong"; return; }
-  if(st.payment_status !== "approved"){ msgBox.innerHTML="Payment Pending"; return; }
-  if(!st.admit_allowed){ msgBox.innerHTML="Admit not activated"; return; }
+  function getPhotoUrl(path){
+    if(!path) return "";
+    const { data } = sb.storage.from("student_docs").getPublicUrl(path);
+    return data && data.publicUrl ? data.publicUrl : "";
+  }
 
-  const photoUrl = st.photo_path ?
-    sb.storage.from("student_docs").getPublicUrl(st.photo_path).data.publicUrl :
-    "";
+  // ---- MAIN: Load Admit Card ----
+  async function getAdmit(){
+    const roll = document.getElementById("rollInput").value.trim().toUpperCase();
+    const dob  = document.getElementById("dobInput").value;
+    const btn  = document.getElementById("btnGet");
+    const pdfBtn = document.getElementById("btnDownload");
+    const pendingNote = document.getElementById("pendingNote");
 
-  let card = pg => `
-<div class="admit-page">
-  <div class="watermark">BDS EXAM</div>
+    document.getElementById("admitArea").style.display = "none";
+    document.getElementById("admitPdfWrapper").innerHTML = "";
+    pdfBtn.style.display = "none";
+    pendingNote.style.display = "block";
 
-  <div class="admit-header">
-    <h2>Future Achievers Scholarship Exam 2026</h2>
-    <div><b>EXAM ${pg==="STUDENT"?"(Student Copy)":"(Exam Cell Copy)"}</b></div>
-  </div>
+    if(!roll || !dob){
+      showMsg("Roll number aur Date of Birth dono fill karein.","#ff8080");
+      return;
+    }
 
-  <div class="stu-photo" style="background-image:url('${photoUrl}');"></div>
+    btn.disabled = true;
+    showMsg("Please wait, record search ho raha hai...","#fff");
 
-  <div class="row"><span class="label">Name:</span> <span>${st.full_name}</span></div>
-  <div class="row"><span class="label">Father Name:</span> <span>${st.father_name}</span></div>
-  <div class="row"><span class="label">Roll No:</span> <span>${st.roll_number}</span></div>
-  <div class="row"><span class="label">Centre:</span> <span>${st.exam_center}</span></div>
+    try{
+      // Zaroori fields + photo + exam fields
+      const { data: stu, error } = await sb
+        .from("students")
+        .select(`
+          full_name, father_name, roll_number, dob, mobile,
+          qualification, address, payment_status,
+          exam_center, admit_allowed,
+          photo_path,
+          exam_date, exam_start_time, exam_end_time, exam_shift
+        `)
+        .eq("roll_number", roll)
+        .maybeSingle();
 
-  <div class="sign-area">
-    <div class="sign-box">Student Signature</div>
-    <div class="sign-box">Invigilator Signature</div>
-  </div>
+      if(error){
+        console.error(error);
+        showMsg("Error: " + error.message, "#ff8080");
+        btn.disabled = false;
+        return;
+      }
 
-  <div class="footer-note">
-    Carry this admit card with Aadhaar to examination center.
-  </div>
-</div>
-`;
+      if(!stu){
+        showMsg("Record nahi mila. Roll number check karein.","#ff8080");
+        btn.disabled = false;
+        return;
+      }
 
-  admitWrap.innerHTML = card("STUDENT") + card("EXAM CELL");
-  admitArea.style.display="block";
-  msgBox.innerHTML="READY ✔";
-}
+      // DOB match
+      if(!stu.dob || stu.dob !== dob){
+        showMsg("DOB match nahi ho rahi. Sahi Date of Birth enter karein.","#ff8080");
+        btn.disabled = false;
+        return;
+      }
 
-btnGet.onclick = getAdmit;
+      // PAYMENT STATUS check
+      const payStatus = (stu.payment_status || "").toString().toLowerCase();
+      const okPay = ["approved","success","successful","verified","paid"];
 
-function downloadPDF(){
-  let area = document.getElementById("admitWrap");
-  html2pdf().from(area).set({
-    margin: 5,
-    filename: rollInput.value + "_AdmitCard.pdf",
-    jsPDF: {format: 'a4', orientation: 'portrait'}
-  }).save();
-}
+      if(!okPay.includes(payStatus)){
+        showMsg(
+          "Aapki registration abhi <b>PENDING / FAILED</b> hai. " +
+          "Organizer payment verify karne ke baad hi admit card active hoga.",
+          "#ffcc66"
+        );
+        btn.disabled = false;
+        return;
+      }
+
+      // Admit + centre check
+      if (!stu.admit_allowed) {
+        showMsg(
+          "Aapka exam centre / admit card abhi activate nahi hua. Organizer se sampark karein.",
+          "#ffcc66"
+        );
+        btn.disabled = false;
+        return;
+      }
+      if (!stu.exam_center || !stu.exam_center.trim()) {
+        showMsg(
+          "Exam centre detail abhi set nahi hai. Organizer se sampark karein.",
+          "#ffcc66"
+        );
+        btn.disabled = false;
+        return;
+      }
+
+      // Yahan tak aaya matlab admit OK
+      pendingNote.style.display = "none";
+
+      // Exam info (per-student agar available ho to)
+      const examDate  = stu.exam_date       || DEFAULT_EXAM_DATE;
+      const startTime = stu.exam_start_time || DEFAULT_START_TIME;
+      const endTime   = stu.exam_end_time   || DEFAULT_END_TIME;
+      const reportTime= DEFAULT_REPORT_TIME;
+      const shiftText = stu.exam_shift ? `Shift: ${stu.exam_shift}` : "";
+
+      const photoUrl = getPhotoUrl(stu.photo_path);
+
+      const wrapper = document.getElementById("admitPdfWrapper");
+
+      // helper to make one copy
+      function makeCopy(copyLabel){
+        return `
+        <div class="admit-page">
+          <div class="watermark">BDS EXAM</div>
+          <div class="admit-inner">
+            <div class="admit-header">
+              <div class="org-name">BABA DEEP SINGH MEGA TALENT HUB</div>
+              <h2>Future Achievers Scholarship Feb. 2026</h2>
+              <div class="session-line">EXAM (${copyLabel})</div>
+            </div>
+
+            <div class="top-row">
+              <div class="left-details">
+                <div class="detail-line">
+                  <span class="detail-label">Name:</span>
+                  <span>${stu.full_name || ""}</span>
+                </div>
+                <div class="detail-line">
+                  <span class="detail-label">Father Name:</span>
+                  <span>${stu.father_name || ""}</span>
+                </div>
+                <div class="detail-line">
+                  <span class="detail-label">Roll No:</span>
+                  <span>${stu.roll_number || ""}</span>
+                </div>
+                <div class="detail-line">
+                  <span class="detail-label">Mobile:</span>
+                  <span>${stu.mobile || ""}</span>
+                </div>
+                <div class="detail-line">
+                  <span class="detail-label">Qualification:</span>
+                  <span>${stu.qualification || ""}</span>
+                </div>
+                <div class="detail-line">
+                  <span class="detail-label">Centre:</span>
+                  <span>${stu.exam_center}</span>
+                </div>
+              </div>
+
+              <div class="photo-box">
+                <div class="photo-frame">
+                  ${photoUrl
+                    ? `<img src="${photoUrl}" alt="Photo">`
+                    : `<div style="font-size:10px;padding:4px;">Photo not available</div>`
+                  }
+                </div>
+                <div class="photo-caption">Candidate Photo</div>
+              </div>
+            </div>
+
+            <div class="exam-block">
+              <div class="exam-row">
+                <span class="exam-label">Exam Date:</span>
+                <span>${examDate}</span>
+              </div>
+              <div class="exam-row">
+                <span class="exam-label">Exam Time:</span>
+                <span>${startTime} – ${endTime}</span>
+              </div>
+              <div class="exam-row">
+                <span class="exam-label">Reporting Time:</span>
+                <span>${reportTime}</span>
+              </div>
+              ${shiftText ? `
+              <div class="exam-row">
+                <span class="exam-label">Shift:</span>
+                <span>${shiftText}</span>
+              </div>` : ""}
+            </div>
+
+            <div class="sign-row">
+              <div class="sign-box">
+                <div class="sign-line">Student Signature</div>
+              </div>
+              <div class="sign-box">
+                <div class="sign-line">Invigilator Signature</div>
+              </div>
+            </div>
+
+            <div class="inst-text">
+              Carry this admit card along with Aadhaar card to the examination centre.
+              Electronic items (mobile, calculator, smart watch, etc.) are strictly prohibited.
+            </div>
+          </div>
+        </div>
+        `;
+      }
+
+      // 2 copies: Student + Office
+      wrapper.innerHTML = makeCopy("Student Copy") + makeCopy("Office Copy");
+
+      document.getElementById("admitArea").style.display = "block";
+      showMsg("Admit card successfully loaded.","#7CFC00");
+      pdfBtn.style.display = "inline-block";
+
+      // store for PDF
+      window.__lastAdmitLoaded = true;
+
+    }catch(err){
+      console.error(err);
+      showMsg("Error: " + err.message,"#ff8080");
+    }finally{
+      document.getElementById("btnGet").disabled = false;
+    }
+  }
+
+  document.getElementById("btnGet").addEventListener("click", getAdmit);
+
+  // ---- DOWNLOAD PDF ----
+  document.getElementById("btnDownload").addEventListener("click", async () => {
+    if(!window.__lastAdmitLoaded){
+      showMsg("Pehle admit card load karein, fir download karein.","#ff8080");
+      return;
+    }
+    const wrapper = document.getElementById("admitPdfWrapper");
+    showMsg("PDF generate ho raha hai, please wait...","#fff");
+
+    try{
+      const canvas = await html2canvas(wrapper, { scale:2 });
+      const imgData = canvas.toDataURL("image/png");
+
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF("p","mm","a4");
+
+      const pageWidth  = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+
+      // Image ko full page me fit karna
+      const imgProps = pdf.getImageProperties(imgData);
+      const imgRatio = imgProps.width / imgProps.height;
+      let pdfWidth = pageWidth - 20;      // margin 10-10
+      let pdfHeight = pdfWidth / imgRatio;
+      if(pdfHeight > pageHeight - 20){
+        pdfHeight = pageHeight - 20;
+        pdfWidth  = pdfHeight * imgRatio;
+      }
+
+      const x = (pageWidth - pdfWidth)/2;
+      const y = (pageHeight - pdfHeight)/2;
+
+      pdf.addImage(imgData, "PNG", x, y, pdfWidth, pdfHeight);
+      pdf.save("AdmitCard_" + (document.getElementById("rollInput").value || "BDS") + ".pdf");
+      showMsg("PDF download ho gaya.","#7CFC00");
+    }catch(err){
+      console.error(err);
+      showMsg("PDF banate time error: " + err.message,"#ff8080");
+    }
+  });
 </script>
 
 </body>
