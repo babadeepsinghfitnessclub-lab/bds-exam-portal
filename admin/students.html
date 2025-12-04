@@ -111,7 +111,7 @@
     <p><span class="field-label">Form Status:</span> <span id="dStatus"></span></p>
     <p><span class="field-label">Payment Status:</span> <span id="dPayment"></span></p>
     <p><span class="field-label">UPI Txn ID:</span> <span id="dTxn"></span></p>
-    <p><span class="field-label">Address:</span> <span id="dAddress"></span></p    >
+    <p><span class="field-label">Address:</span> <span id="dAddress"></span></p>
     <p><span class="field-label">Qualification:</span> <span id="dQual"></span></p>
 
     <div class="section-title">Documents</div>
@@ -129,8 +129,31 @@
     </div>
 
     <div class="section-title">Exam Centre & Admit Card</div>
+
     <label>Exam Centre (school / city etc.)</label>
     <input type="text" id="centerInput" placeholder="e.g. Govt Sr Sec School, Sangariya">
+
+    <div class="row-2col" style="margin-top:6px;">
+      <div>
+        <label>Exam Date</label>
+        <input type="text" id="examDateInput" placeholder="e.g. 08-02-2026">
+      </div>
+      <div>
+        <label>Exam Shift</label>
+        <input type="text" id="examShiftInput" placeholder="Morning / Evening">
+      </div>
+    </div>
+
+    <div class="row-2col" style="margin-top:6px;">
+      <div>
+        <label>Start Time</label>
+        <input type="text" id="examStartInput" placeholder="e.g. 10:00 AM">
+      </div>
+      <div>
+        <label>End Time</label>
+        <input type="text" id="examEndInput" placeholder="e.g. 01:00 PM">
+      </div>
+    </div>
 
     <label style="margin-top:6px;display:inline-flex;align-items:center;gap:4px;">
       <input type="checkbox" id="admitAllow">
@@ -248,9 +271,17 @@ async function loadStudents(){
        <td>${st.exam_center || "-"}</td>
        <td>${formStatus}</td>
        <td>${paymentStatus}</td>
-       <td><button class='btn-view'>View</button></td>`;
+       <td>
+         <button class="btn-view">View</button>
+         <button class="btn-reject btn-del">Delete</button>
+       </td>`;
 
-    tr.querySelector("button").onclick = ()=>openDetails(st);
+    const viewBtn = tr.querySelector(".btn-view");
+    const delBtn  = tr.querySelector(".btn-del");
+
+    viewBtn.onclick = ()=>openDetails(st);
+    delBtn.onclick  = ()=>deleteStudent(st);
+
     body.appendChild(tr);
   });
 
@@ -286,13 +317,17 @@ function openDetails(st){
   setDocLink("dMarksheet", st.marksheet_path);
   setDocLink("dPaymentSS", st.payment_screenshot_path);
 
-  document.getElementById("centerInput").value = st.exam_center || "";
-  document.getElementById("admitAllow").checked = st.admit_allowed === true;
+  document.getElementById("centerInput").value     = st.exam_center || "";
+  document.getElementById("examDateInput").value   = st.exam_date || "";
+  document.getElementById("examShiftInput").value  = st.exam_shift || "";
+  document.getElementById("examStartInput").value  = st.exam_start_time || "";
+  document.getElementById("examEndInput").value    = st.exam_end_time || "";
+  document.getElementById("admitAllow").checked    = st.admit_allowed === true;
 
-  document.getElementById("rMarks").value  = st.marks ?? "";
-  document.getElementById("rRank").value   = st.rank ?? "";
-  document.getElementById("rStatus").value = st.result_status || "";
-  document.getElementById("rPublish").checked = st.result_published === true;
+  document.getElementById("rMarks").value          = st.marks ?? "";
+  document.getElementById("rRank").value           = st.rank ?? "";
+  document.getElementById("rStatus").value         = st.result_status || "";
+  document.getElementById("rPublish").checked      = st.result_published === true;
 }
 
 async function updateStatus(newStatus,payFlag){
@@ -330,12 +365,20 @@ async function saveCentreAdmit(){
   msg.textContent = "Saving centre / admit...";
 
   const centre = document.getElementById("centerInput").value.trim();
+  const date   = document.getElementById("examDateInput").value.trim();
+  const shift  = document.getElementById("examShiftInput").value.trim();
+  const start  = document.getElementById("examStartInput").value.trim();
+  const end    = document.getElementById("examEndInput").value.trim();
   const allow  = document.getElementById("admitAllow").checked;
 
   const { error } = await sb
     .from("students")
     .update({
       exam_center: centre || null,
+      exam_date: date || null,
+      exam_shift: shift || null,
+      exam_start_time: start || null,
+      exam_end_time: end || null,
       admit_allowed: allow
     })
     .eq("id", currentId);
@@ -380,6 +423,32 @@ async function saveResult(){
 
   msg.style.color="green";
   msg.textContent="Result saved successfully.";
+}
+
+async function deleteStudent(st){
+  const listMsg = document.getElementById("listMsg");
+  if(!confirm(`Kya aap sure hain? Roll ${st.roll_number} ka form permanently delete ho jayega.`)){
+    return;
+  }
+
+  listMsg.textContent = "Deleting record...";
+
+  const { error } = await sb
+    .from("students")
+    .delete()
+    .eq("id", st.id);
+
+  if(error){
+    listMsg.textContent = "Error deleting: " + error.message;
+    return;
+  }
+
+  listMsg.textContent = "Record deleted.";
+  if(currentId === st.id){
+    currentId = null;
+    document.getElementById("detailBox").style.display = "none";
+  }
+  loadStudents();
 }
 </script>
 
