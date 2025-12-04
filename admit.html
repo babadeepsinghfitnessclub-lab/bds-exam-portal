@@ -6,199 +6,222 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <style>
-    *{box-sizing:border-box;margin:0;padding:0;}
+    *{margin:0;padding:0;box-sizing:border-box;}
+
     body{
       font-family:Arial, sans-serif;
-      background:radial-gradient(circle at top,#1a4fff,#000d2a);
+      background:radial-gradient(circle at top,#1a4fff 0%,#000b33 55%,#000316 100%);
       color:#fff;
     }
-    header{
-      background:#000a;
-      padding:8px 14px;
-      border-bottom:2px solid #ffbf00;
-      font-weight:bold;
-    }
-    nav a{
-      margin-left:10px;color:#fff;text-decoration:none;
-      font-size:13px;font-weight:bold;
-    }
-    .container{max-width:900px;margin:20px auto;padding:0 10px;}
 
+    header{
+      background:rgba(0,0,0,.7);
+      padding:8px 14px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      border-bottom:2px solid #ffbf00;
+    }
+    header a{color:#fff;text-decoration:none;font-size:13px;font-weight:bold;}
+
+    .container{
+      max-width:900px;
+      margin:20px auto;
+      padding:0 10px;
+    }
     .card{
-      background:#0007;padding:14px;
+      background:rgba(0,0,0,0.65);
+      padding:14px;
       border-radius:10px;
     }
+
     label{font-size:14px;margin-top:6px;display:block;}
-    input{width:100%;padding:7px;border-radius:6px;font-size:14px;margin-top:3px;}
+    input{
+      width:100%;padding:7px;
+      border:none;border-radius:6px;
+      margin-top:4px;font-size:14px;
+    }
+
+    .btn {
+      margin-top:10px;
+      padding:9px 20px;
+      border:none;
+      background:#ffbf00;
+      color:#000;
+      font-weight:700;
+      border-radius:999px;
+      cursor:pointer;
+    }
+    .btn:disabled{opacity:0.6;}
+
     #msgBox{margin-top:8px;font-size:13px;}
 
-    .btn{
-      margin-top:10px;padding:8px 16px;
-      background:#ffbf00;border:none;
-      border-radius:20px;font-size:14px;
-      font-weight:bold;color:#000;cursor:pointer;
+    /* 🔵 A4 PDF Layout */
+    .admit-page{
+      width:21cm;
+      min-height:29.7cm;
+      background:#fff;
+      color:#000;
+      padding:18px;
+      border:2px solid #000;
+      position:relative;
+      margin-bottom:20px;
     }
-    #admitBox{
-      background:#fff;color:#000;
-      border:2px solid #ffbf00;
-      border-radius:10px;
-      padding:14px;
-      width:100%;
-      margin-top:14px;
-    }
-    .admit-header{text-align:center;border-bottom:1px solid #ccc;padding-bottom:6px;margin-bottom:6px;}
-    .admit-header h2{color:#b20c0c;margin-bottom:4px;}
-    .row{display:flex;margin:3px 0;justify-content:space-between;font-size:13px;}
-    .row b{font-weight:700;}
 
-    .photo-box{
-      width:150px;height:180px;
-      border:1px solid #333;
-      position:absolute;top:90px;right:18px;
-      background:#eee;overflow:hidden;
-    }
-    .photo-box img{width:100%;height:100%;object-fit:cover;}
+    .admit-header{text-align:center;margin-bottom:10px;}
+    .admit-header h2{color:#b20c0c;font-size:20px;}
 
-    .footer{text-align:center;font-size:12px;margin-top:14px;}
-
-    footer{
-      text-align:center;font-size:12px;
-      padding:12px;background:#000c;margin-top:22px;
+    .stu-photo{
+      width:110px;
+      height:130px;
+      border:2px solid #000;
+      position:absolute;
+      top:25px; right:25px;
+      background-size:cover;
+      background-position:center;
     }
+
+    .row{display:flex;justify-content:space-between;font-size:14px;margin:5px 0;}
+    .label{font-weight:bold;}
+
+    /* Signature Boxes */
+    .sign-area{
+      margin-top:20px;
+      display:flex;
+      justify-content:space-between;
+    }
+    .sign-box{
+      width:40%;
+      text-align:center;
+      font-size:14px;
+      border-top:2px solid #000;
+      padding-top:6px;
+    }
+    .footer-note{
+      margin-top:15px;
+      font-size:11px;
+    }
+
+    /* 🔘 Watermark */
+    .watermark{
+      position:absolute;
+      top:40%;
+      left:15%;
+      font-size:60px;
+      color:rgba(200,0,0,0.06);
+      transform:rotate(-25deg);
+      pointer-events:none;
+    }
+
+    #admitArea{display:none;margin-top:12px;text-align:center;}
+
   </style>
 
-  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/jspdf"></script>
+  <!-- CDN for PDF download -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
 <header>
-  BABA DEEP SINGH MEGA TALENT HUB
-  <nav style="display:inline;">
+  <div><b>BABA DEEP SINGH MEGA TALENT HUB</b></div>
+  <div>
     <a href="index.html">HOME</a>
-    <a href="apply.html">APPLY</a>
-    <a href="admit.html">ADMIT CARD</a>
-    <a href="result.html">RESULT</a>
-  </nav>
+    <a href="help.html">HELP</a>
+  </div>
 </header>
 
 <div class="container">
   <div class="card">
-    <h1>Download Admit Card</h1>
+    <h2>Download Admit Card</h2>
 
     <label>Roll Number</label>
-    <input type="text" id="rollInput" placeholder="e.g. BDS26XXXX">
+    <input id="rollInput" type="text">
 
     <label>Date of Birth</label>
-    <input type="date" id="dobInput">
+    <input id="dobInput" type="date">
 
-    <button class="btn" id="btnGet">Get Admit Card</button>
+    <button id="btnGet" class="btn">Get Admit Card</button>
+
     <div id="msgBox"></div>
 
-    <div id="admitBox" style="display:none;"></div>
-    <button class="btn" id="btnDownload" style="display:none;">Download Admit Card (PDF)</button>
+    <div id="admitArea">
+      <div id="admitWrap"></div>
+      <button class="btn" onclick="downloadPDF()">Download Admit Card PDF</button>
+    </div>
 
   </div>
 </div>
 
-<footer>© 2026 Baba Deep Singh Mega Talent Hub</footer>
-
 <script>
 const sb = supabase.createClient(
-"YOUR_URL",
-"YOUR_KEY"
+  "https://yyymjhuwjvyykukfzqow.supabase.co",
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl5eW1qaHV3anZ5eWt1a2Z6cW93Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2NzMzMjIsImV4cCI6MjA4MDI0OTMyMn0.Ja9Do4cwumTnXx2NGIRW8Ti3rKm4MBiLClQz0xjOtrQ"
 );
 
-const EXAM_NAME="Future Achievers Scholarship Exam 2026";
-const EXAM_DATE="08-02-2026";
-const EXAM_TIME="11:00 AM – 12:30 PM";
-const REPORT_TIME="10:00 AM";
+async function getAdmit(){
+  let roll = rollInput.value.trim();
+  let dob = dobInput.value;
 
-document.getElementById("btnGet").onclick = loadAdmit;
-document.getElementById("btnDownload").onclick = downloadPDF;
+  admitArea.style.display="none";
+  msgBox.innerHTML="Searching...";
 
-let STUDENT_DATA=null;
+  const { data: st } = await sb
+  .from("students")
+  .select("*")
+  .eq("roll_number", roll)
+  .maybeSingle();
 
-async function loadAdmit(){
-  const roll=document.getElementById("rollInput").value.trim().toUpperCase();
-  const dob=document.getElementById("dobInput").value;
-  if(!roll || !dob){show("Enter Roll No and DOB","red");return;}
+  if(!st){ msgBox.innerHTML="Invalid Roll"; return; }
+  if(st.dob !== dob){ msgBox.innerHTML="DOB Wrong"; return; }
+  if(st.payment_status !== "approved"){ msgBox.innerHTML="Payment Pending"; return; }
+  if(!st.admit_allowed){ msgBox.innerHTML="Admit not activated"; return; }
 
-  show("Loading...");
-  const {data,error}= await sb.from("students")
-  .select("*").eq("roll_number",roll).maybeSingle();
+  const photoUrl = st.photo_path ?
+    sb.storage.from("student_docs").getPublicUrl(st.photo_path).data.publicUrl :
+    "";
 
-  if(!data){show("Record not found!","red");return;}
-  if(data.dob!==dob){show("DOB mismatch!","red");return;}
+  let card = pg => `
+<div class="admit-page">
+  <div class="watermark">BDS EXAM</div>
 
-  if(data.payment_status!=="approved"){
-    show("Payment not verified yet.","orange");return;
-  }
-  if(!data.admit_allowed){show("Admit card not activated.","orange");return;}
+  <div class="admit-header">
+    <h2>Future Achievers Scholarship Exam 2026</h2>
+    <div><b>EXAM ${pg==="STUDENT"?"(Student Copy)":"(Exam Cell Copy)"}</b></div>
+  </div>
 
-  STUDENT_DATA=data;
-  document.getElementById("btnDownload").style.display="block";
+  <div class="stu-photo" style="background-image:url('${photoUrl}');"></div>
 
-  let html=cardHTML(data,false);
-  document.getElementById("admitBox").innerHTML=html;
-  document.getElementById("admitBox").style.display="block";
-  show("Loaded successfully!","lightgreen");
-}
+  <div class="row"><span class="label">Name:</span> <span>${st.full_name}</span></div>
+  <div class="row"><span class="label">Father Name:</span> <span>${st.father_name}</span></div>
+  <div class="row"><span class="label">Roll No:</span> <span>${st.roll_number}</span></div>
+  <div class="row"><span class="label">Centre:</span> <span>${st.exam_center}</span></div>
 
-function cardHTML(st,centreCopy){
-return `
-<div style="position:relative;">
-<div class='admit-header'>
-<h2>${centreCopy?"EXAM CELL COPY":EXAM_NAME}</h2>
-<div><b>BABA DEEP SINGH MEGA TALENT HUB</b></div>
-</div>
+  <div class="sign-area">
+    <div class="sign-box">Student Signature</div>
+    <div class="sign-box">Invigilator Signature</div>
+  </div>
 
-<div class='photo-box'><img src='${fileUrl(st.photo_path)}'></div>
-
-<div class='row'><b>Name:</b> ${st.full_name}</div>
-<div class='row'><b>Father:</b> ${st.father_name}</div>
-<div class='row'><b>Roll No:</b> ${st.roll_number}</div>
-<div class='row'><b>Mobile:</b> ${st.mobile}</div>
-<div class='row'><b>Qualification:</b> ${st.qualification}</div>
-<div class='row'><b>Address:</b> ${st.address}</div>
-
-<hr>
-
-<div class='row'><b>Exam Date:</b> ${EXAM_DATE}</div>
-<div class='row'><b>Time:</b> ${EXAM_TIME}</div>
-<div class='row'><b>Reporting:</b> ${REPORT_TIME}</div>
-<div class='row'><b>Centre:</b> ${st.exam_center}</div>
-
-<div class='footer'>Watermark: BDS EXAM</div>
+  <div class="footer-note">
+    Carry this admit card with Aadhaar to examination center.
+  </div>
 </div>
 `;
+
+  admitWrap.innerHTML = card("STUDENT") + card("EXAM CELL");
+  admitArea.style.display="block";
+  msgBox.innerHTML="READY ✔";
 }
 
-function show(t,c){let m=document.getElementById("msgBox");m.style.color=c||"#fff";m.innerHTML=t;}
+btnGet.onclick = getAdmit;
 
-function fileUrl(path){
-const {data}=sb.storage.from("student_docs").getPublicUrl(path);
-return data.publicUrl;
-}
-
-async function downloadPDF(){
-let pdf=new jsPDF('p','pt','a4');
-let box=document.getElementById("admitBox");
-
-await html2canvas(box).then(canvas=>{
-pdf.addImage(canvas,'PNG',10,10,575,820);
-});
-
-let second=cardHTML(STUDENT_DATA,true);
-document.getElementById("admitBox").innerHTML=second;
-await html2canvas(admitBox).then(canvas=>{
-pdf.addPage();
-pdf.addImage(canvas,'PNG',10,10,575,820);
-});
-
-pdf.save(STUDENT_DATA.roll_number+"_AdmitCard.pdf");
-document.getElementById("admitBox").innerHTML=cardHTML(STUDENT_DATA,false);
+function downloadPDF(){
+  let area = document.getElementById("admitWrap");
+  html2pdf().from(area).set({
+    margin: 5,
+    filename: rollInput.value + "_AdmitCard.pdf",
+    jsPDF: {format: 'a4', orientation: 'portrait'}
+  }).save();
 }
 </script>
 
