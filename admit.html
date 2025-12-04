@@ -70,7 +70,7 @@
       color:#000;
       border-radius:10px;
       padding:10px;
-      border:3px double #000;       /* strong border */
+      border:3px double #000;
     }
 
     /* ek A4 page ke andar do copies */
@@ -208,7 +208,6 @@
     <a href="result.html">RESULT</a>
     <a href="download.html">DOWNLOAD</a>
     <a href="help.html">HELP</a>
-    <!-- admin link hataya hua hai -->
   </nav>
 </header>
 
@@ -288,7 +287,6 @@
     showMsg("Please wait, record search ho raha hai...","#fff");
 
     try{
-      // photo_path bhi select kar rahe hain
       const { data: stu, error } = await sb
         .from("students")
         .select("full_name, father_name, roll_number, dob, mobile, qualification, address, payment_status, exam_center, admit_allowed, photo_path")
@@ -308,14 +306,12 @@
         return;
       }
 
-      // DOB match
       if(!stu.dob || stu.dob !== dob){
         showMsg("DOB match nahi ho rahi. Sahi Date of Birth enter karein.","#ff8080");
         btn.disabled = false;
         return;
       }
 
-      // PAYMENT STATUS check
       const payStatus = (stu.payment_status || "").toString().toLowerCase();
       const okPay = ["approved","success","successful","verified","paid"];
 
@@ -329,7 +325,6 @@
         return;
       }
 
-      // Admit allowed + centre check
       if (!stu.admit_allowed) {
         showMsg(
           "Aapka exam centre / admit card abhi activate nahi hua. Organizer se sampark karein.",
@@ -362,7 +357,6 @@
 
       const box = document.getElementById("admitBox");
 
-      // Do copies: Student + Office
       const baseCopy = (copyType) => `
         <div class="admit-copy">
           <div class="watermark">BDS EXAM</div>
@@ -406,7 +400,7 @@
             <div class="photo-box">
               ${
                 photoUrl
-                  ? `<img src="${photoUrl}" alt="Student Photo">`
+                  ? `<img src="${photoUrl}" alt="Student Photo" crossorigin="anonymous">`
                   : `<div class="photo-placeholder">Photo Not Available</div>`
               }
             </div>
@@ -469,10 +463,11 @@
     const { jsPDF } = window.jspdf;
     const pdf = new jsPDF("p","mm","a4");
 
-    const canvas = await html2canvas(admitBox, { scale:2 });
+    // 👇 yahan useCORS true kiya
+    const canvas = await html2canvas(admitBox, { scale:2, useCORS:true });
     const imgData = canvas.toDataURL("image/png");
 
-    const pageWidth = 210;          // A4 width mm
+    const pageWidth = 210;
     const margin = 10;
     const imgWidth = pageWidth - margin * 2;
     const imgHeight = canvas.height * imgWidth / canvas.width;
