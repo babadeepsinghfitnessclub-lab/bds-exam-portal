@@ -69,36 +69,56 @@
       background:#fff;
       color:#000;
       border-radius:10px;
-      padding:14px;
-      border:2px solid #ffbf00;
+      padding:10px;
+      border:3px double #000;       /* strong border */
     }
+
+    /* ek A4 page ke andar do copies */
+    .admit-page{
+      font-size:12px;
+    }
+    .admit-copy{
+      position:relative;
+      border:2px solid #000;
+      border-radius:6px;
+      padding:8px 10px;
+      margin-bottom:10px;
+      min-height:260px;
+      overflow:hidden;
+    }
+    .copy-label{
+      text-align:right;
+      font-size:11px;
+      font-weight:bold;
+    }
+
     .admit-header{
       text-align:center;
-      border-bottom:1px solid #ddd;
-      padding-bottom:6px;
-      margin-bottom:6px;
+      padding-bottom:4px;
+      border-bottom:1px solid #aaa;
+      margin-bottom:4px;
     }
     .admit-header h2{
-      font-size:18px;
-      margin-bottom:3px;
+      font-size:16px;
+      margin-bottom:2px;
       color:#b20c0c;
     }
-    .admit-header div{font-size:12px;}
+    .admit-header div{font-size:11px;}
 
     /* top area: left details + right photo */
     .top-area{
       display:flex;
       justify-content:space-between;
       gap:10px;
-      margin:6px 0;
+      margin:4px 0;
       align-items:flex-start;
     }
     .top-left{
       flex:1 1 auto;
     }
     .photo-box{
-      width:90px;
-      height:110px;
+      width:80px;
+      height:95px;
       border:1px solid #000;
       border-radius:4px;
       overflow:hidden;
@@ -112,7 +132,7 @@
       display:block;
     }
     .photo-placeholder{
-      font-size:10px;
+      font-size:9px;
       text-align:center;
       padding:4px;
       color:#333;
@@ -121,16 +141,45 @@
     .admit-row{
       display:flex;
       justify-content:space-between;
-      font-size:13px;
-      margin:3px 0;
+      font-size:12px;
+      margin:2px 0;
     }
     .admit-row span.label{font-weight:bold;}
 
     .admit-footer{
-      border-top:1px solid #ddd;
-      margin-top:8px;
-      padding-top:6px;
+      border-top:1px solid #aaa;
+      margin-top:4px;
+      padding-top:3px;
+      font-size:10px;
+    }
+
+    .sign-row{
+      display:flex;
+      justify-content:space-between;
+      margin-top:12px;
       font-size:11px;
+    }
+    .sign-cell{
+      width:45%;
+      text-align:center;
+    }
+    .sign-line{
+      display:block;
+      border-top:1px solid #000;
+      margin:14px 0 3px;
+    }
+
+    .watermark{
+      position:absolute;
+      top:45%;
+      left:50%;
+      transform:translate(-50%,-50%) rotate(-25deg);
+      font-size:34px;
+      font-weight:900;
+      color:rgba(0,0,0,0.05);
+      pointer-events:none;
+      user-select:none;
+      letter-spacing:3px;
     }
 
     footer{
@@ -144,6 +193,9 @@
 
   <!-- Supabase JS -->
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <!-- PDF libraries -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
 
@@ -176,6 +228,9 @@
     <input type="date" id="dobInput">
 
     <button class="btn-primary" id="btnGet">Get Admit Card</button>
+    <!-- naya download button -->
+    <button class="btn-primary" id="btnDownload" style="display:none;">Download Admit Card (PDF)</button>
+
     <div id="msgBox"></div>
 
     <div id="admitArea">
@@ -218,9 +273,11 @@
     const roll = document.getElementById("rollInput").value.trim().toUpperCase();
     const dob  = document.getElementById("dobInput").value;
     const btn  = document.getElementById("btnGet");
+    const btnDownload = document.getElementById("btnDownload");
 
     document.getElementById("admitArea").style.display = "none";
     document.getElementById("admitBox").innerHTML = "";
+    btnDownload.style.display = "none";
 
     if(!roll || !dob){
       showMsg("Roll number aur Date of Birth dono fill karein.","#ff8080");
@@ -231,7 +288,7 @@
     showMsg("Please wait, record search ho raha hai...","#fff");
 
     try{
-      // ✅ photo_path bhi select kar rahe hain
+      // photo_path bhi select kar rahe hain
       const { data: stu, error } = await sb
         .from("students")
         .select("full_name, father_name, roll_number, dob, mobile, qualification, address, payment_status, exam_center, admit_allowed, photo_path")
@@ -291,7 +348,7 @@
         return;
       }
 
-      // ✅ Photo URL banana (student_docs bucket se)
+      // Photo URL (student_docs bucket)
       let photoUrl = "";
       if (stu.photo_path) {
         const { data: pub } = sb
@@ -303,93 +360,126 @@
         }
       }
 
-      // ==== Admit card HTML ====
       const box = document.getElementById("admitBox");
 
+      // Do copies: Student + Office
+      const baseCopy = (copyType) => `
+        <div class="admit-copy">
+          <div class="watermark">BDS EXAM</div>
+
+          <div class="copy-label">${copyType}</div>
+
+          <div class="admit-header">
+            <h2>${EXAM_NAME}</h2>
+            <div><b>BABA DEEP SINGH MEGA TALENT HUB</b></div>
+            <div>Sangariya, District Hanumangarh (Raj.)</div>
+          </div>
+
+          <div class="top-area">
+            <div class="top-left">
+              <div class="admit-row">
+                <span class="label">Name:</span>
+                <span>${stu.full_name || ""}</span>
+              </div>
+              <div class="admit-row">
+                <span class="label">Father Name:</span>
+                <span>${stu.father_name || ""}</span>
+              </div>
+              <div class="admit-row">
+                <span class="label">Roll No:</span>
+                <span>${stu.roll_number || ""}</span>
+              </div>
+              <div class="admit-row">
+                <span class="label">Mobile:</span>
+                <span>${stu.mobile || ""}</span>
+              </div>
+              <div class="admit-row">
+                <span class="label">Qualification:</span>
+                <span>${stu.qualification || ""}</span>
+              </div>
+              <div class="admit-row">
+                <span class="label">Centre:</span>
+                <span>${stu.exam_center}</span>
+              </div>
+            </div>
+
+            <div class="photo-box">
+              ${
+                photoUrl
+                  ? `<img src="${photoUrl}" alt="Student Photo">`
+                  : `<div class="photo-placeholder">Photo Not Available</div>`
+              }
+            </div>
+          </div>
+
+          <div class="admit-row">
+            <span class="label">Exam Date:</span>
+            <span>${EXAM_DATE}</span>
+          </div>
+          <div class="admit-row">
+            <span class="label">Exam Time:</span>
+            <span>${EXAM_TIME}</span>
+          </div>
+          <div class="admit-row">
+            <span class="label">Reporting Time:</span>
+            <span>${REPORT_TIME}</span>
+          </div>
+
+          <div class="sign-row">
+            <div class="sign-cell">
+              <span class="sign-line"></span>
+              Student Signature
+            </div>
+            <div class="sign-cell">
+              <span class="sign-line"></span>
+              Invigilator Signature
+            </div>
+          </div>
+
+          <div class="admit-footer">
+            Carry this admit card along with Aadhaar to the examination centre.
+          </div>
+        </div>
+      `;
+
       const html = `
-        <div class="admit-header">
-          <h2>${EXAM_NAME}</h2>
-          <div><b>BABA DEEP SINGH MEGA TALENT HUB</b></div>
-          <div>Sangariya, District Hanumangarh (Raj.)</div>
-        </div>
-
-        <div class="top-area">
-          <div class="top-left">
-            <div class="admit-row">
-              <span class="label">Candidate Name:</span>
-              <span>${stu.full_name || ""}</span>
-            </div>
-            <div class="admit-row">
-              <span class="label">Father's Name:</span>
-              <span>${stu.father_name || ""}</span>
-            </div>
-            <div class="admit-row">
-              <span class="label">Roll No:</span>
-              <span>${stu.roll_number || ""}</span>
-            </div>
-            <div class="admit-row">
-              <span class="label">Mobile:</span>
-              <span>${stu.mobile || ""}</span>
-            </div>
-            <div class="admit-row">
-              <span class="label">Qualification:</span>
-              <span>${stu.qualification || ""}</span>
-            </div>
-            <div class="admit-row">
-              <span class="label">Address:</span>
-              <span>${stu.address || ""}</span>
-            </div>
-          </div>
-
-          <div class="photo-box">
-            ${
-              photoUrl
-                ? `<img src="${photoUrl}" alt="Student Photo">`
-                : `<div class="photo-placeholder">Photo Not Available</div>`
-            }
-          </div>
-        </div>
-
-        <hr style="margin:6px 0;">
-
-        <div class="admit-row">
-          <span class="label">Exam Date:</span>
-          <span>${EXAM_DATE}</span>
-        </div>
-        <div class="admit-row">
-          <span class="label">Exam Time:</span>
-          <span>${EXAM_TIME}</span>
-        </div>
-        <div class="admit-row">
-          <span class="label">Reporting Time:</span>
-          <span>${REPORT_TIME}</span>
-        </div>
-        <div class="admit-row">
-          <span class="label">Exam Centre:</span>
-          <span>${stu.exam_center}</span>
-        </div>
-
-        <div class="admit-footer">
-          <b>Important Instructions:</b>
-          <ol style="padding-left:18px;margin-top:4px;">
-            <li>Admit card aur valid photo ID (Aadhaar) exam centre par saath lekar aayen.</li>
-            <li>Exam start hone se kam se kam 30 minute pehle centre par pahunch jaayen.</li>
-            <li>Mobile, calculator, smart watch jaise electronic items allowed nahi hain.</li>
-          </ol>
+        <div class="admit-page">
+          ${baseCopy("EXAM (Student Copy)")}
+          ${baseCopy("EXAM (Office Copy)")}
         </div>
       `;
 
       box.innerHTML = html;
       document.getElementById("admitArea").style.display = "block";
+      document.getElementById("btnDownload").style.display = "inline-block";
       showMsg("Admit card successfully loaded.","#7CFC00");
       btn.disabled = false;
-
     }catch(err){
       console.error(err);
       showMsg("Error: " + err.message,"#ff8080");
       btn.disabled = false;
     }
   }
+
+  // PDF download
+  document.getElementById("btnDownload").addEventListener("click", async () => {
+    const admitBox = document.getElementById("admitBox");
+    if (!admitBox.innerHTML.trim()) return;
+
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF("p","mm","a4");
+
+    const canvas = await html2canvas(admitBox, { scale:2 });
+    const imgData = canvas.toDataURL("image/png");
+
+    const pageWidth = 210;          // A4 width mm
+    const margin = 10;
+    const imgWidth = pageWidth - margin * 2;
+    const imgHeight = canvas.height * imgWidth / canvas.width;
+
+    pdf.addImage(imgData, "PNG", margin, 10, imgWidth, imgHeight);
+    pdf.save("BDS_Admit_Card.pdf");
+  });
 </script>
 
 </body>
