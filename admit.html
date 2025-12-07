@@ -21,7 +21,19 @@
       flex-wrap:wrap;
       border-bottom:2px solid #ffbf00;
     }
-    .logo-text{font-size:18px;font-weight:bold;letter-spacing:1px;}
+    .logo-text{
+      font-size:18px;
+      font-weight:bold;
+      letter-spacing:1px;
+      display:flex;                /* ✅ logo + text ek line me */
+      align-items:center;
+      gap:8px;
+    }
+    .logo-text img{                /* ✅ header logo style */
+      height:38px;
+      width:auto;
+      border-radius:4px;
+    }
     nav a{
       color:#fff;
       text-decoration:none;
@@ -104,6 +116,13 @@
       color:#b20c0c;
     }
     .admit-header div{font-size:11px;}
+
+    /* ✅ admit card ke upar wala logo */
+    .admit-logo{
+      height:40px;
+      width:auto;
+      margin-bottom:4px;
+    }
 
     /* top area: left details + right photo */
     .top-area{
@@ -200,7 +219,11 @@
 <body>
 
 <header>
-  <div class="logo-text">BABA DEEP SINGH MEGA TALENT HUB</div>
+  <div class="logo-text">
+    <!-- ✅ yahi se header me logo aa jayega -->
+    <img src="bds-logo.png" alt="BDS Logo">
+    BABA DEEP SINGH MEGA TALENT HUB
+  </div>
   <nav>
     <a href="index.html">HOME</a>
     <a href="apply.html">APPLY</a>
@@ -364,6 +387,8 @@
           <div class="copy-label">${copyType}</div>
 
           <div class="admit-header">
+            <!-- ✅ Admit card ke upar logo -->
+            <img src="bds-logo.png" class="admit-logo" alt="BDS Logo">
             <h2>${EXAM_NAME}</h2>
             <div><b>BABA DEEP SINGH MEGA TALENT HUB</b></div>
             <div>Sangariya, District Hanumangarh (Raj.)</div>
