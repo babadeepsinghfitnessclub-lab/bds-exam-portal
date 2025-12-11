@@ -70,6 +70,20 @@
     font-size:13px;
   }
   label{font-size:13px;}
+
+  /* Download button styles */
+  #downloadExcelBtn {
+    display:inline-block;
+    padding:6px 10px;
+    border-radius:6px;
+    background:#0b74de;
+    color:#fff;
+    border:none;
+    font-weight:bold;
+    cursor:pointer;
+    margin-right:8px;
+  }
+  #dlStatus { font-size:13px; color:#666; margin-left:6px; }
 </style>
 
 <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
@@ -80,6 +94,11 @@
   <div class="topbar-links">
     <a href="dashboard.html">← Admin Home</a> |
     <a href="../index.html" target="_blank">Open Website</a>
+    <!-- Download Excel UI -->
+    <span style="float:right;">
+      <button id="downloadExcelBtn">⬇️ Download Students Excel</button>
+      <span id="dlStatus"></span>
+    </span>
   </div>
 
   <h1>Student Applications</h1>
@@ -191,6 +210,9 @@
   </div>
 
 </div>
+
+<!-- SheetJS for Excel generation -->
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
 <script>
 // Admin login check
@@ -450,6 +472,116 @@ async function deleteStudent(st){
   }
   loadStudents();
 }
+
+/* -------------------------
+   Excel export functionality
+   ------------------------- */
+
+async function fetchAllForExport(){
+  // fetch all students — select specific columns you want in excel
+  const { data, error } = await sb
+    .from('students')
+    .select(`
+      id,
+      full_name,
+      father_name,
+      dob,
+      gender,
+      mobile,
+      whatsapp,
+      email,
+      qualification,
+      aadhar_no,
+      address,
+      roll_number,
+      form_status,
+      payment_status,
+      upi_txn,
+      photo_path,
+      aadhar_front_path,
+      aadhar_back_path,
+      marksheet_path,
+      payment_screenshot_path,
+      created_at
+    `)
+    .order('id', { ascending: true });
+
+  if(error) throw error;
+  return data || [];
+}
+
+// Helper: get public URL if bucket is public
+function getPublicUrlSafe(path){
+  if(!path) return "";
+  try{
+    const { data } = sb.storage.from("student_docs").getPublicUrl(path);
+    return data && data.publicUrl ? data.publicUrl : "";
+  }catch(e){
+    return "";
+  }
+}
+
+function makeExcelAndDownload(rows){
+  if(!rows || rows.length === 0){
+    alert("No student data found.");
+    return;
+  }
+
+  const mapped = rows.map(r => ({
+    "ID": r.id ?? '',
+    "Full Name": r.full_name ?? '',
+    "Father's Name": r.father_name ?? '',
+    "DOB": r.dob ?? '',
+    "Gender": r.gender ?? '',
+    "Mobile": r.mobile ?? '',
+    "WhatsApp": r.whatsapp ?? '',
+    "Email": r.email ?? '',
+    "Qualification": r.qualification ?? '',
+    "Aadhaar No": r.aadhar_no ?? '',
+    "Address": r.address ?? '',
+    "Roll Number": r.roll_number ?? '',
+    "Form Status": r.form_status ?? '',
+    "Payment Status": r.payment_status ?? '',
+    "UPI Transaction ID": r.upi_txn ?? '',
+    "Photo URL": r.photo_path ? getPublicUrlSafe(r.photo_path) : '',
+    "Aadhaar Front URL": r.aadhar_front_path ? getPublicUrlSafe(r.aadhar_front_path) : '',
+    "Aadhaar Back URL": r.aadhar_back_path ? getPublicUrlSafe(r.aadhar_back_path) : '',
+    "Marksheet URL": r.marksheet_path ? getPublicUrlSafe(r.marksheet_path) : '',
+    "Payment Screenshot URL": r.payment_screenshot_path ? getPublicUrlSafe(r.payment_screenshot_path) : '',
+    "Created At": r.created_at ?? ''
+  }));
+
+  const ws = XLSX.utils.json_to_sheet(mapped, { dateNF: 'yyyy-mm-dd' });
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Students");
+
+  const wbout = XLSX.write(wb, { bookType:'xlsx', type:'array' });
+  const blob = new Blob([wbout], { type: "application/octet-stream" });
+  const ts = new Date().toISOString().slice(0,19).replace(/[:T]/g,'-');
+  const filename = `students_${ts}.xlsx`;
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+}
+
+document.getElementById('downloadExcelBtn').addEventListener('click', async function(){
+  const status = document.getElementById('dlStatus');
+  status.textContent = 'Fetching students...';
+  try{
+    const rows = await fetchAllForExport();
+    status.textContent = 'Preparing Excel...';
+    makeExcelAndDownload(rows);
+    status.textContent = 'Downloaded';
+    setTimeout(()=> status.textContent = '', 2500);
+  }catch(err){
+    console.error(err);
+    alert('Error exporting students: ' + (err.message || err));
+    document.getElementById('dlStatus').textContent = '';
+  }
+});
 </script>
 
 </body>
