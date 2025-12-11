@@ -85,6 +85,8 @@ th{
   font-size:11px;
   cursor:pointer;
 }
+.file-name { font-size:12px; color:#fff; opacity:0.9; }
+.meta { font-size:11px; opacity:0.8; color:#ddd; }
 </style>
 
 <!-- Supabase JS v2 (browser UMD) -->
@@ -98,16 +100,24 @@ th{
 </header>
 
 <div class="container">
-  <h1>Manage Notices</h1>
+  <h1>Manage Notices (Text + File upload)</h1>
 
   <form id="noticeForm">
     <label>Notice Title
-      <input type="text" id="nTitle" required>
+      <input type="text" id="nTitle" required placeholder="e.g. Syllabus Feb 2026">
     </label>
-    <label>Notice Text
-      <textarea id="nBody" required></textarea>
+    <label>Notice Text (short)
+      <textarea id="nBody" required placeholder="Brief description or instructions..."></textarea>
     </label>
-    <button class="primary" type="submit">Add Notice</button>
+
+    <label>Attach File (optional) — PDF / DOC / DOCX
+      <input type="file" id="nFile" accept=".pdf,.doc,.docx" />
+    </label>
+
+    <div style="margin-top:8px;">
+      <button class="primary" type="submit" id="uploadBtn">Add Notice</button>
+      <span id="noticeStatus" class="meta"></span>
+    </div>
   </form>
 
   <table>
@@ -116,6 +126,7 @@ th{
         <th>#</th>
         <th>Title</th>
         <th>Text</th>
+        <th>File</th>
         <th>Status</th>
         <th>Actions</th>
       </tr>
@@ -125,7 +136,7 @@ th{
 </div>
 
 <script>
-  // 🔐 Admin guard
+  // Admin guard
   if (localStorage.getItem("bdsAdminLoggedIn") !== "yes") {
     window.location.href = "login.html";
   }
@@ -135,7 +146,7 @@ th{
   }
   window.logout = logout;
 
-  // 🔗 Supabase config (tumhara project)
+  // Supabase config (same as other admin pages)
   const SUPABASE_URL = "https://yyymjhuwjvyykukfzqow.supabase.co";
   const SUPABASE_ANON_KEY =
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl5eW1qaHV3anZ5eWt1a2Z6cW93Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2NzMzMjIsImV4cCI6MjA4MDI0OTMyMn0.Ja9Do4cwumTnXx2NGIRW8Ti3rKm4MBiLClQz0xjOtrQ";
@@ -143,133 +154,215 @@ th{
   const { createClient } = supabase;
   const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+  // constants
+  const NOTICE_BUCKET = 'notices'; // storage bucket name (create this and set public)
+  const NOTICE_TABLE  = 'notices'; // table (id, title, body, path, active, created_at)
+
   const form  = document.getElementById("noticeForm");
   const tbody = document.getElementById("noticesBody");
+  const statusSpan = document.getElementById("noticeStatus");
+  const uploadBtn = document.getElementById("uploadBtn");
 
-  // ➕ Add new notice
+  // escape helper to avoid inserting raw HTML
+  function escapeHtml(s){
+    return String(s || '').replace(/[&<>"']/g, function(m){
+      return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[m];
+    });
+  }
+
+  // upload handler (text + optional file)
   form.addEventListener("submit", async (e)=>{
     e.preventDefault();
     const title = document.getElementById("nTitle").value.trim();
     const body  = document.getElementById("nBody").value.trim();
+    const fileInput = document.getElementById("nFile");
+    const file = fileInput.files[0];
 
     if(!title || !body){
       alert("Title aur notice text dono zaroori hain.");
       return;
     }
 
-    const { error } = await sb
-      .from("notices")
-      .insert([{
-        title:  title,   // ✅ column name
-        body:   body,    // ✅ column name
-        active: true     // ✅ boolean column
-        // created_at column me default now() laga hua hai (auto)
-      }]);
+    statusSpan.style.color = '#fff';
+    statusSpan.textContent = 'Processing...';
+    uploadBtn.disabled = true;
 
-    if (error) {
-      console.error(error);
-      alert("Error adding notice: " + error.message);
-      return;
-    }
+    try{
+      let path = null;
+      if(file){
+        // create safe path
+        const ts = Date.now();
+        const safeName = file.name.replace(/\s+/g,'_').replace(/[^\w\-.]/g,'');
+        path = `${ts}_${safeName}`;
 
-    form.reset();
-    loadNotices();
-  });
-
-  // 📥 Load notices list
-  async function loadNotices(){
-    tbody.innerHTML = "<tr><td colspan='5'>Loading...</td></tr>";
-
-    const { data, error } = await sb
-      .from("notices")
-      .select("*")
-      .order("created_at", { ascending:false });
-
-    if (error) {
-      console.error(error);
-      tbody.innerHTML =
-        "<tr><td colspan='5'>Error loading notices: "+error.message+"</td></tr>";
-      return;
-    }
-
-    if (!data || data.length === 0) {
-      tbody.innerHTML = "<tr><td colspan='5'>No notices found.</td></tr>";
-      return;
-    }
-
-    let i=1, html="";
-    data.forEach(row=>{
-      const active = row.active !== false;
-      let createdText = "";
-      if (row.created_at) {
-        const dt = new Date(row.created_at);
-        if (!isNaN(dt.getTime())) {
-          createdText = dt.toLocaleString();
+        const { error: uploadErr } = await sb.storage.from(NOTICE_BUCKET).upload(path, file, { upsert: true });
+        if(uploadErr){
+          throw uploadErr;
         }
       }
 
-      html += `
-        <tr>
+      // insert into notices table with optional path
+      const insertObj = {
+        title: title,
+        body: body,
+        active: true,
+        path: path // may be null
+      };
+
+      const { error: insErr } = await sb.from(NOTICE_TABLE).insert([insertObj]);
+      if(insErr){
+        // rollback uploaded file if present
+        if(path){
+          await sb.storage.from(NOTICE_BUCKET).remove([path]).catch(()=>{});
+        }
+        throw insErr;
+      }
+
+      statusSpan.style.color = 'lightgreen';
+      statusSpan.textContent = 'Notice added.';
+      form.reset();
+      loadNotices();
+
+    }catch(err){
+      console.error(err);
+      statusSpan.style.color = 'salmon';
+      statusSpan.textContent = 'Error: ' + (err.message || err);
+    }finally{
+      uploadBtn.disabled = false;
+      setTimeout(()=> statusSpan.textContent = '', 3000);
+    }
+  });
+
+
+  // load notices list
+  async function loadNotices(){
+    tbody.innerHTML = "<tr><td colspan='6'>Loading...</td></tr>";
+    try{
+      const { data, error } = await sb
+        .from(NOTICE_TABLE)
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if(error){
+        tbody.innerHTML = `<tr><td colspan='6'>Error loading notices: ${escapeHtml(error.message)}</td></tr>`;
+        return;
+      }
+
+      if(!data || data.length === 0){
+        tbody.innerHTML = "<tr><td colspan='6'>No notices found.</td></tr>";
+        return;
+      }
+
+      let i = 1;
+      let html = '';
+      data.forEach(row => {
+        const active = row.active !== false;
+        const createdText = row.created_at ? new Date(row.created_at).toLocaleString() : '';
+        // file public url (if exists)
+        let fileHtml = '<span style="color:#999">—</span>';
+        if(row.path){
+          try{
+            const { data: urlData } = sb.storage.from(NOTICE_BUCKET).getPublicUrl(row.path);
+            const url = urlData && urlData.publicUrl ? urlData.publicUrl : '';
+            if(url){
+              fileHtml = `<a class="file-name" href="${escapeHtml(url)}" target="_blank">Download</a>`;
+            } else {
+              // show path text if public url not available
+              fileHtml = `<span class="file-name">${escapeHtml(row.path)}</span>`;
+            }
+          }catch(e){
+            fileHtml = `<span class="file-name">${escapeHtml(row.path)}</span>`;
+          }
+        }
+
+        html += `<tr>
           <td>${i++}</td>
-          <td>${row.title || ""}</td>
-          <td>${row.body || ""}</td>
+          <td>${escapeHtml(row.title || '')}</td>
+          <td>${escapeHtml(row.body || '')}</td>
+          <td style="white-space:nowrap;">${fileHtml}</td>
           <td>
-            <span class="badge ${active ? "badge-on" : "badge-off"}">
-              ${active ? "Visible" : "Hidden"}
-            </span><br>
-            <span style="font-size:11px;opacity:.8;">${createdText}</span>
+            <span class="badge ${active ? 'badge-on' : 'badge-off'}">${active ? 'Visible' : 'Hidden'}</span>
+            <div class="meta">${escapeHtml(createdText)}</div>
           </td>
-          <td>
-            <button class="small-btn"
-              onclick="toggleNotice(${row.id},${active})">
-              ${active ? "Hide" : "Show"}
-            </button>
-            <button class="small-btn" style="background:#ff5252;color:#fff;"
-              onclick="deleteNotice(${row.id})">
-              Delete
-            </button>
+          <td style="white-space:nowrap;">
+            <button class="small-btn" onclick="toggleNotice(${row.id}, ${active})">${active ? 'Hide' : 'Show'}</button>
+            <button class="small-btn" style="background:#ff5252;color:#fff;" onclick="deleteNotice(${row.id}, ${row.path ? `'${escapeJsString(row.path)}'` : 'null'})">Delete</button>
           </td>
         </tr>`;
-    });
-    tbody.innerHTML = html;
+      });
+
+      tbody.innerHTML = html;
+
+    }catch(err){
+      console.error(err);
+      tbody.innerHTML = `<tr><td colspan='6'>Unexpected error.</td></tr>`;
+    }
   }
 
-  // 👁 Hide / Show
-  async function toggleNotice(id,current){
-    const { error } = await sb
-      .from("notices")
-      .update({ active: !current })
-      .eq("id", id);
+  // helper to escape single quotes/newlines for inline js when injecting path
+  function escapeJsString(s){
+    if(!s) return '';
+    return String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\n/g,'\\n');
+  }
+  window.escapeJsString = escapeJsString;
 
-    if (error) {
-      console.error(error);
-      alert("Error updating notice: " + error.message);
-      return;
+  // toggle visibility
+  async function toggleNotice(id,current){
+    try{
+      const { error } = await sb.from(NOTICE_TABLE).update({ active: !current }).eq('id', id);
+      if(error) throw error;
+      loadNotices();
+    }catch(err){
+      console.error(err);
+      alert('Error toggling notice: ' + (err.message || err));
     }
-    loadNotices();
   }
   window.toggleNotice = toggleNotice;
 
-  // 🗑 Delete
-  async function deleteNotice(id){
-    if (!confirm("Delete this notice?")) return;
+  // delete notice: first fetch path (if not provided), remove storage file, then delete row
+  async function deleteNotice(id, pathArg){
+    if(!confirm('Are you sure you want to delete this notice?')) return;
 
-    const { error } = await sb
-      .from("notices")
-      .delete()
-      .eq("id", id);
+    const noticeStatus = document.getElementById("noticeStatus");
+    noticeStatus.style.color = '#fff';
+    noticeStatus.textContent = 'Deleting...';
 
-    if (error) {
-      console.error(error);
-      alert("Error deleting notice: " + error.message);
-      return;
+    try{
+      let path = pathArg && pathArg !== 'null' ? pathArg : null;
+
+      // If path not passed, fetch it
+      if(!path){
+        const { data, error } = await sb.from(NOTICE_TABLE).select('path').eq('id', id).single();
+        if(error) throw error;
+        path = data ? data.path : null;
+      }
+
+      // delete row from table
+      const { error: delRowErr } = await sb.from(NOTICE_TABLE).delete().eq('id', id);
+      if(delRowErr) throw delRowErr;
+
+      // delete file from storage if exists (ignore error)
+      if(path){
+        await sb.storage.from(NOTICE_BUCKET).remove([path]).catch((e)=>console.warn('storage remove err', e));
+      }
+
+      noticeStatus.style.color = 'lightgreen';
+      noticeStatus.textContent = 'Deleted.';
+      loadNotices();
+
+    }catch(err){
+      console.error(err);
+      noticeStatus.style.color = 'salmon';
+      noticeStatus.textContent = 'Delete failed: ' + (err.message || err);
+    }finally{
+      setTimeout(()=> noticeStatus.textContent = '', 2500);
     }
-    loadNotices();
   }
   window.deleteNotice = deleteNotice;
 
-  // First load
+  // initial load
   loadNotices();
+
 </script>
 
 </body>
