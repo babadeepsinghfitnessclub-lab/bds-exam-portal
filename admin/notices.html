@@ -87,6 +87,7 @@ th{
 }
 .file-name { font-size:12px; color:#fff; opacity:0.9; }
 .meta { font-size:11px; opacity:0.8; color:#ddd; }
+.status { margin-left:8px; font-size:13px; vertical-align:middle; }
 </style>
 
 <!-- Supabase JS v2 (browser UMD) -->
@@ -116,7 +117,7 @@ th{
 
     <div style="margin-top:8px;">
       <button class="primary" type="submit" id="uploadBtn">Add Notice</button>
-      <span id="noticeStatus" class="meta"></span>
+      <span id="noticeStatus" class="status meta"></span>
     </div>
   </form>
 
@@ -156,7 +157,7 @@ th{
 
   // constants
   const NOTICE_BUCKET = 'notices'; // storage bucket name (create this and set public)
-  const NOTICE_TABLE  = 'notices'; // table (id, title, body, path, active, created_at)
+  const NOTICE_TABLE  = 'notices'; // table (id, title, body, file_path, active, created_at)
 
   const form  = document.getElementById("noticeForm");
   const tbody = document.getElementById("noticesBody");
@@ -188,32 +189,32 @@ th{
     uploadBtn.disabled = true;
 
     try{
-      let path = null;
+      let uploadedPath = null;
       if(file){
         // create safe path
         const ts = Date.now();
         const safeName = file.name.replace(/\s+/g,'_').replace(/[^\w\-.]/g,'');
-        path = `${ts}_${safeName}`;
+        uploadedPath = `${ts}_${safeName}`;
 
-        const { error: uploadErr } = await sb.storage.from(NOTICE_BUCKET).upload(path, file, { upsert: true });
+        const { error: uploadErr } = await sb.storage.from(NOTICE_BUCKET).upload(uploadedPath, file, { upsert: true });
         if(uploadErr){
           throw uploadErr;
         }
       }
 
-      // insert into notices table with optional path
+      // insert into notices table with optional file_path
       const insertObj = {
         title: title,
         body: body,
         active: true,
-        path: path // may be null
+        file_path: uploadedPath // may be null
       };
 
-      const { error: insErr } = await sb.from(NOTICE_TABLE).insert([insertObj]);
+      const { data: insData, error: insErr } = await sb.from(NOTICE_TABLE).insert([insertObj]).select().single();
       if(insErr){
         // rollback uploaded file if present
-        if(path){
-          await sb.storage.from(NOTICE_BUCKET).remove([path]).catch(()=>{});
+        if(uploadedPath){
+          await sb.storage.from(NOTICE_BUCKET).remove([uploadedPath]).catch(()=>{});
         }
         throw insErr;
       }
@@ -229,7 +230,7 @@ th{
       statusSpan.textContent = 'Error: ' + (err.message || err);
     }finally{
       uploadBtn.disabled = false;
-      setTimeout(()=> statusSpan.textContent = '', 3000);
+      setTimeout(()=> statusSpan.textContent = '', 3500);
     }
   });
 
@@ -260,18 +261,18 @@ th{
         const createdText = row.created_at ? new Date(row.created_at).toLocaleString() : '';
         // file public url (if exists)
         let fileHtml = '<span style="color:#999">—</span>';
-        if(row.path){
+        if(row.file_path){
           try{
-            const { data: urlData } = sb.storage.from(NOTICE_BUCKET).getPublicUrl(row.path);
+            const { data: urlData } = sb.storage.from(NOTICE_BUCKET).getPublicUrl(row.file_path);
             const url = urlData && urlData.publicUrl ? urlData.publicUrl : '';
             if(url){
-              fileHtml = `<a class="file-name" href="${escapeHtml(url)}" target="_blank">Download</a>`;
+              fileHtml = `<a class="file-name" href="${escapeHtml(url)}" target="_blank" rel="noopener">Download</a>`;
             } else {
-              // show path text if public url not available
-              fileHtml = `<span class="file-name">${escapeHtml(row.path)}</span>`;
+              // show filename text if public url not available
+              fileHtml = `<span class="file-name">${escapeHtml(row.file_path)}</span>`;
             }
           }catch(e){
-            fileHtml = `<span class="file-name">${escapeHtml(row.path)}</span>`;
+            fileHtml = `<span class="file-name">${escapeHtml(row.file_path)}</span>`;
           }
         }
 
@@ -286,7 +287,7 @@ th{
           </td>
           <td style="white-space:nowrap;">
             <button class="small-btn" onclick="toggleNotice(${row.id}, ${active})">${active ? 'Hide' : 'Show'}</button>
-            <button class="small-btn" style="background:#ff5252;color:#fff;" onclick="deleteNotice(${row.id}, ${row.path ? `'${escapeJsString(row.path)}'` : 'null'})">Delete</button>
+            <button class="small-btn" style="background:#ff5252;color:#fff;" onclick="deleteNotice(${row.id}, ${row.file_path ? `'${escapeJsString(row.file_path)}'` : 'null'})">Delete</button>
           </td>
         </tr>`;
       });
@@ -319,8 +320,8 @@ th{
   }
   window.toggleNotice = toggleNotice;
 
-  // delete notice: first fetch path (if not provided), remove storage file, then delete row
-  async function deleteNotice(id, pathArg){
+  // delete notice: first fetch file_path (if not provided), remove storage file, then delete row
+  async function deleteNotice(id, filePathArg){
     if(!confirm('Are you sure you want to delete this notice?')) return;
 
     const noticeStatus = document.getElementById("noticeStatus");
@@ -328,13 +329,13 @@ th{
     noticeStatus.textContent = 'Deleting...';
 
     try{
-      let path = pathArg && pathArg !== 'null' ? pathArg : null;
+      let filePath = filePathArg && filePathArg !== 'null' ? filePathArg : null;
 
-      // If path not passed, fetch it
-      if(!path){
-        const { data, error } = await sb.from(NOTICE_TABLE).select('path').eq('id', id).single();
+      // If filePath not passed, fetch it
+      if(!filePath){
+        const { data, error } = await sb.from(NOTICE_TABLE).select('file_path').eq('id', id).single();
         if(error) throw error;
-        path = data ? data.path : null;
+        filePath = data ? data.file_path : null;
       }
 
       // delete row from table
@@ -342,8 +343,8 @@ th{
       if(delRowErr) throw delRowErr;
 
       // delete file from storage if exists (ignore error)
-      if(path){
-        await sb.storage.from(NOTICE_BUCKET).remove([path]).catch((e)=>console.warn('storage remove err', e));
+      if(filePath){
+        await sb.storage.from(NOTICE_BUCKET).remove([filePath]).catch((e)=>console.warn('storage remove err', e));
       }
 
       noticeStatus.style.color = 'lightgreen';
