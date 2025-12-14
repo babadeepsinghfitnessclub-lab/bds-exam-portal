@@ -140,11 +140,13 @@ async function load(){
  let i=1;
 
  data.forEach(s=>{
+  const nameVal = s.full_name || s.name || "";
+
   const tr=document.createElement("tr");
   tr.innerHTML=`
    <td>${i++}</td>
    <td>${s.roll_number||""}</td>
-   <td>${s.full_name ||""}</td>  
+   <td>${nameVal}</td>
    <td>${s.mobile||""}</td>
    <td>${s.exam_level||""}</td>
    <td>${s.form_status||"pending"}</td>
@@ -159,6 +161,7 @@ async function load(){
  });
  listMsg.innerText="Loaded";
 }
+
 load();
 
 function setLink(el,path){
@@ -178,7 +181,7 @@ function openDetail(s){
  currentId=s.id;
  detailBox.style.display="block";
 
- dName.innerText=s.full_name ||"";
+ dName.innerText = s.full_name || s.name || "";
  dFather.innerText=s.father_name||"";
  dMobile.innerText=s.mobile||"";
  dRoll.innerText=s.roll_number||"";
@@ -191,48 +194,6 @@ function openDetail(s){
  setLink(dAB,s.aadhar_back_path);
  setLink(dMS,s.marksheet_path);
  setLink(dPSS,s.payment_screenshot_path);
-
- cCentre.value=s.exam_center||"";
- cDate.value=s.exam_date||"";
- cShift.value=s.exam_shift||"";
- cStart.value=s.exam_start_time||"";
- cEnd.value=s.exam_end_time||"";
- cAllow.checked=s.admit_allowed===true;
-
- rMarks.value=s.marks||"";
- rRank.value=s.rank||"";
- rStatus.value=s.result_status||"";
- rPub.checked=s.result_published===true;
-}
-
-async function setStatus(st,pay){
- await sb.from("students").update({
-  form_status:st,
-  payment_status:pay?"approved":"pending"
- }).eq("id",currentId);
- load();
-}
-
-async function saveAdmit(){
- await sb.from("students").update({
-  exam_center:cCentre.value,
-  exam_date:cDate.value,
-  exam_shift:cShift.value,
-  exam_start_time:cStart.value,
-  exam_end_time:cEnd.value,
-  admit_allowed:cAllow.checked
- }).eq("id",currentId);
- dMsg.innerText="Admit saved";
-}
-
-async function saveResult(){
- await sb.from("students").update({
-  marks:rMarks.value||null,
-  rank:rRank.value||null,
-  result_status:rStatus.value||null,
-  result_published:rPub.checked
- }).eq("id",currentId);
- dMsg.innerText="Result saved";
 }
 
 async function delRow(id){
@@ -243,8 +204,15 @@ async function delRow(id){
 
 async function downloadExcel(){
  const {data}=await sb.from("students")
-  .select("full_name,roll_number,mobile");
- const ws=XLSX.utils.json_to_sheet(data);
+  .select("full_name,name,roll_number,mobile");
+
+ const fixed=data.map(s=>({
+  Name: s.full_name || s.name || "",
+  Roll: s.roll_number,
+  Mobile: s.mobile
+ }));
+
+ const ws=XLSX.utils.json_to_sheet(fixed);
  const wb=XLSX.utils.book_new();
  XLSX.utils.book_append_sheet(wb,ws,"Students");
  XLSX.writeFile(wb,"students.xlsx");
@@ -252,5 +220,3 @@ async function downloadExcel(){
 </script>
 </body>
 </html>
-
-
