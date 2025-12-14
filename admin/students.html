@@ -144,7 +144,8 @@ async function load(){
   tr.innerHTML=`
    <td>${i++}</td>
    <td>${s.roll_number||""}</td>
-   <td>${s.full_name || s.name || s.username || ""}</td>   <td>${s.mobile||""}</td>
+   <td>${s.full_name ||""}</td>  
+   <td>${s.mobile||""}</td>
    <td>${s.exam_level||""}</td>
    <td>${s.form_status||"pending"}</td>
    <td>${s.payment_status||"pending"}</td>
@@ -177,7 +178,7 @@ function openDetail(s){
  currentId=s.id;
  detailBox.style.display="block";
 
- dName.innerText=s.full_name || s.name || "";
+ dName.innerText=s.full_name ||"";
  dFather.innerText=s.father_name||"";
  dMobile.innerText=s.mobile||"";
  dRoll.innerText=s.roll_number||"";
@@ -251,4 +252,5 @@ async function downloadExcel(){
 </script>
 </body>
 </html>
+
 
