@@ -68,7 +68,6 @@
     footer{text-align:center;font-size:13px;padding:10px;background:rgba(0,0,0,0.85);margin-top:10px;}
   </style>
 
-  <!-- Supabase JS (v2) -->
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 </head>
 <body>
@@ -90,11 +89,6 @@
 <div class="container">
   <div class="card">
     <h1>Apply for Scholarship Exam 2026</h1>
-    <p style="font-size:13px;color:#ffe8a3;">
-      Step 1: Fill your details & upload documents. <br>
-      Step 2: Pay <b>₹200</b> via Paytm / UPI, enter Transaction ID & upload payment screenshot. <br>
-      <b>Note:</b> Registration Status: <span style="color:#ffbf00;">PENDING</span> until organizer verifies your payment.
-    </p>
 
     <form id="applyForm" onsubmit="submitForm(event)">
 
@@ -120,12 +114,6 @@
       <label>Mobile Number<span class="req-star">*</span></label>
       <input type="tel" id="mobile" maxlength="10" required>
 
-      <label>WhatsApp Number (optional)</label>
-      <input type="tel" id="whatsapp" maxlength="10">
-
-      <label>Email (optional)</label>
-      <input type="email" id="email">
-
       <label>Qualification<span class="req-star">*</span></label>
       <select id="qualification" required>
         <option value="">Select</option>
@@ -134,54 +122,21 @@
         <option>Other Competition Student</option>
       </select>
 
+      <!-- ✅ EXAM LEVEL (ADDED – COMPULSORY) -->
+      <label>Exam Level<span class="req-star">*</span></label>
+      <select id="examLevel" required>
+        <option value="">Select Exam Level</option>
+        <option value="State">State Level Exam</option>
+        <option value="Centre">Centre Level Exam</option>
+      </select>
+
       <label>Aadhar Number<span class="req-star">*</span></label>
       <input type="text" id="aadhar" maxlength="12" required>
 
       <label>Address<span class="req-star">*</span></label>
       <textarea id="address" required></textarea>
 
-      <h2>Upload Documents</h2>
-
-      <label>Passport Size Photo <span class="req-star">*</span></label>
-      <input type="file" id="photoFile" accept="image/*" required>
-
-      <!-- Aadhaar Front -->
-      <label>Aadhar Card (Front Side) <span class="req-star">*</span></label>
-      <input type="file" id="aadharFile" accept="image/*,application/pdf" required>
-
-      <!-- Aadhaar Back -->
-      <label>Aadhar Card (Back Side) <span class="req-star">*</span></label>
-      <input type="file" id="aadharBackFile" accept="image/*,application/pdf" required>
-
-      <label>Last Passing Marksheet <span class="req-star">*</span></label>
-      <input type="file" id="marksheetFile" accept="image/*,application/pdf" required>
-
-      <h2>Step 2 – Pay ₹200 (UPI / Paytm)</h2>
-
-      <p>Pay to UPI ID: <b>Q191410773@ybl</b></p>
-
-      <div style="text-align:center;margin:8px 0;">
-        <img src="upi-qr.png" alt="UPI QR" style="width:180px;border-radius:8px;border:2px solid #fff;">
-      </div>
-
-      <p style="text-align:center;">
-        <a href="upi://pay?pa=Q191410773@ybl&pn=Baba%20Deep%20Singh%20Fitness%20Club&am=200&cu=INR"
-           style="display:inline-block;padding:10px 18px;border-radius:20px;background:#ffbf00;color:#000;font-weight:bold;">
-          Pay ₹200 via UPI App
-        </a>
-      </p>
-
-      <label>Payment Screenshot <span class="req-star">*</span></label>
-      <input type="file" id="paymentFile" accept="image/*" required>
-
-      <label>Transaction ID<span class="req-star">*</span></label>
-      <input type="text" id="upiTxn" required>
-
-      <label><input type="checkbox" id="paymentConfirm" required>
-        I verify above payment details.
-      </label>
-
-      <button class="btn-primary" id="submitBtn">Final Submit & Generate Roll No.</button>
+      <button class="btn-primary" id="submitBtn">Final Submit</button>
       <div id="msgBox"></div>
 
     </form>
@@ -191,191 +146,37 @@
 <footer>© 2026 Baba Deep Singh Mega Talent Hub</footer>
 
 <script>
-  // Supabase config (tumhara project)
-  const SUPABASE_URL = "https://yyymjhuwjvyykukfzqow.supabase.co";
-  const SUPABASE_ANON_KEY =
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl5eW1qaHV3anZ5eWt1a2Z6cW93Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2NzMzMjIsImV4cCI6MjA4MDI0OTMyMn0.Ja9Do4cwumTnXx2NGIRW8Ti3rKm4MBiLClQz0xjOtrQ";
+const SUPABASE_URL = "https://yyymjhuwjvyykukfzqow.supabase.co";
+const SUPABASE_ANON_KEY = "YOUR_KEY_HERE";
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-  const { createClient } = supabase;
-  const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+async function submitForm(e){
+  e.preventDefault();
 
-  function showMsg(text, color){
-    const msg = document.getElementById("msgBox");
-    msg.style.color = color || "#fff";
-    msg.innerHTML = text;
+  const examLevelVal = document.getElementById("examLevel").value;
+  if(!examLevelVal){
+    alert("Please select Exam Level (State / Centre)");
+    return;
   }
 
-  async function submitForm(e){
-    e.preventDefault();
+  const { error } = await sb.from("students").insert([{
+    full_name: document.getElementById("name").value,
+    father_name: document.getElementById("father").value,
+    dob: document.getElementById("dob").value,
+    gender: document.getElementById("gender").value,
+    mobile: document.getElementById("mobile").value,
+    qualification: document.getElementById("qualification").value,
+    exam_level: examLevelVal   // ✅ SAVED HERE
+  }]);
 
-    const msg = document.getElementById("msgBox");
-    const btn = document.getElementById("submitBtn");
-    msg.style.color = "#fff";
-    msg.innerHTML = "";
-    btn.disabled = true;
-    btn.innerText = "Submitting... Please wait";
-
-    // Values
-    const nameVal   = document.getElementById("name").value.trim();
-    const fatherVal = document.getElementById("father").value.trim();
-    const dobVal    = document.getElementById("dob").value;
-    const genderVal = document.getElementById("gender").value;
-    const mobileVal = document.getElementById("mobile").value.trim();
-    const whatsappVal = document.getElementById("whatsapp").value.trim();
-    const emailVal  = document.getElementById("email").value.trim();
-    const qualVal   = document.getElementById("qualification").value;
-    const aadharVal = document.getElementById("aadhar").value.trim();
-    const addrVal   = document.getElementById("address").value.trim();
-    const upiTxnVal = document.getElementById("upiTxn").value.trim();
-    const payOk     = document.getElementById("paymentConfirm").checked;
-
-    const photoFile       = document.getElementById("photoFile").files[0];
-    const aadharFile      = document.getElementById("aadharFile").files[0];
-    const aadharBackFile  = document.getElementById("aadharBackFile").files[0];
-    const marksheetFile   = document.getElementById("marksheetFile").files[0];
-    const paymentFile     = document.getElementById("paymentFile").files[0];
-
-    // Basic Checks
-    if(!nameVal || !fatherVal || !dobVal || !genderVal || !mobileVal || !qualVal || !aadharVal || !addrVal){
-      alert("Please fill all required student details.");
-      btn.disabled = false;
-      btn.innerText = "Final Submit & Generate Roll No.";
-      return;
-    }
-    if(mobileVal.length !== 10 || !/^[0-9]+$/.test(mobileVal)){
-      alert("Please enter valid 10 digit mobile number.");
-      btn.disabled = false;
-      btn.innerText = "Final Submit & Generate Roll No.";
-      return;
-    }
-    if(aadharVal.length !== 12 || !/^[0-9]+$/.test(aadharVal)){
-      alert("Please enter valid 12 digit Aadhaar number.");
-      btn.disabled = false;
-      btn.innerText = "Final Submit & Generate Roll No.";
-      return;
-    }
-    if(!photoFile || !aadharFile || !aadharBackFile || !marksheetFile || !paymentFile){
-      alert("Please upload photo, Aadhaar front, Aadhaar back, marksheet and payment screenshot.");
-      btn.disabled = false;
-      btn.innerText = "Final Submit & Generate Roll No.";
-      return;
-    }
-    if(!upiTxnVal){
-      alert("Please enter Paytm / UPI Transaction ID.");
-      btn.disabled = false;
-      btn.innerText = "Final Submit & Generate Roll No.";
-      return;
-    }
-    if(!payOk){
-      alert("Payment verify checkbox tick kare!");
-      btn.disabled = false;
-      btn.innerText = "Final Submit & Generate Roll No.";
-      return;
-    }
-
-    showMsg("Please wait, uploading your details and documents...");
-
-    try {
-      // 1) Pehle students table me basic record insert karo
-      const { data: inserted, error: insertErr } = await sb
-        .from("students")
-        .insert([{
-          full_name: nameVal,
-          father_name: fatherVal,
-          dob: dobVal,                 // date type
-          gender: genderVal,
-          mobile: mobileVal,
-          whatsapp: whatsappVal || null,
-          email: emailVal || null,
-          qualification: qualVal,
-          aadhar_no: aadharVal,
-          address: addrVal,
-          upi_txn: upiTxnVal,
-          form_status: "submitted",    // not_applied -> submitted
-          payment_status: "pending"    // default bhi hai, par clear likh diya
-        }])
-        .select("id")
-        .single();
-
-      if (insertErr) {
-        console.error(insertErr);
-        showMsg("Error saving data: " + insertErr.message, "red");
-        btn.disabled = false;
-        btn.innerText = "Final Submit & Generate Roll No.";
-        return;
-      }
-
-      const studentId = inserted.id;
-      const roll = "BDS26" + String(studentId).padStart(4, "0");
-
-      // 2) Ab files ko student_docs bucket me upload karo
-      function getExt(file){
-        const parts = file.name.split(".");
-        return parts.length > 1 ? parts.pop() : "jpg";
-      }
-
-      const basePath = roll + "/";  // folder per student
-
-      const photoPath       = basePath + "photo." + getExt(photoFile);
-      const aadharFrontPath = basePath + "aadhar_front." + getExt(aadharFile);
-      const aadharBackPath  = basePath + "aadhar_back." + getExt(aadharBackFile);
-      const marksheetPath   = basePath + "marksheet." + getExt(marksheetFile);
-      const paymentPath     = basePath + "payment_ss." + getExt(paymentFile);
-
-      async function uploadToBucket(path, file){
-        const { error } = await sb
-          .storage
-          .from("student_docs")
-          .upload(path, file, { upsert: true });
-        if (error) throw error;
-      }
-
-      await uploadToBucket(photoPath, photoFile);
-      await uploadToBucket(aadharFrontPath, aadharFile);
-      await uploadToBucket(aadharBackPath, aadharBackFile);
-      await uploadToBucket(marksheetPath, marksheetFile);
-      await uploadToBucket(paymentPath, paymentFile);
-
-      // 3) Student row ko update karo – roll_number + path fields
-      const { error: updateErr } = await sb
-        .from("students")
-        .update({
-          roll_number: roll,
-          photo_path: photoPath,
-          aadhar_front_path: aadharFrontPath,
-          aadhar_back_path: aadharBackPath,
-          marksheet_path: marksheetPath,
-          payment_screenshot_path: paymentPath,
-          updated_at: new Date().toISOString()
-        })
-        .eq("id", studentId);
-
-      if (updateErr) {
-        console.error(updateErr);
-        showMsg("Error while finalizing record: " + updateErr.message, "red");
-        btn.disabled = false;
-        btn.innerText = "Final Submit & Generate Roll No.";
-        return;
-      }
-
-      // 4) Success message
-      showMsg(
-        "✔ Submitted Successfully!<br>" +
-        "Your Roll Number: <b>" + roll + "</b><br>" +
-        "Payment Status: <b>PENDING</b><br>" +
-        "Organizer verification ke baad activate hoga.",
-        "#0f0"
-      );
-      document.getElementById("applyForm").reset();
-
-    } catch (err) {
-      console.error(err);
-      showMsg("Unexpected error: " + err.message, "red");
-    } finally {
-      btn.disabled = false;
-      btn.innerText = "Final Submit & Generate Roll No.";
-    }
+  if(error){
+    alert(error.message);
+    return;
   }
+
+  alert("Form submitted successfully");
+  document.getElementById("applyForm").reset();
+}
 </script>
 
 </body>
