@@ -1,364 +1,199 @@
-<!DOCTYPE html>  <html lang="en">  
-<head>  
-  <meta charset="UTF-8">  
-  <title>Apply | BDS Mega Talent Hub</title>  
-  <meta name="viewport" content="width=device-width, initial-scale=1">    <style>  
-    body{  
-      margin:0;  
-      font-family:Arial, sans-serif;  
-      background:radial-gradient(circle at top, #1a4fff 0%, #000b33 55%, #000316 100%);  
-      color:#fff;  
-    }  
-    header{  
-      background:rgba(0,0,0,0.7);  
-      padding:8px 14px;  
-      display:flex;  
-      align-items:center;  
-      justify-content:space-between;  
-      flex-wrap:wrap;  
-    }  
-    .logo-text{font-size:18px;font-weight:bold;letter-spacing:1px;}  
-    nav a{  
-      color:#fff;  
-      text-decoration:none;  
-      margin-left:10px;  
-      font-size:13px;  
-      font-weight:bold;  
-    }  
-    nav a:hover{text-decoration:underline;}  
-  
-    .container{max-width:900px;margin:15px auto;padding:10px;}  
-    .card{background:rgba(0,0,0,0.6);border-radius:10px;padding:14px;}  
-    h1{font-size:22px;margin:6px 0 4px;}  
-    h2{font-size:18px;margin:10px 0 6px;color:#ffd84d;}  
-  
-    label{display:block;font-size:14px;margin-top:6px;}  
-    .req-star{color:#ff5555;margin-left:2px;}  
-  
-    input, select, textarea{  
-      width:100%;  
-      padding:7px;  
-      border-radius:6px;  
-      border:none;  
-      margin-top:2px;  
-      font-size:14px;  
-      box-sizing:border-box;  
-    }  
-    textarea{resize:vertical;min-height:60px;}  
-    input[type="file"]{padding:4px;background:#fff;color:#000;}  
-  
-    .btn-primary{  
-      margin-top:12px;  
-      padding:10px 22px;  
-      border-radius:999px;  
-      border:none;  
-      background:#ffbf00;  
-      color:#000;  
-      font-weight:bold;  
-      cursor:pointer;  
-      font-size:15px;  
-    }  
-    .btn-primary:disabled{opacity:0.6;cursor:default;}  
-  
-    #msgBox{margin-top:10px;font-size:14px;}  
-  
-    footer{text-align:center;font-size:13px;padding:10px;background:rgba(0,0,0,0.85);margin-top:10px;}  
-  </style>    <!-- Supabase JS (v2) -->    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>  </head>  
-<body>  <header>  
-  <div class="logo-text">BABA DEEP SINGH MEGA TALENT HUB</div>  
-  <nav>  
-    <a href="index.html">HOME</a>  
-    <a href="apply.html">APPLY</a>  
-    <a href="form-status.html">FORM STATUS</a>  
-    <a href="admit.html">ADMIT CARD</a>  
-    <a href="result.html">RESULT</a>  
-    <a href="download.html">DOWNLOAD</a>  
-    <a href="help.html">HELP</a>  
-    <a href="admin/login.html">ADMIN</a>  
-  </nav>  
-</header>  <div class="container">  
-  <div class="card">  
-    <h1>Apply for Scholarship Exam 2026</h1>  
-    <p style="font-size:13px;color:#ffe8a3;">  
-      Step 1: Fill your details & upload documents. <br>  
-      Step 2: Pay <b>₹200</b> via Paytm / UPI, enter Transaction ID & upload payment screenshot. <br>  
-      <b>Note:</b> Registration Status: <span style="color:#ffbf00;">PENDING</span> until organizer verifies your payment.  
-    </p>  <form id="applyForm" onsubmit="submitForm(event)">  
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Apply | BDS Mega Talent Hub</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <h2>Step 1 – Student Details</h2>  
+<style>
+body{
+  margin:0;
+  font-family:Arial, sans-serif;
+  background:radial-gradient(circle at top, #1a4fff 0%, #000b33 55%, #000316 100%);
+  color:#fff;
+}
+header{
+  background:rgba(0,0,0,0.7);
+  padding:8px 14px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  flex-wrap:wrap;
+}
+.logo-text{font-size:18px;font-weight:bold;letter-spacing:1px;}
+nav a{
+  color:#fff;
+  text-decoration:none;
+  margin-left:10px;
+  font-size:13px;
+  font-weight:bold;
+}
+.container{max-width:900px;margin:15px auto;padding:10px;}
+.card{background:rgba(0,0,0,0.6);border-radius:10px;padding:14px;}
+h1{font-size:22px;margin:6px 0 4px;}
+h2{font-size:18px;margin:10px 0 6px;color:#ffd84d;}
+label{display:block;font-size:14px;margin-top:6px;}
+.req-star{color:#ff5555;margin-left:2px;}
+input, select, textarea{
+  width:100%;
+  padding:7px;
+  border-radius:6px;
+  border:none;
+  margin-top:2px;
+  font-size:14px;
+}
+textarea{min-height:60px;}
+input[type="file"]{padding:4px;background:#fff;color:#000;}
+.btn-primary{
+  margin-top:12px;
+  padding:10px 22px;
+  border-radius:999px;
+  border:none;
+  background:#ffbf00;
+  color:#000;
+  font-weight:bold;
+  cursor:pointer;
+}
+#msgBox{margin-top:10px;font-size:14px;}
+footer{text-align:center;font-size:13px;padding:10px;background:rgba(0,0,0,0.85);margin-top:10px;}
+</style>
 
-  <label>Full Name<span class="req-star">*</span></label>  
-  <input type="text" id="name" required>  
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+</head>
 
-  <label>Father's Name<span class="req-star">*</span></label>  
-  <input type="text" id="father" required>  
+<body>
 
-  <label>Date of Birth<span class="req-star">*</span></label>  
-  <input type="date" id="dob" required>  
+<header>
+  <div class="logo-text">BABA DEEP SINGH MEGA TALENT HUB</div>
+  <nav>
+    <a href="index.html">HOME</a>
+    <a href="apply.html">APPLY</a>
+    <a href="form-status.html">FORM STATUS</a>
+    <a href="admit.html">ADMIT CARD</a>
+    <a href="result.html">RESULT</a>
+    <a href="admin/login.html">ADMIN</a>
+  </nav>
+</header>
 
-  <label>Gender<span class="req-star">*</span></label>  
-  <select id="gender" required>  
-    <option value="">Select</option>  
-    <option>Male</option>  
-    <option>Female</option>  
-    <option>Other</option>  
-  </select>  
+<div class="container">
+<div class="card">
 
-  <label>Mobile Number<span class="req-star">*</span></label>  
-  <input type="tel" id="mobile" maxlength="10" required>  
+<h1>Apply for Scholarship Exam 2026</h1>
 
-  <label>WhatsApp Number (optional)</label>  
-  <input type="tel" id="whatsapp" maxlength="10">  
+<form id="applyForm" onsubmit="submitForm(event)">
 
-  <label>Email (optional)</label>  
-  <input type="email" id="email">  
+<h2>Student Details</h2>
 
-  <label>Qualification<span class="req-star">*</span></label>  
-  <select id="qualification" required>  
-    <option value="">Select</option>  
-    <option>12th Appearing</option>  
-    <option>12th Pass</option>  
-    <option>Other Competition Student</option>  
-  </select>  
+<label>Full Name<span class="req-star">*</span></label>
+<input type="text" id="name" required>
 
-  <label>Aadhar Number<span class="req-star">*</span></label>  
-  <input type="text" id="aadhar" maxlength="12" required>  
+<label>Father's Name<span class="req-star">*</span></label>
+<input type="text" id="father" required>
 
-  <label>Address<span class="req-star">*</span></label>  
-  <textarea id="address" required></textarea>  
+<label>Date of Birth<span class="req-star">*</span></label>
+<input type="date" id="dob" required>
 
-  <h2>Upload Documents</h2>  
+<label>Gender<span class="req-star">*</span></label>
+<select id="gender" required>
+  <option value="">Select</option>
+  <option>Male</option>
+  <option>Female</option>
+  <option>Other</option>
+</select>
 
-  <label>Passport Size Photo <span class="req-star">*</span></label>  
-  <input type="file" id="photoFile" accept="image/*" required>  
+<label>Mobile Number<span class="req-star">*</span></label>
+<input type="tel" id="mobile" maxlength="10" required>
 
-  <!-- Aadhaar Front -->  
-  <label>Aadhar Card (Front Side) <span class="req-star">*</span></label>  
-  <input type="file" id="aadharFile" accept="image/*,application/pdf" required>  
+<label>Qualification<span class="req-star">*</span></label>
+<select id="qualification" required>
+  <option value="">Select</option>
+  <option>12th Appearing</option>
+  <option>12th Pass</option>
+  <option>Other Competition Student</option>
+</select>
 
-  <!-- Aadhaar Back -->  
-  <label>Aadhar Card (Back Side) <span class="req-star">*</span></label>  
-  <input type="file" id="aadharBackFile" accept="image/*,application/pdf" required>  
+<!-- ✅ ONLY NEW FIELD ADDED -->
+<label>Exam Level<span class="req-star">*</span></label>
+<select id="examLevel" required>
+  <option value="">Select Exam Level</option>
+  <option value="State">State Level</option>
+  <option value="Centre">Centre Level</option>
+</select>
 
-  <label>Last Passing Marksheet <span class="req-star">*</span></label>  
-  <input type="file" id="marksheetFile" accept="image/*,application/pdf" required>  
+<label>Aadhar Number<span class="req-star">*</span></label>
+<input type="text" id="aadhar" maxlength="12" required>
 
-  <h2>Step 2 – Pay ₹200 (UPI / Paytm)</h2>  
+<label>Address<span class="req-star">*</span></label>
+<textarea id="address" required></textarea>
 
-  <p>Pay to UPI ID: <b>Q191410773@ybl</b></p>  
+<h2>Upload Documents</h2>
 
-  <div style="text-align:center;margin:8px 0;">  
-    <img src="upi-qr.png" alt="UPI QR" style="width:180px;border-radius:8px;border:2px solid #fff;">  
-  </div>  
+<label>Passport Size Photo<span class="req-star">*</span></label>
+<input type="file" id="photoFile" required>
 
-  <p style="text-align:center;">  
-    <a href="upi://pay?pa=Q191410773@ybl&pn=Baba%20Deep%20Singh%20Fitness%20Club&am=200&cu=INR"  
-       style="display:inline-block;padding:10px 18px;border-radius:20px;background:#ffbf00;color:#000;font-weight:bold;">  
-      Pay ₹200 via UPI App  
-    </a>  
-  </p>  
+<label>Aadhar Front<span class="req-star">*</span></label>
+<input type="file" id="aadharFile" required>
 
-  <label>Payment Screenshot <span class="req-star">*</span></label>  
-  <input type="file" id="paymentFile" accept="image/*" required>  
+<label>Aadhar Back<span class="req-star">*</span></label>
+<input type="file" id="aadharBackFile" required>
 
-  <label>Transaction ID<span class="req-star">*</span></label>  
-  <input type="text" id="upiTxn" required>  
+<label>Marksheet<span class="req-star">*</span></label>
+<input type="file" id="marksheetFile" required>
 
-  <label><input type="checkbox" id="paymentConfirm" required>  
-    I verify above payment details.  
-  </label>  
+<h2>Payment</h2>
 
-  <button class="btn-primary" id="submitBtn">Final Submit & Generate Roll No.</button>  
-  <div id="msgBox"></div>  
+<label>Payment Screenshot<span class="req-star">*</span></label>
+<input type="file" id="paymentFile" required>
+
+<label>Transaction ID<span class="req-star">*</span></label>
+<input type="text" id="upiTxn" required>
+
+<label>
+<input type="checkbox" id="paymentConfirm" required>
+I confirm payment
+</label>
+
+<button class="btn-primary">Final Submit</button>
+<div id="msgBox"></div>
 
 </form>
+</div>
+</div>
 
-  </div>  
-</div>  <footer>© 2026 Baba Deep Singh Mega Talent Hub</footer>  <script>  
-  // Supabase config (tumhara project)  
-  const SUPABASE_URL = "https://yyymjhuwjvyykukfzqow.supabase.co";  
-  const SUPABASE_ANON_KEY =  
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl5eW1qaHV3anZ5eWt1a2Z6cW93Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2NzMzMjIsImV4cCI6MjA4MDI0OTMyMn0.Ja9Do4cwumTnXx2NGIRW8Ti3rKm4MBiLClQz0xjOtrQ";  
-  
-  const { createClient } = supabase;  
-  const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);  
-  
-  function showMsg(text, color){  
-    const msg = document.getElementById("msgBox");  
-    msg.style.color = color || "#fff";  
-    msg.innerHTML = text;  
-  }  
-  
-  async function submitForm(e){  
-    e.preventDefault();  
-  
-    const msg = document.getElementById("msgBox");  
-    const btn = document.getElementById("submitBtn");  
-    msg.style.color = "#fff";  
-    msg.innerHTML = "";  
-    btn.disabled = true;  
-    btn.innerText = "Submitting... Please wait";  
-  
-    // Values  
-    const nameVal   = document.getElementById("name").value.trim();  
-    const fatherVal = document.getElementById("father").value.trim();  
-    const dobVal    = document.getElementById("dob").value;  
-    const genderVal = document.getElementById("gender").value;  
-    const mobileVal = document.getElementById("mobile").value.trim();  
-    const whatsappVal = document.getElementById("whatsapp").value.trim();  
-    const emailVal  = document.getElementById("email").value.trim();  
-    const qualVal   = document.getElementById("qualification").value;  
-    const aadharVal = document.getElementById("aadhar").value.trim();  
-    const addrVal   = document.getElementById("address").value.trim();  
-    const upiTxnVal = document.getElementById("upiTxn").value.trim();  
-    const payOk     = document.getElementById("paymentConfirm").checked;  
-  
-    const photoFile       = document.getElementById("photoFile").files[0];  
-    const aadharFile      = document.getElementById("aadharFile").files[0];  
-    const aadharBackFile  = document.getElementById("aadharBackFile").files[0];  
-    const marksheetFile   = document.getElementById("marksheetFile").files[0];  
-    const paymentFile     = document.getElementById("paymentFile").files[0];  
-  
-    // Basic Checks  
-    if(!nameVal || !fatherVal || !dobVal || !genderVal || !mobileVal || !qualVal || !aadharVal || !addrVal){  
-      alert("Please fill all required student details.");  
-      btn.disabled = false;  
-      btn.innerText = "Final Submit & Generate Roll No.";  
-      return;  
-    }  
-    if(mobileVal.length !== 10 || !/^[0-9]+$/.test(mobileVal)){  
-      alert("Please enter valid 10 digit mobile number.");  
-      btn.disabled = false;  
-      btn.innerText = "Final Submit & Generate Roll No.";  
-      return;  
-    }  
-    if(aadharVal.length !== 12 || !/^[0-9]+$/.test(aadharVal)){  
-      alert("Please enter valid 12 digit Aadhaar number.");  
-      btn.disabled = false;  
-      btn.innerText = "Final Submit & Generate Roll No.";  
-      return;  
-    }  
-    if(!photoFile || !aadharFile || !aadharBackFile || !marksheetFile || !paymentFile){  
-      alert("Please upload photo, Aadhaar front, Aadhaar back, marksheet and payment screenshot.");  
-      btn.disabled = false;  
-      btn.innerText = "Final Submit & Generate Roll No.";  
-      return;  
-    }  
-    if(!upiTxnVal){  
-      alert("Please enter Paytm / UPI Transaction ID.");  
-      btn.disabled = false;  
-      btn.innerText = "Final Submit & Generate Roll No.";  
-      return;  
-    }  
-    if(!payOk){  
-      alert("Payment verify checkbox tick kare!");  
-      btn.disabled = false;  
-      btn.innerText = "Final Submit & Generate Roll No.";  
-      return;  
-    }  
-  
-    showMsg("Please wait, uploading your details and documents...");  
-  
-    try {  
-      // 1) Pehle students table me basic record insert karo  
-      const { data: inserted, error: insertErr } = await sb  
-        .from("students")  
-        .insert([{  
-          full_name: nameVal,  
-          father_name: fatherVal,  
-          dob: dobVal,                 // date type  
-          gender: genderVal,  
-          mobile: mobileVal,  
-          whatsapp: whatsappVal || null,  
-          email: emailVal || null,  
-          qualification: qualVal,  
-          aadhar_no: aadharVal,  
-          address: addrVal,  
-          upi_txn: upiTxnVal,  
-          form_status: "submitted",    // not_applied -> submitted  
-          payment_status: "pending"    // default bhi hai, par clear likh diya  
-        }])  
-        .select("id")  
-        .single();  
-  
-      if (insertErr) {  
-        console.error(insertErr);  
-        showMsg("Error saving data: " + insertErr.message, "red");  
-        btn.disabled = false;  
-        btn.innerText = "Final Submit & Generate Roll No.";  
-        return;  
-      }  
-  
-      const studentId = inserted.id;  
-      const roll = "BDS26" + String(studentId).padStart(4, "0");  
-  
-      // 2) Ab files ko student_docs bucket me upload karo  
-      function getExt(file){  
-        const parts = file.name.split(".");  
-        return parts.length > 1 ? parts.pop() : "jpg";  
-      }  
-  
-      const basePath = roll + "/";  // folder per student  
-  
-      const photoPath       = basePath + "photo." + getExt(photoFile);  
-      const aadharFrontPath = basePath + "aadhar_front." + getExt(aadharFile);  
-      const aadharBackPath  = basePath + "aadhar_back." + getExt(aadharBackFile);  
-      const marksheetPath   = basePath + "marksheet." + getExt(marksheetFile);  
-      const paymentPath     = basePath + "payment_ss." + getExt(paymentFile);  
-  
-      async function uploadToBucket(path, file){  
-        const { error } = await sb  
-          .storage  
-          .from("student_docs")  
-          .upload(path, file, { upsert: true });  
-        if (error) throw error;  
-      }  
-  
-      await uploadToBucket(photoPath, photoFile);  
-      await uploadToBucket(aadharFrontPath, aadharFile);  
-      await uploadToBucket(aadharBackPath, aadharBackFile);  
-      await uploadToBucket(marksheetPath, marksheetFile);  
-      await uploadToBucket(paymentPath, paymentFile);  
-  
-      // 3) Student row ko update karo – roll_number + path fields  
-      const { error: updateErr } = await sb  
-        .from("students")  
-        .update({  
-          roll_number: roll,  
-          photo_path: photoPath,  
-          aadhar_front_path: aadharFrontPath,  
-          aadhar_back_path: aadharBackPath,  
-          marksheet_path: marksheetPath,  
-          payment_screenshot_path: paymentPath,  
-          updated_at: new Date().toISOString()  
-        })  
-        .eq("id", studentId);  
-  
-      if (updateErr) {  
-        console.error(updateErr);  
-        showMsg("Error while finalizing record: " + updateErr.message, "red");  
-        btn.disabled = false;  
-        btn.innerText = "Final Submit & Generate Roll No.";  
-        return;  
-      }  
-  
-      // 4) Success message  
-      showMsg(  
-        "✔ Submitted Successfully!<br>" +  
-        "Your Roll Number: <b>" + roll + "</b><br>" +  
-        "Payment Status: <b>PENDING</b><br>" +  
-        "Organizer verification ke baad activate hoga.",  
-        "#0f0"  
-      );  
-      document.getElementById("applyForm").reset();  
-  
-    } catch (err) {  
-      console.error(err);  
-      showMsg("Unexpected error: " + err.message, "red");  
-    } finally {  
-      btn.disabled = false;  
-      btn.innerText = "Final Submit & Generate Roll No.";  
-    }  
-  }  
-</script>  </body>  
+<footer>© 2026 Baba Deep Singh Mega Talent Hub</footer>
+
+<script>
+const sb = supabase.createClient(
+  "https://yyymjhuwjvyykukfzqow.supabase.co",
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+);
+
+async function submitForm(e){
+ e.preventDefault();
+
+ const { error } = await sb.from("students").insert({
+   full_name: name.value,
+   father_name: father.value,
+   dob: dob.value,
+   gender: gender.value,
+   mobile: mobile.value,
+   qualification: qualification.value,
+   exam_level: examLevel.value,   // ✅ ONLY ADDITION
+   aadhar_no: aadhar.value,
+   address: address.value,
+   upi_txn: upiTxn.value,
+   form_status: "submitted",
+   payment_status: "pending"
+ });
+
+ if(error){
+   msgBox.innerHTML = error.message;
+ }else{
+   msgBox.innerHTML = "Form submitted successfully";
+   applyForm.reset();
+ }
+}
+</script>
+
+</body>
 </html>
