@@ -8,20 +8,21 @@
 <style>
 body{font-family:Arial;background:#f4f4f4;margin:0}
 .container{max-width:1100px;margin:15px auto;background:#fff;padding:15px;border-radius:8px}
-h1{color:#b10000;margin:0 0 10px}
-table{width:100%;border-collapse:collapse;font-size:14px}
-th,td{border:1px solid #ccc;padding:6px}
+h1{color:#b20c0c;margin:0 0 10px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{border:1px solid #ddd;padding:6px}
 th{background:#eee}
 button{padding:5px 8px;border:none;border-radius:4px;cursor:pointer}
 .view{background:#1976d2;color:#fff}
 .del{background:#c62828;color:#fff}
 .approve{background:#2e7d32;color:#fff}
-.pending{background:#f9a825}
-.reject{background:#d32f2f;color:#fff}
-.box{background:#fafafa;border:1px solid #ccc;padding:10px;margin-top:10px;border-radius:6px}
-input{width:100%;padding:4px;margin-top:3px}
-label{font-size:13px;font-weight:bold}
-.small{font-size:13px}
+.pending{background:#ffa000}
+.reject{background:#c62828;color:#fff}
+.section{margin-top:12px;border-top:1px solid #ccc;padding-top:8px}
+label{font-size:13px}
+input{width:100%;padding:5px;margin-top:2px}
+.msg{font-size:13px;margin-top:6px}
+a{color:#1976d2}
 </style>
 
 <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
@@ -35,7 +36,7 @@ label{font-size:13px;font-weight:bold}
 <h1>Student Applications</h1>
 
 <button onclick="downloadExcel()">⬇ Download Excel</button>
-<p id="msg">Loading...</p>
+<p id="listMsg">Loading...</p>
 
 <table>
 <thead>
@@ -50,118 +51,169 @@ label{font-size:13px;font-weight:bold}
 <th>Action</th>
 </tr>
 </thead>
-<tbody id="list"></tbody>
+<tbody id="tbody"></tbody>
 </table>
 
-<div id="details" class="box" style="display:none"></div>
+<!-- DETAILS -->
+<div id="detailBox" style="display:none">
+
+<div class="section">
+<b>Name:</b> <span id="dName"></span><br>
+<b>Father:</b> <span id="dFather"></span><br>
+<b>Mobile:</b> <span id="dMobile"></span><br>
+<b>Roll:</b> <span id="dRoll"></span><br>
+<b>Exam Level:</b> <span id="dLevel"></span><br>
+<b>Status:</b> <span id="dStatus"></span><br>
+<b>Payment:</b> <span id="dPayment"></span>
+</div>
+
+<div class="section">
+<b>Documents</b><br>
+Photo: <a id="dPhoto" target="_blank">Open</a><br>
+Aadhaar Front: <a id="dAF" target="_blank">Open</a><br>
+Aadhaar Back: <a id="dAB" target="_blank">Open</a><br>
+Marksheet: <a id="dMS" target="_blank">Open</a><br>
+Payment SS: <a id="dPSS" target="_blank">Open</a>
+</div>
+
+<div class="section">
+<button class="approve" onclick="setStatus('approved',true)">Approve</button>
+<button class="pending" onclick="setStatus('pending',false)">Pending</button>
+<button class="reject" onclick="setStatus('rejected',false)">Reject</button>
+</div>
+
+<div class="section">
+<b>Admit Card</b>
+<label>Centre</label>
+<input id="cCentre">
+<label>Date</label>
+<input id="cDate">
+<label>Shift</label>
+<input id="cShift">
+<label>Start</label>
+<input id="cStart">
+<label>End</label>
+<input id="cEnd">
+<label><input type="checkbox" id="cAllow"> Admit Allowed</label>
+<button class="approve" onclick="saveAdmit()">Save Admit</button>
+</div>
+
+<div class="section">
+<b>Result</b>
+<label>Marks</label>
+<input id="rMarks">
+<label>Rank</label>
+<input id="rRank">
+<label>Status</label>
+<input id="rStatus">
+<label><input type="checkbox" id="rPub"> Publish</label>
+<button class="approve" onclick="saveResult()">Save Result</button>
+</div>
+
+<p class="msg" id="dMsg"></p>
+</div>
 
 </div>
 
 <script>
-if(localStorage.getItem("bdsAdminLoggedIn")!=="yes"){
-  location.href="login.html";
-}
-
-const SUPABASE_URL = "PASTE_YOUR_SUPABASE_URL";
-const SUPABASE_KEY = "PASTE_YOUR_PUBLISHABLE_KEY";
+const SUPABASE_URL = "https://yyymjhuwjvyykukfzqow.supabase.co";
+const SUPABASE_KEY = "sb_publishable_AotK9XHnYF0UmfJYrS7GCg_BHXVvzy0";
 
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-let current=null;
+let currentId=null;
 
-function fileLink(path){
-  if(!path) return "Not uploaded";
-  return `<a target="_blank" href="${sb.storage.from("student_docs").getPublicUrl(path).data.publicUrl}">Open</a>`;
+function pub(path){
+ if(!path)return "";
+ return sb.storage.from("student_docs").getPublicUrl(path).data.publicUrl;
 }
 
 async function load(){
-  const {data,error}=await sb.from("students").select("*").order("created_at",{ascending:false});
-  if(error){msg.textContent=error.message;return}
-  list.innerHTML=""; msg.textContent="Loaded successfully";
-  let i=1;
-  data.forEach(s=>{
-    const tr=document.createElement("tr");
-    tr.innerHTML=`
-    <td>${i++}</td>
-    <td>${s.roll_number||""}</td>
-    <td>${s.full_name||""}</td>
-    <td>${s.mobile||""}</td>
-    <td>${s.exam_level||""}</td>
-    <td>${s.form_status||"pending"}</td>
-    <td>${s.payment_status||"pending"}</td>
-    <td>
-      <button class="view" onclick="openDetails('${s.id}')">View</button>
-      <button class="del" onclick="del('${s.id}','${s.roll_number}')">Delete</button>
-    </td>`;
-    list.appendChild(tr);
-  });
+ const {data,error}=await sb.from("students").select("*").order("created_at",{ascending:false});
+ if(error){listMsg.innerText=error.message;return;}
+ tbody.innerHTML="";
+ let i=1;
+ data.forEach(s=>{
+  const tr=document.createElement("tr");
+  tr.innerHTML=`
+   <td>${i++}</td>
+   <td>${s.roll_number||""}</td>
+   <td>${s.full_name||""}</td>
+   <td>${s.mobile||""}</td>
+   <td>${s.exam_level||""}</td>
+   <td>${s.form_status||"pending"}</td>
+   <td>${s.payment_status||"pending"}</td>
+   <td>
+    <button class="view">View</button>
+    <button class="del">Delete</button>
+   </td>`;
+  tr.querySelector(".view").onclick=()=>open(s);
+  tr.querySelector(".del").onclick=()=>del(s.id);
+  tbody.appendChild(tr);
+ });
+ listMsg.innerText="Loaded";
 }
 load();
 
-async function openDetails(id){
-  const {data}=await sb.from("students").select("*").eq("id",id).single();
-  current=data;
-  details.style.display="block";
-  details.innerHTML=`
-<b>Name:</b> ${data.full_name}<br>
-<b>Father:</b> ${data.father_name||""}<br>
-<b>Mobile:</b> ${data.mobile}<br>
-<b>Roll:</b> ${data.roll_number}<br>
-<b>Exam Level:</b> ${data.exam_level||""}<br><br>
-
-<b>Documents</b><br>
-Photo: ${fileLink(data.photo_path)}<br>
-Aadhaar Front: ${fileLink(data.aadhar_front_path)}<br>
-Aadhaar Back: ${fileLink(data.aadhar_back_path)}<br>
-Marksheet: ${fileLink(data.marksheet_path)}<br>
-Payment SS: ${fileLink(data.payment_screenshot_path)}<br><br>
-
-<b>Form / Payment</b><br>
-<button class="approve" onclick="status('approved','approved')">Approve</button>
-<button class="pending" onclick="status('pending','pending')">Pending</button>
-<button class="reject" onclick="status('rejected','rejected')">Reject</button>
-
-<hr>
-<b>Admit Card</b>
-<label>Centre</label><input id="c" value="${data.exam_center||""}">
-<label>Date</label><input id="d" value="${data.exam_date||""}">
-<label>Shift</label><input id="s" value="${data.exam_shift||""}">
-<label>Start</label><input id="st" value="${data.exam_start_time||""}">
-<label>End</label><input id="et" value="${data.exam_end_time||""}">
-<button class="approve" onclick="saveAdmit()">Save Admit</button>
-
-<hr>
-<b>Result</b>
-<label>Marks</label><input id="m" value="${data.marks||""}">
-<label>Rank</label><input id="r" value="${data.rank||""}">
-<label>Status</label><input id="rs" value="${data.result_status||""}">
-<button class="approve" onclick="saveResult()">Save Result</button>
-`;
+function open(s){
+ currentId=s.id;
+ detailBox.style.display="block";
+ dName.innerText=s.full_name||"";
+ dFather.innerText=s.father_name||"";
+ dMobile.innerText=s.mobile||"";
+ dRoll.innerText=s.roll_number||"";
+ dLevel.innerText=s.exam_level||"";
+ dStatus.innerText=s.form_status||"";
+ dPayment.innerText=s.payment_status||"";
+ dPhoto.href=pub(s.photo_path);
+ dAF.href=pub(s.aadhar_front_path);
+ dAB.href=pub(s.aadhar_back_path);
+ dMS.href=pub(s.marksheet_path);
+ dPSS.href=pub(s.payment_screenshot_path);
+ cCentre.value=s.exam_center||"";
+ cDate.value=s.exam_date||"";
+ cShift.value=s.exam_shift||"";
+ cStart.value=s.exam_start_time||"";
+ cEnd.value=s.exam_end_time||"";
+ cAllow.checked=s.admit_allowed===true;
+ rMarks.value=s.marks||"";
+ rRank.value=s.rank||"";
+ rStatus.value=s.result_status||"";
+ rPub.checked=s.result_published===true;
 }
 
-async function status(f,p){
- await sb.from("students").update({form_status:f,payment_status:p}).eq("id",current.id);
+async function setStatus(st,pay){
+ await sb.from("students").update({
+  form_status:st,
+  payment_status:pay?"approved":"pending"
+ }).eq("id",currentId);
  load();
 }
 
 async function saveAdmit(){
  await sb.from("students").update({
- exam_center:c.value,exam_date:d.value,exam_shift:s.value,
- exam_start_time:st.value,exam_end_time:et.value
- }).eq("id",current.id);
- alert("Admit saved");
+  exam_center:cCentre.value,
+  exam_date:cDate.value,
+  exam_shift:cShift.value,
+  exam_start_time:cStart.value,
+  exam_end_time:cEnd.value,
+  admit_allowed:cAllow.checked
+ }).eq("id",currentId);
+ dMsg.innerText="Admit saved";
 }
 
 async function saveResult(){
  await sb.from("students").update({
- marks:m.value,rank:r.value,result_status:rs.value
- }).eq("id",current.id);
- alert("Result saved");
+  marks:rMarks.value||null,
+  rank:rRank.value||null,
+  result_status:rStatus.value||null,
+  result_published:rPub.checked
+ }).eq("id",currentId);
+ dMsg.innerText="Result saved";
 }
 
-async function del(id,roll){
- if(!confirm("Delete roll "+roll+" permanently?"))return;
+async function del(id){
+ if(!confirm("Permanent delete?"))return;
  await sb.from("students").delete().eq("id",id);
- details.style.display="none";
  load();
 }
 
