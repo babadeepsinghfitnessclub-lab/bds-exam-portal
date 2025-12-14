@@ -144,8 +144,7 @@ async function load(){
   tr.innerHTML=`
    <td>${i++}</td>
    <td>${s.roll_number||""}</td>
-   <td>${s.full_name || s.name || ""}</td>
-   <td>${s.mobile||""}</td>
+   <td>${s.full_name || s.name || s.username || ""}</td>   <td>${s.mobile||""}</td>
    <td>${s.exam_level||""}</td>
    <td>${s.form_status||"pending"}</td>
    <td>${s.payment_status||"pending"}</td>
@@ -252,3 +251,4 @@ async function downloadExcel(){
 </script>
 </body>
 </html>
+
