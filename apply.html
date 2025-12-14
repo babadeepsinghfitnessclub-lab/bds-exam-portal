@@ -78,7 +78,7 @@ footer{text-align:center;font-size:12px;padding:10px;background:#000c;margin-top
 
 <h1>Apply for Scholarship Exam 2026</h1>
 
-<form id="applyForm" onsubmit="submitForm(event)">
+<form id="applyForm">
 
 <h2>Student Details</h2>
 
@@ -125,16 +125,16 @@ footer{text-align:center;font-size:12px;padding:10px;background:#000c;margin-top
 
 <h2>Upload Documents</h2>
 
-<label>Passport Photo <span class="req">*</span></label>
+<label>Passport Photo *</label>
 <input type="file" id="photoFile" required>
 
-<label>Aadhaar Front <span class="req">*</span></label>
+<label>Aadhaar Front *</label>
 <input type="file" id="aadharFront" required>
 
-<label>Aadhaar Back <span class="req">*</span></label>
+<label>Aadhaar Back *</label>
 <input type="file" id="aadharBack" required>
 
-<label>Marksheet <span class="req">*</span></label>
+<label>Marksheet *</label>
 <input type="file" id="marksheet" required>
 
 <h2>Payment ₹200</h2>
@@ -151,10 +151,10 @@ Pay ₹200 via UPI App
 </a>
 </p>
 
-<label>Payment Screenshot <span class="req">*</span></label>
+<label>Payment Screenshot *</label>
 <input type="file" id="paymentFile" required>
 
-<label>Transaction ID <span class="req">*</span></label>
+<label>Transaction ID *</label>
 <input type="text" id="txnId" required>
 
 <label>
@@ -162,7 +162,7 @@ Pay ₹200 via UPI App
 I confirm that payment is completed
 </label>
 
-<button class="btn">Final Submit</button>
+<button class="btn" type="submit">Final Submit</button>
 <div id="msgBox"></div>
 
 </form>
@@ -177,7 +177,7 @@ const sb = supabase.createClient(
   "sb_publishable_AotK9XHnYF0UmfJYrS7GCg_BHXVvzy0"
 );
 
-// 🔹 AUTO ROLL NUMBER
+// AUTO ROLL
 async function generateRoll(){
   const { data } = await sb
     .from("students")
@@ -189,16 +189,14 @@ async function generateRoll(){
   return "BDS" + (parseInt(data[0].roll_number.replace("BDS","")) + 1);
 }
 
-// 🔹 UPLOAD HELPER
+// UPLOAD
 async function uploadFile(file, path){
-  const { error } = await sb.storage.from("student_docs").upload(path, file, {
-    upsert:true
-  });
+  const { error } = await sb.storage.from("student_docs").upload(path, file, { upsert:true });
   if(error) throw error;
   return path;
 }
 
-async function submitForm(e){
+applyForm.addEventListener("submit", async (e)=>{
 e.preventDefault();
 
 if(!payConfirm.checked){
@@ -206,16 +204,16 @@ if(!payConfirm.checked){
  return;
 }
 
-msgBox.innerHTML="Submitting...";
-
-const roll = await generateRoll();
+msgBox.innerText="Submitting...";
 
 try{
+ const roll = await generateRoll();
+
  const photoPath = await uploadFile(photoFile.files[0], `photos/${roll}.jpg`);
- const afPath = await uploadFile(aadharFront.files[0], `aadhar_front/${roll}.jpg`);
- const abPath = await uploadFile(aadharBack.files[0], `aadhar_back/${roll}.jpg`);
- const msPath = await uploadFile(marksheet.files[0], `marksheet/${roll}.jpg`);
- const payPath = await uploadFile(paymentFile.files[0], `payment/${roll}.jpg`);
+ const afPath    = await uploadFile(aadharFront.files[0], `aadhar_front/${roll}.jpg`);
+ const abPath    = await uploadFile(aadharBack.files[0], `aadhar_back/${roll}.jpg`);
+ const msPath    = await uploadFile(marksheet.files[0], `marksheet/${roll}.jpg`);
+ const payPath   = await uploadFile(paymentFile.files[0], `payment/${roll}.jpg`);
 
  const { error } = await sb.from("students").insert({
   roll_number: roll,
@@ -248,7 +246,7 @@ try{
 }catch(err){
  msgBox.innerHTML="<span style='color:red'>"+err.message+"</span>";
 }
-}
+});
 </script>
 
 </body>
