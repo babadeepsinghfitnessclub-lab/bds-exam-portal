@@ -32,9 +32,7 @@ a{color:#1976d2}
 <body>
 <div class="container">
 
-<a href="dashboard.html">← Admin Home</a>
 <h1>Student Applications</h1>
-
 <button onclick="downloadExcel()">⬇ Download Excel</button>
 <p id="listMsg">Loading...</p>
 
@@ -62,7 +60,7 @@ a{color:#1976d2}
 <b>Mobile:</b> <span id="dMobile"></span><br>
 <b>Roll:</b> <span id="dRoll"></span><br>
 <b>Exam Level:</b> <span id="dLevel"></span><br>
-<b>Status:</b> <span id="dStatus"></span><br>
+<b>Form Status:</b> <span id="dStatus"></span><br>
 <b>Payment:</b> <span id="dPayment"></span>
 </div>
 
@@ -120,27 +118,27 @@ const sb = supabase.createClient(
  "sb_publishable_AotK9XHnYF0UmfJYrS7GCg_BHXVvzy0"
 );
 
-let currentId = null;
+let currentId=null;
 
 function pub(path){
  if(!path) return null;
- const { data } = sb.storage.from("student_docs").getPublicUrl(path);
- return data?.publicUrl || null;
+ const {data}=sb.storage.from("student_docs").getPublicUrl(path);
+ return data?.publicUrl||null;
 }
 
 async function load(){
- const { data, error } = await sb
+ const {data,error}=await sb
   .from("students")
   .select("*")
   .order("created_at",{ascending:false});
 
- if(error){ listMsg.innerText=error.message; return; }
+ if(error){listMsg.innerText=error.message;return;}
 
  tbody.innerHTML="";
  let i=1;
 
  data.forEach(s=>{
-  const name = s.full_name || s.name || "";
+  const name = s.full_name || "";
 
   const tr=document.createElement("tr");
   tr.innerHTML=`
@@ -166,29 +164,22 @@ async function load(){
 load();
 
 function setLink(el,path){
- const url = pub(path);
- if(url){
-  el.href=url;
-  el.textContent="Open";
-  el.style.pointerEvents="auto";
- }else{
-  el.removeAttribute("href");
-  el.textContent="Not uploaded";
-  el.style.pointerEvents="none";
- }
+ const url=pub(path);
+ if(url){el.href=url;el.textContent="Open";}
+ else{el.textContent="Not uploaded";el.removeAttribute("href");}
 }
 
 function openDetail(s){
- currentId = s.id;
+ currentId=s.id;
  detailBox.style.display="block";
 
- dName.innerText   = s.full_name || s.name || "";
- dFather.innerText = s.father_name || "";
- dMobile.innerText = s.mobile || "";
- dRoll.innerText   = s.roll_number || "";
- dLevel.innerText  = s.exam_level || "";
- dStatus.innerText = s.form_status || "";
- dPayment.innerText= s.payment_status || "";
+ dName.innerText=s.full_name||"";
+ dFather.innerText=s.father_name||"";
+ dMobile.innerText=s.mobile||"";
+ dRoll.innerText=s.roll_number||"";
+ dLevel.innerText=s.exam_level||"";
+ dStatus.innerText=s.form_status||"";
+ dPayment.innerText=s.payment_status||"";
 
  setLink(dPhoto,s.photo_path);
  setLink(dAF,s.aadhar_front_path);
@@ -198,13 +189,11 @@ function openDetail(s){
 }
 
 async function setStatus(status,pay){
- if(!currentId){ alert("Click VIEW first"); return; }
-
+ if(!currentId)return alert("Select student");
  await sb.from("students").update({
   form_status:status,
-  payment_status: pay ? "approved" : "pending"
+  payment_status:pay?"approved":"pending"
  }).eq("id",currentId);
-
  load();
  alert("Status updated");
 }
@@ -232,19 +221,20 @@ async function saveResult(){
 }
 
 async function delRow(id){
- if(!confirm("Permanent delete?"))return;
+ if(!confirm("Delete permanently?"))return;
  await sb.from("students").delete().eq("id",id);
  load();
 }
 
 async function downloadExcel(){
  const {data}=await sb.from("students")
-  .select("full_name,name,roll_number,mobile");
+  .select("full_name,roll_number,mobile,exam_level");
 
  const rows=data.map(s=>({
-  Name: s.full_name || s.name || "",
-  Roll: s.roll_number,
-  Mobile: s.mobile
+  Name:s.full_name||"",
+  Roll:s.roll_number||"",
+  Mobile:s.mobile||"",
+  ExamLevel:s.exam_level||""
  }));
 
  const ws=XLSX.utils.json_to_sheet(rows);
