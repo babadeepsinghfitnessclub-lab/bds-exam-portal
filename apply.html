@@ -110,7 +110,6 @@ footer{text-align:center;font-size:12px;padding:10px;background:#000c;margin-top
 <option>Other Competition Student</option>
 </select>
 
-<!-- ✅ ONLY NEW FIELD -->
 <label>Exam Level <span class="req-star">*</span></label>
 <select id="examLevel" required>
 <option value="">Select</option>
@@ -181,29 +180,41 @@ const sb = supabase.createClient(
 async function submitForm(e){
  e.preventDefault();
 
- const examLevelVal = examLevel.value;
-
- const { error } = await sb.from("students").insert({
-   full_name: name.value,
-   father_name: father.value,
-   dob: dob.value,
-   gender: gender.value,
-   mobile: mobile.value,
-   qualification: qualification.value,
-   exam_level: examLevelVal,   // ✅ ONLY ADDITION
-   aadhar_no: aadhar.value,
-   address: address.value,
-   upi_txn: upiTxn.value,
-   form_status: "submitted",
-   payment_status: "pending"
- });
+ const { data, error } = await sb
+   .from("students")
+   .insert([{
+     full_name: name.value,
+     father_name: father.value,
+     dob: dob.value,
+     gender: gender.value,
+     mobile: mobile.value,
+     qualification: qualification.value,
+     exam_level: examLevel.value,
+     aadhar_no: aadhar.value,
+     address: address.value,
+     upi_txn: upiTxn.value,
+     form_status: "submitted",
+     payment_status: "pending"
+   }])
+   .select("id")
+   .single();
 
  if(error){
    msgBox.innerHTML = error.message;
- }else{
-   msgBox.innerHTML = "<span style='color:lightgreen'>Form submitted successfully</span>";
-   applyForm.reset();
+   return;
  }
+
+ const roll = "BDS26" + String(data.id).padStart(5,"0");
+
+ await sb
+   .from("students")
+   .update({ roll_number: roll })
+   .eq("id", data.id);
+
+ msgBox.innerHTML =
+   "<span style='color:lightgreen'>Form submitted successfully<br>Roll No: <b>"+roll+"</b></span>";
+
+ applyForm.reset();
 }
 </script>
 
