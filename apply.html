@@ -65,14 +65,6 @@ footer{text-align:center;font-size:13px;padding:10px;background:rgba(0,0,0,0.85)
 
 <header>
   <div class="logo-text">BABA DEEP SINGH MEGA TALENT HUB</div>
-  <nav>
-    <a href="index.html">HOME</a>
-    <a href="apply.html">APPLY</a>
-    <a href="form-status.html">FORM STATUS</a>
-    <a href="admit.html">ADMIT CARD</a>
-    <a href="result.html">RESULT</a>
-    <a href="admin/login.html">ADMIN</a>
-  </nav>
 </header>
 
 <div class="container">
@@ -82,7 +74,7 @@ footer{text-align:center;font-size:13px;padding:10px;background:rgba(0,0,0,0.85)
 
 <form id="applyForm" onsubmit="submitForm(event)">
 
-<h2>Step 1 – Student Details</h2>
+<h2>Student Details</h2>
 
 <label>Full Name<span class="req-star">*</span></label>
 <input type="text" id="name" required>
@@ -112,7 +104,7 @@ footer{text-align:center;font-size:13px;padding:10px;background:rgba(0,0,0,0.85)
   <option>Other Competition Student</option>
 </select>
 
-<!-- ✅ ONLY ADDED FIELD -->
+<!-- ✅ ONLY NEW FIELD ADDED -->
 <label>Exam Level<span class="req-star">*</span></label>
 <select id="examLevel" required>
   <option value="">Select Exam Level</option>
@@ -131,10 +123,10 @@ footer{text-align:center;font-size:13px;padding:10px;background:rgba(0,0,0,0.85)
 <label>Passport Size Photo<span class="req-star">*</span></label>
 <input type="file" id="photoFile" required>
 
-<label>Aadhar Card (Front)<span class="req-star">*</span></label>
+<label>Aadhar Front<span class="req-star">*</span></label>
 <input type="file" id="aadharFile" required>
 
-<label>Aadhar Card (Back)<span class="req-star">*</span></label>
+<label>Aadhar Back<span class="req-star">*</span></label>
 <input type="file" id="aadharBackFile" required>
 
 <label>Marksheet<span class="req-star">*</span></label>
@@ -144,15 +136,13 @@ footer{text-align:center;font-size:13px;padding:10px;background:rgba(0,0,0,0.85)
 
 <p>Pay to UPI ID: <b>Q191410773@ybl</b></p>
 
-<div style="text-align:center;margin:8px 0;">
-  <img src="upi-qr.png" style="width:180px;border:2px solid #fff;border-radius:8px;">
-</div>
+<img src="upi-qr.png" style="width:180px;border:2px solid #fff;border-radius:8px">
 
-<p style="text-align:center;">
+<p>
 <a href="upi://pay?pa=Q191410773@ybl&pn=Baba%20Deep%20Singh%20Fitness%20Club&am=200&cu=INR"
- style="display:inline-block;padding:10px 18px;background:#ffbf00;color:#000;
- font-weight:bold;border-radius:20px;text-decoration:none;">
- Pay ₹200 via UPI App
+style="display:inline-block;padding:10px 20px;background:#ffbf00;color:#000;
+font-weight:bold;border-radius:25px;text-decoration:none;">
+Pay ₹200 via UPI App
 </a>
 </p>
 
@@ -167,7 +157,7 @@ footer{text-align:center;font-size:13px;padding:10px;background:rgba(0,0,0,0.85)
 I verify above payment details
 </label>
 
-<button class="btn-primary" id="submitBtn">Final Submit & Generate Roll No.</button>
+<button class="btn-primary">Final Submit & Generate Roll No.</button>
 <div id="msgBox"></div>
 
 </form>
@@ -179,7 +169,7 @@ I verify above payment details
 <script>
 const sb = supabase.createClient(
   "https://yyymjhuwjvyykukfzqow.supabase.co",
-  "YOUR_ANON_KEY"
+  "PASTE_YOUR_FULL_VALID_ANON_OR_PUBLISHABLE_KEY_HERE"
 );
 
 async function submitForm(e){
@@ -200,9 +190,12 @@ async function submitForm(e){
    payment_status: "pending"
  });
 
- msgBox.innerHTML = error
-  ? `<span style="color:red">${error.message}</span>`
-  : `<span style="color:lightgreen">Form submitted successfully</span>`;
+ if(error){
+   msgBox.innerHTML = error.message;
+ }else{
+   msgBox.innerHTML = "Form submitted successfully";
+   applyForm.reset();
+ }
 }
 </script>
 
