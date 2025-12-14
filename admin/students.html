@@ -97,8 +97,7 @@
         <th>#</th>  
         <th>Roll</th>  
         <th>Name</th>  
-        <th>Mobile</th>
-        <th>Exam Level</th>  
+        <th>Mobile</th>  
         <th>Centre</th>  
         <th>Form Status</th>  
         <th>Payment</th>  
@@ -111,8 +110,7 @@
     <p><span class="field-label">Name:</span> <span id="dName"></span></p>  
     <p><span class="field-label">Father:</span> <span id="dFather"></span></p>  
     <p><span class="field-label">Mobile:</span> <span id="dMobile"></span></p>  
-    <p><span class="field-label">Roll No:</span> <span id="dRoll"></span></p>
-<p><span class="field-label">Exam Level:</span> <span id="dExam Level"></span></p>  
+    <p><span class="field-label">Roll No:</span> <span id="dRoll"></span></p>  
     <p><span class="field-label">Form Status:</span> <span id="dStatus"></span></p>  
     <p><span class="field-label">Payment Status:</span> <span id="dPayment"></span></p>  
     <p><span class="field-label">UPI Txn ID:</span> <span id="dTxn"></span></p>  
@@ -267,8 +265,7 @@ async function loadStudents(){
       `<td>${i++}</td>  
        <td>${st.roll_number}</td>  
        <td>${st.full_name || st.name || ""}</td>  
-       <td>${st.mobile || ""}</td>
-       <td>${st.exam_level || ""}</td>  
+       <td>${st.mobile || ""}</td>  
        <td>${st.exam_center || "-"}</td>  
        <td>${formStatus}</td>  
        <td>${paymentStatus}</td>  
@@ -300,7 +297,6 @@ function openDetails(st){
   document.getElementById("dFather").textContent = st.father_name || "";  
   document.getElementById("dMobile").textContent = st.mobile || "";  
   document.getElementById("dRoll").textContent   = st.roll_number || "";  
-document.getElementById("dExamLevel").textContent   = st.exam_level || "";
   
   const formStatus = st.form_status || st.status || "pending";  
   const payApproved =  
