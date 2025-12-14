@@ -70,7 +70,6 @@
     }
     ul.points li{margin-bottom:6px;}
 
-    /* ⭐ Apply Button */
     .btn-apply{
       display:inline-block;
       background:#ffdd00;
@@ -82,9 +81,7 @@
       margin-top:12px;
       text-decoration:none;
     }
-    .btn-apply:hover{
-      background:#ffe866;
-    }
+    .btn-apply:hover{ background:#ffe866; }
 
     .poster{
       width:100%;
@@ -94,10 +91,7 @@
       box-shadow:0 0 18px rgba(0,0,0,0.9);
     }
 
-    .notice-wrap{
-      margin-top:15px;
-      text-align:center;
-    }
+    .notice-wrap{ margin-top:15px; text-align:center; }
     .notice-card{
       max-width:600px;
       margin:0 auto;
@@ -121,30 +115,6 @@
     }
     #noticeList li{margin:3px 0;}
 
-    .gallery-section{
-      max-width:1000px;
-      margin:0 auto 25px;
-      padding:0 10px;
-    }
-    .gallery-title{
-      font-size:16px;font-weight:bold;
-      margin-bottom:6px;
-    }
-    .gallery-grid{
-      display:flex;
-      flex-wrap:wrap;
-      gap:8px;
-    }
-    .gallery-item{
-      width:90px;height:90px;
-      border-radius:8px;
-      overflow:hidden;
-      border:1px solid rgba(255,255,255,0.4);
-    }
-    .gallery-item img{
-      width:100%;height:100%;object-fit:cover;
-    }
-
     footer{
       background:#000c;
       text-align:center;
@@ -153,9 +123,9 @@
       color:#ddd;
     }
 
-    .info-line { font-size:12px; color:#cfefff; margin-left:8px; display:inline-block; vertical-align:middle; }
-
-    @media (max-width:520px){ .btn-apply{ display:block; width:100%; box-sizing:border-box; } }
+    @media (max-width:520px){
+      .btn-apply{ display:block; width:100%; }
+    }
   </style>
 </head>
 <body>
@@ -179,7 +149,7 @@
   <div class="left">
     <div class="headline">Mega Talent Hub Scholarship Exam FEB 2026</div>
     <div class="subline">Show your talent & win exciting prizes.</div>
-    
+
     <ul class="points">
       <li>Huge Cash Prizes</li>
       <li>1st Prize: ₹51,000</li>
@@ -191,204 +161,38 @@
       <li>Negative marking 1/3</li>
     </ul>
 
-    <!-- ⭐ Apply Button -->
+    <!-- Apply -->
     <a class="btn-apply" href="apply.html">Apply Now</a>
 
-    <!-- ⭐ Syllabus Download Button (Added) -->
-    <!-- default href is relative file in same folder. "download" attribute suggests browser to save file (if supported) -->
-    <div style="margin-top:8px;">
-      <a id="syllabusBtn" class="btn-apply" 
-         href="syllabus.pdf" 
-         target="_blank" 
-         download
-         style="background:#00eaff; color:#000; text-decoration:none;">
-        📘 Download Syllabus
-      </a>
-      <span id="syllInfo" class="info-line"></span>
-    </div>
+    <!-- Download Syllabus -->
+    <a class="btn-apply"
+       href="syllabus.pdf"
+       target="_blank"
+       download
+       style="background:#00eaff; color:#000;">
+      📘 Download Syllabus
+    </a>
+
+    <!-- Centre Syllabus (NEW) -->
+    <a class="btn-apply"
+       href="centre-syllabus.pdf"
+       target="_blank"
+       download
+       style="background:#4cff00; color:#000;">
+      🏫 Download Centre Syllabus
+    </a>
 
   </div>
 
   <div class="right">
-    <img id="heroPoster" class="poster" src="flex.jpg">
-
-    <div class="notice-wrap">
-      <div class="notice-card">
-        <div class="notice-header">📢 Latest Notices</div>
-        <ul id="noticeList"><li>Loading...</li></ul>
-      </div>
-    </div>
+    <img class="poster" src="flex.jpg">
   </div>
 
-</div>
-
-<div class="gallery-section">
-  <div class="gallery-title">📸 Latest Gallery Photos</div>
-  <div id="homeGallery" class="gallery-grid"></div>
 </div>
 
 <footer>
   © 2026 Baba Deep Singh Mega Talent Hub
 </footer>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script>
-const sb = supabase.createClient(
-  "https://yyymjhuwjvyykukfzqow.supabase.co",
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl5eW1qaHV3anZ5eWt1a2Z6cW93Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2NzMzMjIsImV4cCI6MjA4MDI0OTMyMn0.Ja9Do4cwumTnXx2NGIRW8Ti3rKm4MBiLClQz0xjOtrQ"
-);
-
-// Load functions (existing)
-async function loadPoster(){
-  const { data } = await sb
-    .from("flex_banners")
-    .select("image_url")
-    .order("created_at",{ ascending:false })
-    .limit(1);
-  if(data && data.length && data[0].image_url){
-    document.getElementById("heroPoster").src = data[0].image_url;
-  }
-}
-
-async function loadNotices(){
-  const ul=document.getElementById("noticeList");
-  try{
-    const { data } = await sb
-      .from("notices")
-      .select("*")
-      .eq("active",true)
-      .order("created_at",{ ascending:false })
-      .limit(6);
-    ul.innerHTML="";
-    if(!data || !data.length){
-      ul.innerHTML="<li>No active notices</li>";
-      return;
-    }
-    data.forEach(n=>{
-      ul.innerHTML+=`<li>${n.title} - ${n.body}</li>`;
-    });
-  }catch(e){
-    ul.innerHTML = "<li>Error loading notices</li>";
-    console.error(e);
-  }
-}
-
-async function loadGallery(){
-  const area=document.getElementById("homeGallery");
-  try{
-    const { data } = await sb
-      .from("gallery_items")
-      .select("public_url")
-      .eq("visible",true)
-      .order("created_at",{ ascending:false })
-      .limit(8);
-    area.innerHTML="";
-    if(!data || !data.length){
-      area.innerHTML="<div style='font-size:11px'>No photos yet</div>";
-      return;
-    }
-    data.forEach(g=>{
-      area.innerHTML+=`
-        <div class="gallery-item">
-          <img src="${g.public_url}">
-        </div>`;
-    });
-  }catch(e){
-    area.innerHTML = "<div style='font-size:11px'>Gallery error</div>";
-    console.error(e);
-  }
-}
-
-loadPoster();
-loadNotices();
-loadGallery();
-
-/*
-  ensureSyllabusLink()
-  - tries to HEAD /syllabus.pdf (relative). If file found, shows small "available" note.
-  - if not found (404 or fetch error), attempts to construct a GitHub raw URL (heuristic)
-    and updates the button href to that raw url. This helps when you view file
-    via GitHub repo preview (blob) or if Pages not configured.
-*/
-async function ensureSyllabusLink(){
-  const btn = document.getElementById('syllabusBtn');
-  const info = document.getElementById('syllInfo');
-
-  // first try relative path
-  try {
-    const resp = await fetch('syllabus.pdf', { method: 'HEAD' });
-    if (resp && resp.ok) {
-      info.textContent = 'Syllabus (local)';
-      return;
-    }
-  } catch(err){
-    // continue to fallback
-    console.warn('Relative syllabus check failed:', err);
-  }
-
-  // If relative not found, try to construct raw.githubusercontent URL if on github.io or blob view
-  try {
-    const host = window.location.hostname || '';
-    const path = (window.location.pathname || '').replace(/^\//, ''); // remove leading /
-    let rawUrl = null;
-
-    // if site served as https://username.github.io/repo/...
-    if (host.endsWith('github.io')) {
-      const username = host.split('.')[0]; // before .github.io
-      // pathname like '/repo/...', repo is first segment
-      const parts = path.split('/');
-      const repo = parts[0] || '';
-      if (username && repo) {
-        // assume default branch 'main'
-        rawUrl = `https://raw.githubusercontent.com/${username}/${repo}/main/syllabus.pdf`;
-      }
-    }
-
-    // If we are on GitHub's blob page (raw file preview), window.location may include 'github.com'
-    if (!rawUrl && host.includes('github.com')) {
-      // Try to parse /<user>/<repo>/blob/<branch>/... pattern
-      const segs = path.split('/');
-      // expecting: segs[0]=user, segs[1]=repo, segs[2]='blob', segs[3]=branch
-      if (segs.length >= 4 && segs[2] === 'blob') {
-        const username = segs[0], repo = segs[1], branch = segs[3];
-        rawUrl = `https://raw.githubusercontent.com/${username}/${repo}/${branch}/syllabus.pdf`;
-      }
-    }
-
-    // Fallback: try to use a general raw path with 'main' branch if repo folder name found
-    if (!rawUrl && path) {
-      const parts2 = path.split('/');
-      const repoGuess = parts2[0];
-      if (repoGuess) {
-        // can't know username reliably; try to keep relative (no-op) or show message
-        rawUrl = null; // leave null
-      }
-    }
-
-    if (rawUrl) {
-      // test raw url HEAD
-      const r = await fetch(rawUrl, { method: 'HEAD' });
-      if (r && r.ok) {
-        btn.href = rawUrl;
-        info.textContent = 'Syllabus (from GitHub raw)';
-        return;
-      } else {
-        console.warn('raw url not ok', r.status);
-      }
-    }
-
-    // Last resort: just show hint to admin
-    info.textContent = 'Syllabus not found locally. If using GitHub Pages, enable Pages or put syllabus.pdf in same folder.';
-  } catch (e) {
-    console.error('ensureSyllabusLink error', e);
-    info.textContent = 'Syllabus check error';
-  }
-}
-
-// Run the check on load (non-blocking)
-ensureSyllabusLink();
-</script>
-
 </body>
 </html>
-
