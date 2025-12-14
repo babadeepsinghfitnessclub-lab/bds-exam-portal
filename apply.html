@@ -9,7 +9,7 @@
 body{
   margin:0;
   font-family:Arial, sans-serif;
-  background:radial-gradient(circle at top, #1a4fff 0%, #000b33 55%, #000316 100%);
+  background:radial-gradient(circle at top,#1a4fff 0%,#000b33 55%,#000316 100%);
   color:#fff;
 }
 header{
@@ -20,7 +20,7 @@ header{
   justify-content:space-between;
   flex-wrap:wrap;
 }
-.logo-text{font-size:18px;font-weight:bold;letter-spacing:1px;}
+.logo-text{font-size:18px;font-weight:bold;}
 nav a{
   color:#fff;
   text-decoration:none;
@@ -30,22 +30,21 @@ nav a{
 }
 .container{max-width:900px;margin:15px auto;padding:10px;}
 .card{background:rgba(0,0,0,0.6);border-radius:10px;padding:14px;}
-h1{font-size:22px;margin:6px 0 4px;}
-h2{font-size:18px;margin:10px 0 6px;color:#ffd84d;}
-label{display:block;font-size:14px;margin-top:6px;}
-.req-star{color:#ff5555;margin-left:2px;}
-input, select, textarea{
+h1{font-size:22px;}
+h2{font-size:18px;color:#ffd84d;margin-top:12px;}
+label{display:block;margin-top:8px;font-size:14px;}
+.req-star{color:#ff5555;}
+input,select,textarea{
   width:100%;
   padding:7px;
   border-radius:6px;
   border:none;
   margin-top:2px;
-  font-size:14px;
 }
 textarea{min-height:60px;}
-input[type="file"]{padding:4px;background:#fff;color:#000;}
+input[type=file]{background:#fff;color:#000;}
 .btn-primary{
-  margin-top:12px;
+  margin-top:14px;
   padding:10px 22px;
   border-radius:999px;
   border:none;
@@ -54,17 +53,24 @@ input[type="file"]{padding:4px;background:#fff;color:#000;}
   font-weight:bold;
   cursor:pointer;
 }
-#msgBox{margin-top:10px;font-size:14px;}
-footer{text-align:center;font-size:13px;padding:10px;background:rgba(0,0,0,0.85);margin-top:10px;}
+#msgBox{margin-top:10px;}
+footer{text-align:center;font-size:12px;padding:10px;background:#000c;margin-top:12px;}
 </style>
 
 <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 </head>
-
 <body>
 
 <header>
   <div class="logo-text">BABA DEEP SINGH MEGA TALENT HUB</div>
+  <nav>
+    <a href="index.html">HOME</a>
+    <a href="apply.html">APPLY</a>
+    <a href="form-status.html">FORM STATUS</a>
+    <a href="admit.html">ADMIT</a>
+    <a href="result.html">RESULT</a>
+    <a href="admin/login.html">ADMIN</a>
+  </nav>
 </header>
 
 <div class="container">
@@ -76,67 +82,67 @@ footer{text-align:center;font-size:13px;padding:10px;background:rgba(0,0,0,0.85)
 
 <h2>Student Details</h2>
 
-<label>Full Name<span class="req-star">*</span></label>
+<label>Full Name <span class="req-star">*</span></label>
 <input type="text" id="name" required>
 
-<label>Father's Name<span class="req-star">*</span></label>
+<label>Father's Name <span class="req-star">*</span></label>
 <input type="text" id="father" required>
 
-<label>Date of Birth<span class="req-star">*</span></label>
+<label>Date of Birth <span class="req-star">*</span></label>
 <input type="date" id="dob" required>
 
-<label>Gender<span class="req-star">*</span></label>
+<label>Gender <span class="req-star">*</span></label>
 <select id="gender" required>
-  <option value="">Select</option>
-  <option>Male</option>
-  <option>Female</option>
-  <option>Other</option>
+<option value="">Select</option>
+<option>Male</option>
+<option>Female</option>
+<option>Other</option>
 </select>
 
-<label>Mobile Number<span class="req-star">*</span></label>
+<label>Mobile Number <span class="req-star">*</span></label>
 <input type="tel" id="mobile" maxlength="10" required>
 
-<label>Qualification<span class="req-star">*</span></label>
+<label>Qualification <span class="req-star">*</span></label>
 <select id="qualification" required>
-  <option value="">Select</option>
-  <option>12th Appearing</option>
-  <option>12th Pass</option>
-  <option>Other Competition Student</option>
+<option value="">Select</option>
+<option>12th Appearing</option>
+<option>12th Pass</option>
+<option>Other Competition Student</option>
 </select>
 
-<!-- ✅ ONLY NEW FIELD ADDED -->
-<label>Exam Level<span class="req-star">*</span></label>
+<!-- ✅ ONLY NEW FIELD -->
+<label>Exam Level <span class="req-star">*</span></label>
 <select id="examLevel" required>
-  <option value="">Select Exam Level</option>
-  <option value="State">State Level</option>
-  <option value="Centre">Centre Level</option>
+<option value="">Select</option>
+<option value="State">State Level</option>
+<option value="Centre">Centre Level</option>
 </select>
 
-<label>Aadhar Number<span class="req-star">*</span></label>
+<label>Aadhar Number <span class="req-star">*</span></label>
 <input type="text" id="aadhar" maxlength="12" required>
 
-<label>Address<span class="req-star">*</span></label>
+<label>Address <span class="req-star">*</span></label>
 <textarea id="address" required></textarea>
 
 <h2>Upload Documents</h2>
 
-<label>Passport Size Photo<span class="req-star">*</span></label>
+<label>Passport Photo <span class="req-star">*</span></label>
 <input type="file" id="photoFile" required>
 
-<label>Aadhar Front<span class="req-star">*</span></label>
+<label>Aadhar Front <span class="req-star">*</span></label>
 <input type="file" id="aadharFile" required>
 
-<label>Aadhar Back<span class="req-star">*</span></label>
+<label>Aadhar Back <span class="req-star">*</span></label>
 <input type="file" id="aadharBackFile" required>
 
-<label>Marksheet<span class="req-star">*</span></label>
+<label>Marksheet <span class="req-star">*</span></label>
 <input type="file" id="marksheetFile" required>
 
 <h2>Step 2 – Pay ₹200</h2>
 
 <p>Pay to UPI ID: <b>Q191410773@ybl</b></p>
 
-<img src="upi-qr.png" style="width:180px;border:2px solid #fff;border-radius:8px">
+<img src="upi-qr.png" style="width:200px;border:2px solid #fff;border-radius:10px">
 
 <p>
 <a href="upi://pay?pa=Q191410773@ybl&pn=Baba%20Deep%20Singh%20Fitness%20Club&am=200&cu=INR"
@@ -146,10 +152,10 @@ Pay ₹200 via UPI App
 </a>
 </p>
 
-<label>Payment Screenshot<span class="req-star">*</span></label>
+<label>Payment Screenshot <span class="req-star">*</span></label>
 <input type="file" id="paymentFile" required>
 
-<label>Transaction ID<span class="req-star">*</span></label>
+<label>Transaction ID <span class="req-star">*</span></label>
 <input type="text" id="upiTxn" required>
 
 <label>
@@ -157,7 +163,7 @@ Pay ₹200 via UPI App
 I verify above payment details
 </label>
 
-<button class="btn-primary">Final Submit & Generate Roll No.</button>
+<button class="btn-primary" id="submitBtn">Final Submit & Generate Roll No.</button>
 <div id="msgBox"></div>
 
 </form>
@@ -169,11 +175,13 @@ I verify above payment details
 <script>
 const sb = supabase.createClient(
   "https://yyymjhuwjvyykukfzqow.supabase.co",
-  "PASTE_YOUR_FULL_VALID_ANON_OR_PUBLISHABLE_KEY_HERE"
+  "sb_publishable_AotK9XHnYF0UmfJYrS7GCg_BHXVvzy0"
 );
 
 async function submitForm(e){
  e.preventDefault();
+
+ const examLevelVal = examLevel.value;
 
  const { error } = await sb.from("students").insert({
    full_name: name.value,
@@ -182,7 +190,7 @@ async function submitForm(e){
    gender: gender.value,
    mobile: mobile.value,
    qualification: qualification.value,
-   exam_level: examLevel.value,   // ✅ ONLY ADDITION
+   exam_level: examLevelVal,   // ✅ ONLY ADDITION
    aadhar_no: aadhar.value,
    address: address.value,
    upi_txn: upiTxn.value,
@@ -193,7 +201,7 @@ async function submitForm(e){
  if(error){
    msgBox.innerHTML = error.message;
  }else{
-   msgBox.innerHTML = "Form submitted successfully";
+   msgBox.innerHTML = "<span style='color:lightgreen'>Form submitted successfully</span>";
    applyForm.reset();
  }
 }
