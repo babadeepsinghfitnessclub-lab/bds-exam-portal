@@ -7,18 +7,16 @@
 
 <style>
 body{font-family:Arial;background:#f5f5f5;margin:0}
-.container{max-width:1100px;margin:15px auto;background:#fff;padding:15px;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,.2)}
-h1{color:#b20c0c;margin-top:0}
+.container{max-width:1100px;margin:15px auto;background:#fff;padding:15px;border-radius:8px}
+h1{color:#b20c0c;margin:0 0 10px}
 table{width:100%;border-collapse:collapse;font-size:13px}
 th,td{border:1px solid #ddd;padding:6px}
 th{background:#eee}
-button{padding:5px 8px;border:none;border-radius:4px;cursor:pointer;font-size:12px}
+button{padding:5px 8px;border:0;border-radius:4px;cursor:pointer}
 .view{background:#1976d2;color:#fff}
 .del{background:#c62828;color:#fff}
-.approve{background:#2e7d32;color:#fff}
-.reject{background:#c62828;color:#fff}
-.section{margin-top:12px;border-top:1px solid #ccc;padding-top:8px}
-label{font-weight:bold}
+#detail{margin-top:15px;padding:10px;border:1px solid #ccc;background:#fafafa;display:none}
+a{color:#1976d2}
 </style>
 
 <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
@@ -29,10 +27,10 @@ label{font-weight:bold}
 <div class="container">
 
 <a href="dashboard.html">← Admin Home</a>
+<button onclick="downloadExcel()" style="float:right">Download Excel</button>
 
 <h1>Student Applications</h1>
-
-<button onclick="downloadExcel()">⬇ Download Excel</button>
+<p id="msg">Loading...</p>
 
 <table>
 <thead>
@@ -47,25 +45,23 @@ label{font-weight:bold}
 <th>Action</th>
 </tr>
 </thead>
-<tbody id="tbody"></tbody>
+<tbody id="list"></tbody>
 </table>
 
-<div id="detailBox" style="display:none" class="section">
+<div id="detail">
 <h3>Student Details</h3>
-
 <p><b>Name:</b> <span id="dName"></span></p>
 <p><b>Father:</b> <span id="dFather"></span></p>
 <p><b>Mobile:</b> <span id="dMobile"></span></p>
 <p><b>Roll:</b> <span id="dRoll"></span></p>
-<p><b>Exam Level:</b> <span id="dLevel"></span></p>
+<p><b>Exam Level:</b> <span id="dExamLevel"></span></p>
 
-<p><a id="pPhoto" target="_blank">Photo</a></p>
-<p><a id="pAadharF" target="_blank">Aadhaar Front</a></p>
-<p><a id="pAadharB" target="_blank">Aadhaar Back</a></p>
-<p><a id="pMark" target="_blank">Marksheet</a></p>
+<p><b>Photo:</b> <a id="dPhoto" target="_blank">Open</a></p>
+<p><b>Aadhaar Front:</b> <a id="dAF" target="_blank">Open</a></p>
+<p><b>Aadhaar Back:</b> <a id="dAB" target="_blank">Open</a></p>
+<p><b>Marksheet:</b> <a id="dMS" target="_blank">Open</a></p>
 
-<button class="approve" onclick="approve()">Approve</button>
-<button class="reject" onclick="reject()">Reject</button>
+<button class="del" onclick="deleteStudent()">Delete Permanently</button>
 </div>
 
 </div>
@@ -75,87 +71,87 @@ const SUPABASE_URL = "https://yyymjhuwjvyykukfzqow.supabase.co";
 const SUPABASE_KEY = "PASTE_YOUR_ANON_KEY_HERE";
 
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-let currentId=null;
+let currentId = null;
+
+function file(path){
+ if(!path) return "";
+ return sb.storage.from("student_docs").getPublicUrl(path).data.publicUrl;
+}
 
 async function load(){
-const {data}=await sb.from("students").select("*").order("created_at",{ascending:false});
-const tb=document.getElementById("tbody");
-tb.innerHTML="";
-let i=1;
+ const {data,error} = await sb.from("students").select("*").order("id");
+ if(error){ msg.innerText = error.message; return; }
 
-data.forEach(s=>{
-tb.innerHTML+=`
-<tr>
-<td>${i++}</td>
-<td>${s.roll_number||""}</td>
-<td>${s.full_name||""}</td>
-<td>${s.mobile||""}</td>
-<td>${s.exam_level||""}</td>
-<td>${s.exam_center||""}</td>
-<td>${s.form_status||"pending"}</td>
-<td>
-<button class="view" onclick='view(${JSON.stringify(s)})'>View</button>
-<button class="del" onclick='del(${s.id})'>Delete</button>
-</td>
-</tr>`;
-});
+ const tb = document.getElementById("list");
+ tb.innerHTML="";
+ let i=1;
+
+ data.forEach(st=>{
+  const tr=document.createElement("tr");
+  tr.innerHTML=`
+   <td>${i++}</td>
+   <td>${st.roll_number||""}</td>
+   <td>${st.full_name||""}</td>
+   <td>${st.mobile||""}</td>
+   <td>${st.exam_level||""}</td>
+   <td>${st.exam_center||""}</td>
+   <td>${st.form_status||""}</td>
+   <td>
+    <button class="view">View</button>
+    <button class="del">Delete</button>
+   </td>`;
+  tr.querySelector(".view").onclick=()=>openDetail(st);
+  tr.querySelector(".del").onclick=()=>delRow(st.id);
+  tb.appendChild(tr);
+ });
+
+ msg.innerText="Loaded successfully";
 }
 load();
 
-function pub(path){
-if(!path)return "#";
-return sb.storage.from("student_docs").getPublicUrl(path).data.publicUrl;
+function openDetail(st){
+ currentId=st.id;
+ detail.style.display="block";
+ dName.innerText=st.full_name||"";
+ dFather.innerText=st.father_name||"";
+ dMobile.innerText=st.mobile||"";
+ dRoll.innerText=st.roll_number||"";
+ dExamLevel.innerText=st.exam_level||"";
+
+ dPhoto.href=file(st.photo_path);
+ dAF.href=file(st.aadhar_front_path);
+ dAB.href=file(st.aadhar_back_path);
+ dMS.href=file(st.marksheet_path);
 }
 
-function view(s){
-currentId=s.id;
-document.getElementById("detailBox").style.display="block";
-dName.textContent=s.full_name;
-dFather.textContent=s.father_name;
-dMobile.textContent=s.mobile;
-dRoll.textContent=s.roll_number;
-dLevel.textContent=s.exam_level||"";
-
-pPhoto.href=pub(s.photo_path);
-pAadharF.href=pub(s.aadhar_front_path);
-pAadharB.href=pub(s.aadhar_back_path);
-pMark.href=pub(s.marksheet_path);
+async function delRow(id){
+ if(!confirm("Permanent delete?")) return;
+ await sb.from("students").delete().eq("id",id);
+ load();
+ detail.style.display="none";
 }
 
-async function approve(){
-await sb.from("students").update({form_status:"approved"}).eq("id",currentId);
-alert("Approved");
-load();
+async function deleteStudent(){
+ if(!currentId) return;
+ await sb.from("students").delete().eq("id",currentId);
+ load();
+ detail.style.display="none";
 }
 
-async function reject(){
-await sb.from("students").update({form_status:"rejected"}).eq("id",currentId);
-alert("Rejected");
-load();
-}
-
-async function del(id){
-if(!confirm("Delete student?"))return;
-await sb.from("students").delete().eq("id",id);
-load();
-}
-
-/* ===== EXCEL ===== */
 async function downloadExcel(){
-const {data}=await sb.from("students").select("full_name,roll_number,mobile");
+ const {data}=await sb.from("students")
+ .select("full_name,roll_number,mobile");
 
-const rows=data.map(s=>({
-"Name":s.full_name,
-"Roll Number":s.roll_number,
-"Mobile Number":s.mobile
-}));
+ const sheet=XLSX.utils.json_to_sheet(data.map(r=>({
+  Name:r.full_name,
+  Roll:r.roll_number,
+  Mobile:r.mobile
+ })));
 
-const ws=XLSX.utils.json_to_sheet(rows);
-const wb=XLSX.utils.book_new();
-XLSX.utils.book_append_sheet(wb,ws,"Students");
-XLSX.writeFile(wb,"students.xlsx");
+ const wb=XLSX.utils.book_new();
+ XLSX.utils.book_append_sheet(wb,sheet,"Students");
+ XLSX.writeFile(wb,"students.xlsx");
 }
 </script>
-
 </body>
 </html>
