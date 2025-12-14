@@ -6,16 +6,23 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
-body{font-family:Arial;background:#f5f5f5;margin:0}
-.container{max-width:1100px;margin:15px auto;background:#fff;padding:15px;border-radius:8px}
-h1{color:#b20c0c;margin:0 0 10px}
+body{font-family:Arial;background:#f4f4f4;margin:0}
+.container{max-width:1100px;margin:15px auto;background:#fff;padding:15px;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,.2)}
+h1{color:#b20c0c;margin-top:0}
 table{width:100%;border-collapse:collapse;font-size:13px}
 th,td{border:1px solid #ddd;padding:6px}
 th{background:#eee}
-button{padding:5px 8px;border:0;border-radius:4px;cursor:pointer}
-.view{background:#1976d2;color:#fff}
-.del{background:#c62828;color:#fff}
-#detail{margin-top:15px;padding:10px;border:1px solid #ccc;background:#fafafa;display:none}
+tr:nth-child(even){background:#fafafa}
+button{padding:5px 8px;border:none;border-radius:4px;cursor:pointer;font-size:12px}
+.btn-view{background:#1976d2;color:#fff}
+.btn-approve{background:#2e7d32;color:#fff}
+.btn-pending{background:#ffa000}
+.btn-reject{background:#c62828;color:#fff}
+.btn-del{background:#000;color:#fff}
+.section{margin-top:12px;border-top:1px solid #ccc;padding-top:8px}
+input{width:100%;padding:5px;margin-top:3px}
+label{font-size:13px}
+.msg{font-size:13px;margin-top:5px}
 a{color:#1976d2}
 </style>
 
@@ -26,11 +33,13 @@ a{color:#1976d2}
 <body>
 <div class="container">
 
-<a href="dashboard.html">← Admin Home</a>
-<button onclick="downloadExcel()" style="float:right">Download Excel</button>
+<a href="dashboard.html">← Admin Home</a> |
+<a href="../index.html" target="_blank">Open Website</a>
+
+<button style="float:right" onclick="downloadExcel()">⬇ Download Excel</button>
 
 <h1>Student Applications</h1>
-<p id="msg">Loading...</p>
+<p id="listMsg">Loading…</p>
 
 <table>
 <thead>
@@ -41,117 +50,169 @@ a{color:#1976d2}
 <th>Mobile</th>
 <th>Exam Level</th>
 <th>Centre</th>
-<th>Status</th>
+<th>Form</th>
+<th>Payment</th>
 <th>Action</th>
 </tr>
 </thead>
-<tbody id="list"></tbody>
+<tbody id="tbody"></tbody>
 </table>
 
-<div id="detail">
+<div id="details" style="display:none" class="section">
 <h3>Student Details</h3>
+
 <p><b>Name:</b> <span id="dName"></span></p>
 <p><b>Father:</b> <span id="dFather"></span></p>
 <p><b>Mobile:</b> <span id="dMobile"></span></p>
 <p><b>Roll:</b> <span id="dRoll"></span></p>
 <p><b>Exam Level:</b> <span id="dExamLevel"></span></p>
 
-<p><b>Photo:</b> <a id="dPhoto" target="_blank">Open</a></p>
-<p><b>Aadhaar Front:</b> <a id="dAF" target="_blank">Open</a></p>
-<p><b>Aadhaar Back:</b> <a id="dAB" target="_blank">Open</a></p>
-<p><b>Marksheet:</b> <a id="dMS" target="_blank">Open</a></p>
+<h4>Documents</h4>
+<p>Photo: <a id="dPhoto" target="_blank">Open</a></p>
+<p>Aadhaar Front: <a id="dAF" target="_blank">Open</a></p>
+<p>Aadhaar Back: <a id="dAB" target="_blank">Open</a></p>
+<p>Marksheet: <a id="dMS" target="_blank">Open</a></p>
+<p>Payment SS: <a id="dPS" target="_blank">Open</a></p>
 
-<button class="del" onclick="deleteStudent()">Delete Permanently</button>
+<h4>Form / Payment</h4>
+<button class="btn-approve" onclick="setStatus('approved')">Approve</button>
+<button class="btn-pending" onclick="setStatus('pending')">Pending</button>
+<button class="btn-reject" onclick="setStatus('rejected')">Reject</button>
+
+<h4>Admit Card</h4>
+<label>Centre</label><input id="cCentre">
+<label>Date</label><input id="cDate">
+<label>Shift</label><input id="cShift">
+<label>Start Time</label><input id="cStart">
+<label>End Time</label><input id="cEnd">
+<label><input type="checkbox" id="cAdmit"> Admit Card Active</label>
+<button class="btn-approve" onclick="saveAdmit()">Save Admit</button>
+
+<h4>Result</h4>
+<label>Marks</label><input id="rMarks">
+<label>Rank</label><input id="rRank">
+<label>Status</label><input id="rStatus">
+<label><input type="checkbox" id="rPub"> Publish Result</label>
+<button class="btn-approve" onclick="saveResult()">Save Result</button>
+
+<br><br>
+<button class="btn-del" onclick="deleteStudent()">DELETE PERMANENT</button>
+
+<p id="msg" class="msg"></p>
 </div>
 
 </div>
 
 <script>
-const SUPABASE_URL = "https://yyymjhuwjvyykukfzqow.supabase.co";
-const SUPABASE_KEY = "PASTE_YOUR_ANON_KEY_HERE";
+const SUPABASE_URL="https://yyymjhuwjvyykukfzqow.supabase.co";
+const SUPABASE_KEY="sb_publishable_AotK9XHnYF0UmfJYrS7GCg_BHXVvzy0";
+const {createClient}=supabase;
+const sb=createClient(SUPABASE_URL,SUPABASE_KEY);
 
-const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-let currentId = null;
+let CUR=null;
 
-function file(path){
- if(!path) return "";
- return sb.storage.from("student_docs").getPublicUrl(path).data.publicUrl;
+function doc(a,p){
+ if(!p){a.textContent="Not uploaded";return}
+ a.href=sb.storage.from("student_docs").getPublicUrl(p).data.publicUrl;
 }
 
 async function load(){
- const {data,error} = await sb.from("students").select("*").order("id");
- if(error){ msg.innerText = error.message; return; }
-
- const tb = document.getElementById("list");
- tb.innerHTML="";
- let i=1;
-
- data.forEach(st=>{
-  const tr=document.createElement("tr");
-  tr.innerHTML=`
-   <td>${i++}</td>
-   <td>${st.roll_number||""}</td>
-   <td>${st.full_name||""}</td>
-   <td>${st.mobile||""}</td>
-   <td>${st.exam_level||""}</td>
-   <td>${st.exam_center||""}</td>
-   <td>${st.form_status||""}</td>
-   <td>
-    <button class="view">View</button>
-    <button class="del">Delete</button>
-   </td>`;
-  tr.querySelector(".view").onclick=()=>openDetail(st);
-  tr.querySelector(".del").onclick=()=>delRow(st.id);
-  tb.appendChild(tr);
- });
-
- msg.innerText="Loaded successfully";
+const {data}=await sb.from("students").select("*").order("id",{ascending:false});
+tbody.innerHTML="";
+data.forEach((s,i)=>{
+const tr=document.createElement("tr");
+tr.innerHTML=`
+<td>${i+1}</td>
+<td>${s.roll_number||""}</td>
+<td>${s.full_name||""}</td>
+<td>${s.mobile||""}</td>
+<td>${s.exam_level||""}</td>
+<td>${s.exam_center||""}</td>
+<td>${s.form_status||"pending"}</td>
+<td>${s.payment_status||"pending"}</td>
+<td><button class="btn-view">View</button></td>`;
+tr.querySelector("button").onclick=()=>open(s);
+tbody.appendChild(tr);
+});
+listMsg.textContent="Loaded successfully";
 }
 load();
 
-function openDetail(st){
- currentId=st.id;
- detail.style.display="block";
- dName.innerText=st.full_name||"";
- dFather.innerText=st.father_name||"";
- dMobile.innerText=st.mobile||"";
- dRoll.innerText=st.roll_number||"";
- dExamLevel.innerText=st.exam_level||"";
+function open(s){
+CUR=s.id;
+details.style.display="block";
+dName.textContent=s.full_name||"";
+dFather.textContent=s.father_name||"";
+dMobile.textContent=s.mobile||"";
+dRoll.textContent=s.roll_number||"";
+dExamLevel.textContent=s.exam_level||"";
 
- dPhoto.href=file(st.photo_path);
- dAF.href=file(st.aadhar_front_path);
- dAB.href=file(st.aadhar_back_path);
- dMS.href=file(st.marksheet_path);
+doc(dPhoto,s.photo_path);
+doc(dAF,s.aadhar_front_path);
+doc(dAB,s.aadhar_back_path);
+doc(dMS,s.marksheet_path);
+doc(dPS,s.payment_screenshot_path);
+
+cCentre.value=s.exam_center||"";
+cDate.value=s.exam_date||"";
+cShift.value=s.exam_shift||"";
+cStart.value=s.exam_start_time||"";
+cEnd.value=s.exam_end_time||"";
+cAdmit.checked=s.admit_allowed||false;
+
+rMarks.value=s.marks||"";
+rRank.value=s.rank||"";
+rStatus.value=s.result_status||"";
+rPub.checked=s.result_published||false;
 }
 
-async function delRow(id){
- if(!confirm("Permanent delete?")) return;
- await sb.from("students").delete().eq("id",id);
- load();
- detail.style.display="none";
+async function setStatus(st){
+await sb.from("students").update({
+form_status:st,
+payment_status:st==="approved"?"approved":"pending"
+}).eq("id",CUR);
+msg.textContent="Status updated";
+load();
+}
+
+async function saveAdmit(){
+await sb.from("students").update({
+exam_center:cCentre.value,
+exam_date:cDate.value,
+exam_shift:cShift.value,
+exam_start_time:cStart.value,
+exam_end_time:cEnd.value,
+admit_allowed:cAdmit.checked
+}).eq("id",CUR);
+msg.textContent="Admit saved";
+load();
+}
+
+async function saveResult(){
+await sb.from("students").update({
+marks:rMarks.value||null,
+rank:rRank.value||null,
+result_status:rStatus.value||null,
+result_published:rPub.checked
+}).eq("id",CUR);
+msg.textContent="Result saved";
 }
 
 async function deleteStudent(){
- if(!currentId) return;
- await sb.from("students").delete().eq("id",currentId);
- load();
- detail.style.display="none";
+if(!confirm("Permanent delete?"))return;
+await sb.from("students").delete().eq("id",CUR);
+details.style.display="none";
+load();
 }
 
 async function downloadExcel(){
- const {data}=await sb.from("students")
- .select("full_name,roll_number,mobile");
-
- const sheet=XLSX.utils.json_to_sheet(data.map(r=>({
-  Name:r.full_name,
-  Roll:r.roll_number,
-  Mobile:r.mobile
- })));
-
- const wb=XLSX.utils.book_new();
- XLSX.utils.book_append_sheet(wb,sheet,"Students");
- XLSX.writeFile(wb,"students.xlsx");
+const {data}=await sb.from("students").select("full_name,roll_number,mobile");
+const ws=XLSX.utils.json_to_sheet(data);
+const wb=XLSX.utils.book_new();
+XLSX.utils.book_append_sheet(wb,ws,"Students");
+XLSX.writeFile(wb,"students.xlsx");
 }
 </script>
+
 </body>
 </html>
