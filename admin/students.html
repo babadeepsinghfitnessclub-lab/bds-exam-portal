@@ -7,128 +7,153 @@
 
 <style>
 body{font-family:Arial;background:#f5f5f5;margin:0}
-.container{max-width:1000px;margin:15px auto;background:#fff;padding:12px 15px;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,.2)}
-h1{margin:0;color:#b20c0c}
-table{width:100%;border-collapse:collapse;margin-top:10px;font-size:13px}
+.container{max-width:1100px;margin:15px auto;background:#fff;padding:15px;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,.2)}
+h1{color:#b20c0c;margin-top:0}
+table{width:100%;border-collapse:collapse;font-size:13px}
 th,td{border:1px solid #ddd;padding:6px}
 th{background:#eee}
-button{padding:5px 8px;border:none;border-radius:4px;font-size:12px;cursor:pointer}
-.btn-view{background:#1976d2;color:#fff}
-.btn-reject{background:#c62828;color:#fff}
-.btn-approve{background:#2e7d32;color:#fff}
-.msg{font-size:13px;margin-top:5px}
-.detail-card{margin-top:10px;padding:10px;background:#fafafa;border:1px solid #ddd;border-radius:6px}
-.field-label{font-weight:bold}
-a{color:#1976d2}
+button{padding:5px 8px;border:none;border-radius:4px;cursor:pointer;font-size:12px}
+.view{background:#1976d2;color:#fff}
+.del{background:#c62828;color:#fff}
+.approve{background:#2e7d32;color:#fff}
+.reject{background:#c62828;color:#fff}
+.section{margin-top:12px;border-top:1px solid #ccc;padding-top:8px}
+label{font-weight:bold}
 </style>
 
 <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
 
 <body>
-
 <div class="container">
-  <a href="dashboard.html">← Admin Home</a> |
-  <a href="../index.html" target="_blank">Open Website</a>
 
-  <h1>Student Applications</h1>
-  <p class="msg" id="msg">Loading...</p>
+<a href="dashboard.html">← Admin Home</a>
 
-  <table>
-    <thead>
-      <tr>
-        <th>#</th>
-        <th>Roll</th>
-        <th>Name</th>
-        <th>Mobile</th>
-        <th>Exam Level</th>
-        <th>Centre</th>
-        <th>Form</th>
-        <th>Payment</th>
-        <th>Action</th>
-      </tr>
-    </thead>
-    <tbody id="tbody"></tbody>
-  </table>
+<h1>Student Applications</h1>
 
-  <div id="details" class="detail-card" style="display:none">
-    <p><span class="field-label">Name:</span> <span id="dName"></span></p>
-    <p><span class="field-label">Father:</span> <span id="dFather"></span></p>
-    <p><span class="field-label">Mobile:</span> <span id="dMobile"></span></p>
-    <p><span class="field-label">Roll:</span> <span id="dRoll"></span></p>
-    <p><span class="field-label">Exam Level:</span> <span id="dExam"></span></p>
-    <p><span class="field-label">Status:</span> <span id="dStatus"></span></p>
+<button onclick="downloadExcel()">⬇ Download Excel</button>
 
-    <p><span class="field-label">Photo:</span> <a id="dPhoto" target="_blank">Open</a></p>
-    <p><span class="field-label">Aadhaar Front:</span> <a id="dAF" target="_blank">Open</a></p>
-    <p><span class="field-label">Aadhaar Back:</span> <a id="dAB" target="_blank">Open</a></p>
-    <p><span class="field-label">Marksheet:</span> <a id="dM" target="_blank">Open</a></p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Roll</th>
+<th>Name</th>
+<th>Mobile</th>
+<th>Exam Level</th>
+<th>Centre</th>
+<th>Status</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody id="tbody"></tbody>
+</table>
 
-    <button class="btn-approve" onclick="setStatus('approved')">Approve</button>
-    <button class="btn-reject" onclick="setStatus('rejected')">Reject</button>
-  </div>
+<div id="detailBox" style="display:none" class="section">
+<h3>Student Details</h3>
+
+<p><b>Name:</b> <span id="dName"></span></p>
+<p><b>Father:</b> <span id="dFather"></span></p>
+<p><b>Mobile:</b> <span id="dMobile"></span></p>
+<p><b>Roll:</b> <span id="dRoll"></span></p>
+<p><b>Exam Level:</b> <span id="dLevel"></span></p>
+
+<p><a id="pPhoto" target="_blank">Photo</a></p>
+<p><a id="pAadharF" target="_blank">Aadhaar Front</a></p>
+<p><a id="pAadharB" target="_blank">Aadhaar Back</a></p>
+<p><a id="pMark" target="_blank">Marksheet</a></p>
+
+<button class="approve" onclick="approve()">Approve</button>
+<button class="reject" onclick="reject()">Reject</button>
+</div>
+
 </div>
 
 <script>
-if(localStorage.getItem("bdsAdminLoggedIn")!=="yes"){
-  location.href="login.html";
-}
+const SUPABASE_URL = "https://yyymjhuwjvyykukfzqow.supabase.co";
+const SUPABASE_KEY = "PASTE_YOUR_ANON_KEY_HERE";
 
-const sb = supabase.createClient(
-  "https://yyymjhuwjvyykukfzqow.supabase.co",
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl5eW1qaHV3anZ5eWt1a2Z6cW93Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ2NzMzMjIsImV4cCI6MjA4MDI0OTMyMn0.Ja9Do4cwumTnXx2NGIRW8Ti3rKm4MBiLClQz0xjOtrQ"
-);
-
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 let currentId=null;
 
 async function load(){
-  const {data,error}=await sb.from("students").select("*").order("created_at",{ascending:false});
-  if(error){msg.textContent=error.message;return}
-  tbody.innerHTML="";
-  let i=1;
-  data.forEach(s=>{
-    const tr=document.createElement("tr");
-    tr.innerHTML=`
-      <td>${i++}</td>
-      <td>${s.roll_number||""}</td>
-      <td>${s.full_name||""}</td>
-      <td>${s.mobile||""}</td>
-      <td>${s.exam_level||""}</td>
-      <td>${s.exam_center||""}</td>
-      <td>${s.form_status||""}</td>
-      <td>${s.payment_status||""}</td>
-      <td><button class="btn-view">View</button></td>`;
-    tr.querySelector("button").onclick=()=>view(s);
-    tbody.appendChild(tr);
-  });
-  msg.textContent="Loaded successfully";
+const {data}=await sb.from("students").select("*").order("created_at",{ascending:false});
+const tb=document.getElementById("tbody");
+tb.innerHTML="";
+let i=1;
+
+data.forEach(s=>{
+tb.innerHTML+=`
+<tr>
+<td>${i++}</td>
+<td>${s.roll_number||""}</td>
+<td>${s.full_name||""}</td>
+<td>${s.mobile||""}</td>
+<td>${s.exam_level||""}</td>
+<td>${s.exam_center||""}</td>
+<td>${s.form_status||"pending"}</td>
+<td>
+<button class="view" onclick='view(${JSON.stringify(s)})'>View</button>
+<button class="del" onclick='del(${s.id})'>Delete</button>
+</td>
+</tr>`;
+});
 }
 load();
 
 function pub(path){
-  if(!path) return "";
-  return sb.storage.from("student_docs").getPublicUrl(path).data.publicUrl;
+if(!path)return "#";
+return sb.storage.from("student_docs").getPublicUrl(path).data.publicUrl;
 }
 
 function view(s){
-  currentId=s.id;
-  details.style.display="block";
-  dName.textContent=s.full_name||"";
-  dFather.textContent=s.father_name||"";
-  dMobile.textContent=s.mobile||"";
-  dRoll.textContent=s.roll_number||"";
-  dExam.textContent=s.exam_level||"";
-  dStatus.textContent=s.form_status||"";
-  dPhoto.href=pub(s.photo_path);
-  dAF.href=pub(s.aadhar_front_path);
-  dAB.href=pub(s.aadhar_back_path);
-  dM.href=pub(s.marksheet_path);
+currentId=s.id;
+document.getElementById("detailBox").style.display="block";
+dName.textContent=s.full_name;
+dFather.textContent=s.father_name;
+dMobile.textContent=s.mobile;
+dRoll.textContent=s.roll_number;
+dLevel.textContent=s.exam_level||"";
+
+pPhoto.href=pub(s.photo_path);
+pAadharF.href=pub(s.aadhar_front_path);
+pAadharB.href=pub(s.aadhar_back_path);
+pMark.href=pub(s.marksheet_path);
 }
 
-async function setStatus(v){
-  if(!currentId)return;
-  await sb.from("students").update({form_status:v}).eq("id",currentId);
-  load();
+async function approve(){
+await sb.from("students").update({form_status:"approved"}).eq("id",currentId);
+alert("Approved");
+load();
+}
+
+async function reject(){
+await sb.from("students").update({form_status:"rejected"}).eq("id",currentId);
+alert("Rejected");
+load();
+}
+
+async function del(id){
+if(!confirm("Delete student?"))return;
+await sb.from("students").delete().eq("id",id);
+load();
+}
+
+/* ===== EXCEL ===== */
+async function downloadExcel(){
+const {data}=await sb.from("students").select("full_name,roll_number,mobile");
+
+const rows=data.map(s=>({
+"Name":s.full_name,
+"Roll Number":s.roll_number,
+"Mobile Number":s.mobile
+}));
+
+const ws=XLSX.utils.json_to_sheet(rows);
+const wb=XLSX.utils.book_new();
+XLSX.utils.book_append_sheet(wb,ws,"Students");
+XLSX.writeFile(wb,"students.xlsx");
 }
 </script>
 
