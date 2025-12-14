@@ -20,52 +20,26 @@
       justify-content:space-between;
       flex-wrap:wrap;
     }
-    .logo-text{font-size:18px;font-weight:bold;letter-spacing:1px;}
+    .logo-text{font-size:18px;font-weight:bold;}
     nav a{
-      color:#fff;
-      text-decoration:none;
-      margin-left:10px;
-      font-size:13px;
-      font-weight:bold;
+      color:#fff;text-decoration:none;margin-left:10px;font-size:13px;font-weight:bold;
     }
-    nav a:hover{text-decoration:underline;}
-
     .container{max-width:900px;margin:15px auto;padding:10px;}
     .card{background:rgba(0,0,0,0.6);border-radius:10px;padding:14px;}
-    h1{font-size:22px;margin:6px 0 4px;}
-    h2{font-size:18px;margin:10px 0 6px;color:#ffd84d;}
-
+    h1{font-size:22px;}
+    h2{font-size:18px;color:#ffd84d;margin-top:14px;}
     label{display:block;font-size:14px;margin-top:6px;}
-    .req-star{color:#ff5555;margin-left:2px;}
-
-    input, select, textarea{
-      width:100%;
-      padding:7px;
-      border-radius:6px;
-      border:none;
-      margin-top:2px;
-      font-size:14px;
-      box-sizing:border-box;
+    .req-star{color:#ff5555;}
+    input,select,textarea{
+      width:100%;padding:7px;border-radius:6px;border:none;margin-top:2px;font-size:14px;
     }
-    textarea{resize:vertical;min-height:60px;}
-    input[type="file"]{padding:4px;background:#fff;color:#000;}
-
+    textarea{min-height:60px;}
+    input[type="file"]{background:#fff;color:#000;}
     .btn-primary{
-      margin-top:12px;
-      padding:10px 22px;
-      border-radius:999px;
-      border:none;
-      background:#ffbf00;
-      color:#000;
-      font-weight:bold;
-      cursor:pointer;
-      font-size:15px;
+      margin-top:14px;padding:10px 22px;border-radius:999px;border:none;
+      background:#ffbf00;color:#000;font-weight:bold;cursor:pointer;
     }
-    .btn-primary:disabled{opacity:0.6;cursor:default;}
-
-    #msgBox{margin-top:10px;font-size:14px;}
-
-    footer{text-align:center;font-size:13px;padding:10px;background:rgba(0,0,0,0.85);margin-top:10px;}
+    footer{text-align:center;font-size:13px;padding:10px;background:#000c;}
   </style>
 
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
@@ -80,102 +54,129 @@
     <a href="form-status.html">FORM STATUS</a>
     <a href="admit.html">ADMIT CARD</a>
     <a href="result.html">RESULT</a>
-    <a href="download.html">DOWNLOAD</a>
-    <a href="help.html">HELP</a>
-    <a href="admin/login.html">ADMIN</a>
   </nav>
 </header>
 
 <div class="container">
-  <div class="card">
-    <h1>Apply for Scholarship Exam 2026</h1>
+<div class="card">
 
-    <form id="applyForm" onsubmit="submitForm(event)">
+<h1>Apply for Scholarship Exam 2026</h1>
 
-      <h2>Step 1 – Student Details</h2>
+<form id="applyForm" onsubmit="submitForm(event)">
 
-      <label>Full Name<span class="req-star">*</span></label>
-      <input type="text" id="name" required>
+<h2>Step 1 – Student Details</h2>
 
-      <label>Father's Name<span class="req-star">*</span></label>
-      <input type="text" id="father" required>
+<label>Full Name<span class="req-star">*</span></label>
+<input type="text" id="name" required>
 
-      <label>Date of Birth<span class="req-star">*</span></label>
-      <input type="date" id="dob" required>
+<label>Father's Name<span class="req-star">*</span></label>
+<input type="text" id="father" required>
 
-      <label>Gender<span class="req-star">*</span></label>
-      <select id="gender" required>
-        <option value="">Select</option>
-        <option>Male</option>
-        <option>Female</option>
-        <option>Other</option>
-      </select>
+<label>Date of Birth<span class="req-star">*</span></label>
+<input type="date" id="dob" required>
 
-      <label>Mobile Number<span class="req-star">*</span></label>
-      <input type="tel" id="mobile" maxlength="10" required>
+<label>Gender<span class="req-star">*</span></label>
+<select id="gender" required>
+  <option value="">Select</option>
+  <option>Male</option>
+  <option>Female</option>
+  <option>Other</option>
+</select>
 
-      <label>Qualification<span class="req-star">*</span></label>
-      <select id="qualification" required>
-        <option value="">Select</option>
-        <option>12th Appearing</option>
-        <option>12th Pass</option>
-        <option>Other Competition Student</option>
-      </select>
+<label>Mobile Number<span class="req-star">*</span></label>
+<input type="tel" id="mobile" maxlength="10" required>
 
-      <!-- ✅ EXAM LEVEL (ADDED – COMPULSORY) -->
-      <label>Exam Level<span class="req-star">*</span></label>
-      <select id="examLevel" required>
-        <option value="">Select Exam Level</option>
-        <option value="State">State Level Exam</option>
-        <option value="Centre">Centre Level Exam</option>
-      </select>
+<label>Qualification<span class="req-star">*</span></label>
+<select id="qualification" required>
+  <option value="">Select</option>
+  <option>12th Appearing</option>
+  <option>12th Pass</option>
+  <option>Other Competition Student</option>
+</select>
 
-      <label>Aadhar Number<span class="req-star">*</span></label>
-      <input type="text" id="aadhar" maxlength="12" required>
+<!-- ✅ EXAM LEVEL (ONLY ADDITION) -->
+<label>Exam Level<span class="req-star">*</span></label>
+<select id="examLevel" required>
+  <option value="">Select Exam Level</option>
+  <option value="State">State Level</option>
+  <option value="Centre">Centre Level</option>
+</select>
 
-      <label>Address<span class="req-star">*</span></label>
-      <textarea id="address" required></textarea>
+<label>Aadhar Number<span class="req-star">*</span></label>
+<input type="text" id="aadhar" maxlength="12" required>
 
-      <button class="btn-primary" id="submitBtn">Final Submit</button>
-      <div id="msgBox"></div>
+<label>Address<span class="req-star">*</span></label>
+<textarea id="address" required></textarea>
 
-    </form>
-  </div>
+<h2>Upload Documents</h2>
+
+<label>Passport Size Photo<span class="req-star">*</span></label>
+<input type="file" id="photoFile" required>
+
+<label>Aadhar Card (Front)<span class="req-star">*</span></label>
+<input type="file" id="aadharFile" required>
+
+<label>Aadhar Card (Back)<span class="req-star">*</span></label>
+<input type="file" id="aadharBackFile" required>
+
+<label>Marksheet<span class="req-star">*</span></label>
+<input type="file" id="marksheetFile" required>
+
+<h2>Payment ₹200</h2>
+
+<p>UPI ID: <b>Q191410773@ybl</b></p>
+<img src="upi-qr.png" width="180">
+
+<label>Payment Screenshot<span class="req-star">*</span></label>
+<input type="file" id="paymentFile" required>
+
+<label>Transaction ID<span class="req-star">*</span></label>
+<input type="text" id="upiTxn" required>
+
+<button class="btn-primary">Final Submit</button>
+<div id="msgBox"></div>
+
+</form>
+</div>
 </div>
 
 <footer>© 2026 Baba Deep Singh Mega Talent Hub</footer>
 
 <script>
-const SUPABASE_URL = "https://yyymjhuwjvyykukfzqow.supabase.co";
-const SUPABASE_ANON_KEY = "YOUR_KEY_HERE";
-const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const sb = supabase.createClient(
+  "https://yyymjhuwjvyykukfzqow.supabase.co",
+  "YOUR_ANON_KEY"
+);
 
 async function submitForm(e){
   e.preventDefault();
 
   const examLevelVal = document.getElementById("examLevel").value;
   if(!examLevelVal){
-    alert("Please select Exam Level (State / Centre)");
+    alert("Please select Exam Level");
     return;
   }
 
   const { error } = await sb.from("students").insert([{
-    full_name: document.getElementById("name").value,
-    father_name: document.getElementById("father").value,
-    dob: document.getElementById("dob").value,
-    gender: document.getElementById("gender").value,
-    mobile: document.getElementById("mobile").value,
-    qualification: document.getElementById("qualification").value,
-    exam_level: examLevelVal   // ✅ SAVED HERE
+    full_name: name.value,
+    father_name: father.value,
+    dob: dob.value,
+    gender: gender.value,
+    mobile: mobile.value,
+    qualification: qualification.value,
+    exam_level: examLevelVal,
+    aadhar_no: aadhar.value,
+    address: address.value,
+    payment_status: "pending"
   }]);
 
   if(error){
     alert(error.message);
-    return;
+  }else{
+    document.getElementById("msgBox").innerHTML =
+      "<span style='color:#0f0'>Form submitted successfully</span>";
+    document.getElementById("applyForm").reset();
   }
-
-  alert("Form submitted successfully");
-  document.getElementById("applyForm").reset();
 }
 </script>
 
