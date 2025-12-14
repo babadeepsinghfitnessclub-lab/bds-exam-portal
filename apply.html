@@ -67,7 +67,7 @@ footer{text-align:center;font-size:12px;padding:10px;background:#000c;margin-top
     <a href="index.html">HOME</a>
     <a href="apply.html">APPLY</a>
     <a href="form-status.html">FORM STATUS</a>
-    <a href="admit.html">ADMIT CARD</a>
+    <a href="admit.html">ADMIT</a>
     <a href="result.html">RESULT</a>
     <a href="admin/login.html">ADMIN</a>
   </nav>
@@ -93,10 +93,10 @@ footer{text-align:center;font-size:12px;padding:10px;background:#000c;margin-top
 
 <label>Gender <span class="req-star">*</span></label>
 <select id="gender" required>
-  <option value="">Select</option>
-  <option>Male</option>
-  <option>Female</option>
-  <option>Other</option>
+<option value="">Select</option>
+<option>Male</option>
+<option>Female</option>
+<option>Other</option>
 </select>
 
 <label>Mobile Number <span class="req-star">*</span></label>
@@ -104,18 +104,18 @@ footer{text-align:center;font-size:12px;padding:10px;background:#000c;margin-top
 
 <label>Qualification <span class="req-star">*</span></label>
 <select id="qualification" required>
-  <option value="">Select</option>
-  <option>12th Appearing</option>
-  <option>12th Pass</option>
-  <option>Other Competition Student</option>
+<option value="">Select</option>
+<option>12th Appearing</option>
+<option>12th Pass</option>
+<option>Other Competition Student</option>
 </select>
 
-<!-- ✅ ONLY NEW FIELD -->
+<!-- ✅ EXAM LEVEL (ONLY ADDITION IN FORM) -->
 <label>Exam Level <span class="req-star">*</span></label>
 <select id="examLevel" required>
-  <option value="">Select</option>
-  <option value="State">State Level</option>
-  <option value="Centre">Centre Level</option>
+<option value="">Select</option>
+<option value="State">State Level</option>
+<option value="Centre">Centre Level</option>
 </select>
 
 <label>Aadhar Number <span class="req-star">*</span></label>
@@ -179,49 +179,44 @@ const sb = supabase.createClient(
 );
 
 async function submitForm(e){
- e.preventDefault();
+  e.preventDefault();
 
- const btn = submitBtn;
- btn.disabled = true;
+  const { data, error } = await sb
+    .from("students")
+    .insert([{
+      name: name.value,                 // ✅ ADMIN NAME FIX
+      full_name: name.value,
+      father_name: father.value,
+      dob: dob.value,
+      gender: gender.value,
+      mobile: mobile.value,
+      qualification: qualification.value,
+      exam_level: examLevel.value,      // ✅ EXAM LEVEL
+      aadhar_no: aadhar.value,
+      address: address.value,
+      upi_txn: upiTxn.value,
+      form_status: "submitted",
+      payment_status: "pending"
+    }])
+    .select("id")
+    .single();
 
- try{
-   const { data, error } = await sb
-     .from("students")
-     .insert([{
-       full_name: name.value,
-       father_name: father.value,
-       dob: dob.value,
-       gender: gender.value,
-       mobile: mobile.value,
-       qualification: qualification.value,
-       exam_level: examLevel.value,   // ✅ ADDED
-       aadhar_no: aadhar.value,
-       address: address.value,
-       upi_txn: upiTxn.value,
-       form_status: "submitted",
-       payment_status: "pending"
-     }])
-     .select("id")
-     .single();
+  if(error){
+    msgBox.innerHTML = error.message;
+    return;
+  }
 
-   if(error) throw error;
+  const roll = "BDS26" + String(data.id).padStart(4,"0");
 
-   const roll = "BDS26" + String(data.id).padStart(4,"0");
+  await sb.from("students")
+    .update({ roll_number: roll })
+    .eq("id", data.id);
 
-   await sb.from("students")
-     .update({ roll_number: roll })
-     .eq("id", data.id);
+  msgBox.innerHTML =
+    "<span style='color:lightgreen'>Form submitted successfully<br>Roll No: <b>"
+    + roll + "</b></span>";
 
-   msgBox.innerHTML =
-     "<span style='color:lightgreen'>Form submitted successfully<br>Roll No: <b>"+roll+"</b></span>";
-
-   applyForm.reset();
-
- }catch(err){
-   msgBox.innerHTML = "<span style='color:red'>"+err.message+"</span>";
- }finally{
-   btn.disabled = false;
- }
+  applyForm.reset();
 }
 </script>
 
