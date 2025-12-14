@@ -1,48 +1,63 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Apply | BDS Mega Talent Hub</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta charset="UTF-8">
+<title>Apply | BDS Mega Talent Hub</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <style>
-    body{
-      margin:0;
-      font-family:Arial, sans-serif;
-      background:radial-gradient(circle at top, #1a4fff 0%, #000b33 55%, #000316 100%);
-      color:#fff;
-    }
-    header{
-      background:rgba(0,0,0,0.7);
-      padding:8px 14px;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      flex-wrap:wrap;
-    }
-    .logo-text{font-size:18px;font-weight:bold;}
-    nav a{
-      color:#fff;text-decoration:none;margin-left:10px;font-size:13px;font-weight:bold;
-    }
-    .container{max-width:900px;margin:15px auto;padding:10px;}
-    .card{background:rgba(0,0,0,0.6);border-radius:10px;padding:14px;}
-    h1{font-size:22px;}
-    h2{font-size:18px;color:#ffd84d;margin-top:14px;}
-    label{display:block;font-size:14px;margin-top:6px;}
-    .req-star{color:#ff5555;}
-    input,select,textarea{
-      width:100%;padding:7px;border-radius:6px;border:none;margin-top:2px;font-size:14px;
-    }
-    textarea{min-height:60px;}
-    input[type="file"]{background:#fff;color:#000;}
-    .btn-primary{
-      margin-top:14px;padding:10px 22px;border-radius:999px;border:none;
-      background:#ffbf00;color:#000;font-weight:bold;cursor:pointer;
-    }
-    footer{text-align:center;font-size:13px;padding:10px;background:#000c;}
-  </style>
+<style>
+body{
+  margin:0;
+  font-family:Arial, sans-serif;
+  background:radial-gradient(circle at top,#1a4fff 0%,#000b33 55%,#000316 100%);
+  color:#fff;
+}
+header{
+  background:rgba(0,0,0,.7);
+  padding:8px 14px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  flex-wrap:wrap;
+}
+.logo-text{font-size:18px;font-weight:bold;}
+nav a{
+  color:#fff;
+  text-decoration:none;
+  margin-left:10px;
+  font-size:13px;
+  font-weight:bold;
+}
+.container{max-width:900px;margin:15px auto;padding:10px;}
+.card{background:rgba(0,0,0,.6);border-radius:10px;padding:14px;}
+h1{font-size:22px;}
+h2{font-size:18px;color:#ffd84d;margin-top:12px;}
+label{display:block;margin-top:8px;font-size:14px;}
+.req{color:#ff5555;}
+input,select,textarea{
+  width:100%;
+  padding:7px;
+  border-radius:6px;
+  border:none;
+  margin-top:2px;
+}
+textarea{min-height:60px;}
+input[type=file]{background:#fff;color:#000;}
+.btn{
+  margin-top:14px;
+  padding:10px 22px;
+  border-radius:999px;
+  border:none;
+  background:#ffbf00;
+  color:#000;
+  font-weight:bold;
+  cursor:pointer;
+}
+#msgBox{margin-top:10px;}
+footer{text-align:center;font-size:12px;padding:10px;background:#000c;margin-top:12px;}
+</style>
 
-  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
@@ -52,8 +67,9 @@
     <a href="index.html">HOME</a>
     <a href="apply.html">APPLY</a>
     <a href="form-status.html">FORM STATUS</a>
-    <a href="admit.html">ADMIT CARD</a>
+    <a href="admit.html">ADMIT</a>
     <a href="result.html">RESULT</a>
+    <a href="admin/login.html">ADMIN</a>
   </nav>
 </header>
 
@@ -64,76 +80,92 @@
 
 <form id="applyForm" onsubmit="submitForm(event)">
 
-<h2>Step 1 – Student Details</h2>
+<h2>Student Details</h2>
 
-<label>Full Name<span class="req-star">*</span></label>
+<label>Full Name <span class="req">*</span></label>
 <input type="text" id="name" required>
 
-<label>Father's Name<span class="req-star">*</span></label>
+<label>Father's Name <span class="req">*</span></label>
 <input type="text" id="father" required>
 
-<label>Date of Birth<span class="req-star">*</span></label>
+<label>Date of Birth <span class="req">*</span></label>
 <input type="date" id="dob" required>
 
-<label>Gender<span class="req-star">*</span></label>
+<label>Gender <span class="req">*</span></label>
 <select id="gender" required>
-  <option value="">Select</option>
-  <option>Male</option>
-  <option>Female</option>
-  <option>Other</option>
+<option value="">Select</option>
+<option>Male</option>
+<option>Female</option>
+<option>Other</option>
 </select>
 
-<label>Mobile Number<span class="req-star">*</span></label>
+<label>Mobile Number <span class="req">*</span></label>
 <input type="tel" id="mobile" maxlength="10" required>
 
-<label>Qualification<span class="req-star">*</span></label>
+<label>Qualification <span class="req">*</span></label>
 <select id="qualification" required>
-  <option value="">Select</option>
-  <option>12th Appearing</option>
-  <option>12th Pass</option>
-  <option>Other Competition Student</option>
+<option value="">Select</option>
+<option>12th Appearing</option>
+<option>12th Pass</option>
+<option>Competition Student</option>
 </select>
 
-<!-- ✅ EXAM LEVEL (ONLY ADDITION) -->
-<label>Exam Level<span class="req-star">*</span></label>
+<!-- ✅ EXAM LEVEL (COMPULSORY) -->
+<label>Exam Level <span class="req">*</span></label>
 <select id="examLevel" required>
-  <option value="">Select Exam Level</option>
-  <option value="State">State Level</option>
-  <option value="Centre">Centre Level</option>
+<option value="">Select Exam Level</option>
+<option value="State">State Level</option>
+<option value="Centre">Centre Level</option>
 </select>
 
-<label>Aadhar Number<span class="req-star">*</span></label>
+<label>Aadhaar Number <span class="req">*</span></label>
 <input type="text" id="aadhar" maxlength="12" required>
 
-<label>Address<span class="req-star">*</span></label>
+<label>Address <span class="req">*</span></label>
 <textarea id="address" required></textarea>
 
 <h2>Upload Documents</h2>
 
-<label>Passport Size Photo<span class="req-star">*</span></label>
+<label>Passport Photo <span class="req">*</span></label>
 <input type="file" id="photoFile" required>
 
-<label>Aadhar Card (Front)<span class="req-star">*</span></label>
-<input type="file" id="aadharFile" required>
+<label>Aadhaar Front <span class="req">*</span></label>
+<input type="file" id="aadharFront" required>
 
-<label>Aadhar Card (Back)<span class="req-star">*</span></label>
-<input type="file" id="aadharBackFile" required>
+<label>Aadhaar Back <span class="req">*</span></label>
+<input type="file" id="aadharBack" required>
 
-<label>Marksheet<span class="req-star">*</span></label>
-<input type="file" id="marksheetFile" required>
+<label>Marksheet <span class="req">*</span></label>
+<input type="file" id="marksheet" required>
 
 <h2>Payment ₹200</h2>
 
 <p>UPI ID: <b>Q191410773@ybl</b></p>
-<img src="upi-qr.png" width="180">
 
-<label>Payment Screenshot<span class="req-star">*</span></label>
+<img src="upi-qr.png" style="width:180px;border:2px solid #fff;border-radius:8px;">
+
+<!-- ✅ DIRECT PAY BUTTON -->
+<p>
+<a href="upi://pay?pa=Q191410773@ybl&pn=Baba%20Deep%20Singh%20Fitness%20Club&am=200&cu=INR"
+   style="display:inline-block;padding:10px 18px;background:#ffbf00;color:#000;
+   font-weight:bold;border-radius:20px;text-decoration:none;">
+Pay ₹200 via UPI App
+</a>
+</p>
+
+<label>Payment Screenshot <span class="req">*</span></label>
 <input type="file" id="paymentFile" required>
 
-<label>Transaction ID<span class="req-star">*</span></label>
-<input type="text" id="upiTxn" required>
+<label>Transaction ID <span class="req">*</span></label>
+<input type="text" id="txnId" required>
 
-<button class="btn-primary">Final Submit</button>
+<!-- ✅ PAYMENT CONFIRM CHECKBOX -->
+<label style="margin-top:10px;">
+<input type="checkbox" id="payConfirm" required>
+I confirm that payment is completed
+</label>
+
+<button class="btn">Final Submit</button>
 <div id="msgBox"></div>
 
 </form>
@@ -144,39 +176,20 @@
 
 <script>
 const sb = supabase.createClient(
-  "https://yyymjhuwjvyykukfzqow.supabase.co",
-  "YOUR_ANON_KEY"
+"https://yyymjhuwjvyykukfzqow.supabase.co",
+"YOUR_ANON_KEY"
 );
 
 async function submitForm(e){
-  e.preventDefault();
+e.preventDefault();
 
-  const examLevelVal = document.getElementById("examLevel").value;
-  if(!examLevelVal){
-    alert("Please select Exam Level");
-    return;
-  }
+if(!document.getElementById("payConfirm").checked){
+alert("Please confirm payment");
+return;
+}
 
-  const { error } = await sb.from("students").insert([{
-    full_name: name.value,
-    father_name: father.value,
-    dob: dob.value,
-    gender: gender.value,
-    mobile: mobile.value,
-    qualification: qualification.value,
-    exam_level: examLevelVal,
-    aadhar_no: aadhar.value,
-    address: address.value,
-    payment_status: "pending"
-  }]);
-
-  if(error){
-    alert(error.message);
-  }else{
-    document.getElementById("msgBox").innerHTML =
-      "<span style='color:#0f0'>Form submitted successfully</span>";
-    document.getElementById("applyForm").reset();
-  }
+document.getElementById("msgBox").innerHTML =
+"<span style='color:lightgreen'>Form submitted successfully (demo).</span>";
 }
 </script>
 
