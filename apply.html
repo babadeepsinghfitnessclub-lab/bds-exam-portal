@@ -110,7 +110,6 @@ footer{text-align:center;font-size:12px;padding:10px;background:#000c;margin-top
 <option>Competition Student</option>
 </select>
 
-<!-- ✅ EXAM LEVEL (COMPULSORY) -->
 <label>Exam Level <span class="req">*</span></label>
 <select id="examLevel" required>
 <option value="">Select Exam Level</option>
@@ -142,25 +141,13 @@ footer{text-align:center;font-size:12px;padding:10px;background:#000c;margin-top
 
 <p>UPI ID: <b>Q191410773@ybl</b></p>
 
-<img src="upi-qr.png" style="width:180px;border:2px solid #fff;border-radius:8px;">
-
-<!-- ✅ DIRECT PAY BUTTON -->
-<p>
-<a href="upi://pay?pa=Q191410773@ybl&pn=Baba%20Deep%20Singh%20Fitness%20Club&am=200&cu=INR"
-   style="display:inline-block;padding:10px 18px;background:#ffbf00;color:#000;
-   font-weight:bold;border-radius:20px;text-decoration:none;">
-Pay ₹200 via UPI App
-</a>
-</p>
-
 <label>Payment Screenshot <span class="req">*</span></label>
 <input type="file" id="paymentFile" required>
 
 <label>Transaction ID <span class="req">*</span></label>
 <input type="text" id="txnId" required>
 
-<!-- ✅ PAYMENT CONFIRM CHECKBOX -->
-<label style="margin-top:10px;">
+<label>
 <input type="checkbox" id="payConfirm" required>
 I confirm that payment is completed
 </label>
@@ -176,20 +163,64 @@ I confirm that payment is completed
 
 <script>
 const sb = supabase.createClient(
-"https://yyymjhuwjvyykukfzqow.supabase.co",
-"YOUR_ANON_KEY"
+  "https://yyymjhuwjvyykukfzqow.supabase.co",
+  "sb_publishable_AotK9XHnYF0UmfJYrS7GCg_BHXVvzy0"
 );
+
+// 🔹 AUTO ROLL GENERATOR
+async function generateRoll(){
+  const { data } = await sb
+    .from("students")
+    .select("roll_number")
+    .order("created_at",{ascending:false})
+    .limit(1);
+
+  if(!data || data.length===0){
+    return "BDS260001";
+  }
+
+  const last = data[0].roll_number;
+  const num = parseInt(last.replace("BDS","")) + 1;
+  return "BDS" + num;
+}
 
 async function submitForm(e){
 e.preventDefault();
 
-if(!document.getElementById("payConfirm").checked){
-alert("Please confirm payment");
-return;
+if(!payConfirm.checked){
+ alert("Confirm payment first");
+ return;
 }
 
-document.getElementById("msgBox").innerHTML =
-"<span style='color:lightgreen'>Form submitted successfully (demo).</span>";
+msgBox.innerHTML="Submitting...";
+
+const roll = await generateRoll();
+
+const { error } = await sb.from("students").insert({
+ roll_number: roll,
+ full_name: name.value,
+ father_name: father.value,
+ dob: dob.value,
+ gender: gender.value,
+ mobile: mobile.value,
+ qualification: qualification.value,
+ exam_level: examLevel.value,
+ aadhar_no: aadhar.value,
+ address: address.value,
+ form_status: "submitted",
+ payment_status: "pending",
+ upi_txn: txnId.value
+});
+
+if(error){
+ msgBox.innerHTML="<span style='color:red'>"+error.message+"</span>";
+ return;
+}
+
+msgBox.innerHTML=
+"<span style='color:lightgreen'>Form submitted successfully.<br>Your Roll No: <b>"+roll+"</b></span>";
+
+document.getElementById("applyForm").reset();
 }
 </script>
 
