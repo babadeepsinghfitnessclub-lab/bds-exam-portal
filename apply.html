@@ -8,24 +8,53 @@
 <style>
 body{
   margin:0;
-  font-family:Arial;
-  background:radial-gradient(circle at top,#1a4fff,#000316);
+  font-family:Arial, sans-serif;
+  background:radial-gradient(circle at top,#1a4fff 0%,#000b33 55%,#000316 100%);
   color:#fff;
 }
 header{
-  background:#000c;
-  padding:10px;
+  background:rgba(0,0,0,.7);
+  padding:8px 14px;
   display:flex;
   justify-content:space-between;
+  align-items:center;
   flex-wrap:wrap;
 }
-nav a{color:#fff;text-decoration:none;margin-left:10px;font-size:13px;font-weight:bold}
-.container{max-width:900px;margin:15px auto}
-.card{background:#000a;padding:15px;border-radius:10px}
-label{display:block;margin-top:8px}
-input,select,textarea{width:100%;padding:7px;border-radius:6px;border:none}
-input[type=file]{background:#fff;color:#000}
-button{margin-top:15px;padding:10px;border:none;border-radius:20px;background:#ffbf00;font-weight:bold}
+.logo-text{font-size:18px;font-weight:bold;}
+nav a{
+  color:#fff;
+  text-decoration:none;
+  margin-left:10px;
+  font-size:13px;
+  font-weight:bold;
+}
+.container{max-width:900px;margin:15px auto;padding:10px;}
+.card{background:rgba(0,0,0,.6);border-radius:10px;padding:14px;}
+h1{font-size:22px;}
+h2{font-size:18px;color:#ffd84d;margin-top:12px;}
+label{display:block;margin-top:8px;font-size:14px;}
+.req{color:#ff5555;}
+input,select,textarea{
+  width:100%;
+  padding:7px;
+  border-radius:6px;
+  border:none;
+  margin-top:2px;
+}
+textarea{min-height:60px;}
+input[type=file]{background:#fff;color:#000;}
+.btn{
+  margin-top:14px;
+  padding:10px 22px;
+  border-radius:999px;
+  border:none;
+  background:#ffbf00;
+  color:#000;
+  font-weight:bold;
+  cursor:pointer;
+}
+#msgBox{margin-top:10px;}
+footer{text-align:center;font-size:12px;padding:10px;background:#000c;margin-top:12px;}
 </style>
 
 <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
@@ -33,43 +62,47 @@ button{margin-top:15px;padding:10px;border:none;border-radius:20px;background:#f
 <body>
 
 <header>
-<div>BABA DEEP SINGH MEGA TALENT HUB</div>
-<nav>
-<a href="index.html">HOME</a>
-<a href="apply.html">APPLY</a>
-<a href="form-status.html">FORM STATUS</a>
-<a href="admit.html">ADMIT</a>
-<a href="result.html">RESULT</a>
-</nav>
+  <div class="logo-text">BABA DEEP SINGH MEGA TALENT HUB</div>
+  <nav>
+    <a href="index.html">HOME</a>
+    <a href="apply.html">APPLY</a>
+    <a href="form-status.html">FORM STATUS</a>
+    <a href="admit.html">ADMIT</a>
+    <a href="result.html">RESULT</a>
+    <a href="admin/login.html">ADMIN</a>
+  </nav>
 </header>
 
 <div class="container">
 <div class="card">
 
-<h2>Apply for Scholarship Exam 2026</h2>
+<h1>Apply for Scholarship Exam 2026</h1>
 
-<form onsubmit="submitForm(event)">
+<form id="applyForm" onsubmit="submitForm(event)">
 
-<label>Full Name *</label>
-<input id="name" required>
+<h2>Student Details</h2>
 
-<label>Father Name *</label>
-<input id="father" required>
+<label>Full Name <span class="req">*</span></label>
+<input type="text" id="name" required>
 
-<label>DOB *</label>
+<label>Father's Name <span class="req">*</span></label>
+<input type="text" id="father" required>
+
+<label>Date of Birth <span class="req">*</span></label>
 <input type="date" id="dob" required>
 
-<label>Gender *</label>
+<label>Gender <span class="req">*</span></label>
 <select id="gender" required>
 <option value="">Select</option>
 <option>Male</option>
 <option>Female</option>
+<option>Other</option>
 </select>
 
-<label>Mobile *</label>
-<input id="mobile" maxlength="10" required>
+<label>Mobile Number <span class="req">*</span></label>
+<input type="tel" id="mobile" maxlength="10" required>
 
-<label>Qualification *</label>
+<label>Qualification <span class="req">*</span></label>
 <select id="qualification" required>
 <option value="">Select</option>
 <option>12th Appearing</option>
@@ -77,106 +110,144 @@ button{margin-top:15px;padding:10px;border:none;border-radius:20px;background:#f
 <option>Competition Student</option>
 </select>
 
-<label>Exam Level *</label>
+<label>Exam Level <span class="req">*</span></label>
 <select id="examLevel" required>
-<option value="">Select</option>
-<option>State</option>
-<option>Centre</option>
+<option value="">Select Exam Level</option>
+<option value="State">State Level</option>
+<option value="Centre">Centre Level</option>
 </select>
 
-<label>Aadhaar *</label>
-<input id="aadhar" maxlength="12" required>
+<label>Aadhaar Number <span class="req">*</span></label>
+<input type="text" id="aadhar" maxlength="12" required>
 
-<label>Address *</label>
+<label>Address <span class="req">*</span></label>
 <textarea id="address" required></textarea>
 
-<hr>
+<h2>Upload Documents</h2>
 
-<label>Photo *</label>
-<input type="file" id="photo" required>
+<label>Passport Photo <span class="req">*</span></label>
+<input type="file" id="photoFile" required>
 
-<label>Aadhaar Front *</label>
-<input type="file" id="af" required>
+<label>Aadhaar Front <span class="req">*</span></label>
+<input type="file" id="aadharFront" required>
 
-<label>Aadhaar Back *</label>
-<input type="file" id="ab" required>
+<label>Aadhaar Back <span class="req">*</span></label>
+<input type="file" id="aadharBack" required>
 
-<label>Marksheet *</label>
-<input type="file" id="ms" required>
+<label>Marksheet <span class="req">*</span></label>
+<input type="file" id="marksheet" required>
 
-<label>Payment Screenshot *</label>
-<input type="file" id="ps" required>
+<h2>Payment ₹200</h2>
 
-<label>Transaction ID *</label>
-<input id="txn" required>
+<p>UPI ID: <b>Q191410773@ybl</b></p>
 
-<label><input type="checkbox" id="payok" required> Payment completed</label>
+<img src="upi-qr.png" style="width:200px;border:2px solid #fff;border-radius:10px">
 
-<button>Final Submit</button>
-<p id="msg"></p>
+<p>
+<a href="upi://pay?pa=Q191410773@ybl&pn=Baba%20Deep%20Singh%20Mega%20Talent%20Hub&am=200&cu=INR"
+style="display:inline-block;padding:10px 20px;background:#ffbf00;color:#000;
+font-weight:bold;border-radius:25px;text-decoration:none;">
+Pay ₹200 via UPI App
+</a>
+</p>
+
+<label>Payment Screenshot <span class="req">*</span></label>
+<input type="file" id="paymentFile" required>
+
+<label>Transaction ID <span class="req">*</span></label>
+<input type="text" id="txnId" required>
+
+<label>
+<input type="checkbox" id="payConfirm" required>
+I confirm that payment is completed
+</label>
+
+<button class="btn">Final Submit</button>
+<div id="msgBox"></div>
 
 </form>
 </div>
 </div>
 
+<footer>© 2026 Baba Deep Singh Mega Talent Hub</footer>
+
 <script>
 const sb = supabase.createClient(
- "https://yyymjhuwjvyykukfzqow.supabase.co",
- "sb_publishable_AotK9XHnYF0UmfJYrS7GCg_BHXVvzy0"
+  "https://yyymjhuwjvyykukfzqow.supabase.co",
+  "sb_publishable_AotK9XHnYF0UmfJYrS7GCg_BHXVvzy0"
 );
 
-async function upload(file, folder){
- const path = folder + "/" + Date.now() + "_" + file.name;
- await sb.storage.from("student_docs").upload(path, file);
- return path;
+// 🔹 AUTO ROLL NUMBER
+async function generateRoll(){
+  const { data } = await sb
+    .from("students")
+    .select("roll_number")
+    .order("created_at",{ascending:false})
+    .limit(1);
+
+  if(!data || data.length===0) return "BDS260001";
+  return "BDS" + (parseInt(data[0].roll_number.replace("BDS","")) + 1);
 }
 
-async function generateRoll(){
- const {data}=await sb.from("students").select("roll_number").order("created_at",{ascending:false}).limit(1);
- if(!data || data.length==0) return "BDS260001";
- return "BDS"+(parseInt(data[0].roll_number.replace("BDS",""))+1);
+// 🔹 UPLOAD HELPER
+async function uploadFile(file, path){
+  const { error } = await sb.storage.from("student_docs").upload(path, file, {
+    upsert:true
+  });
+  if(error) throw error;
+  return path;
 }
 
 async function submitForm(e){
- e.preventDefault();
- msg.innerText="Submitting...";
+e.preventDefault();
 
- const roll = await generateRoll();
+if(!payConfirm.checked){
+ alert("Confirm payment first");
+ return;
+}
 
- const photoP = await upload(photo.files[0], roll);
- const afP = await upload(af.files[0], roll);
- const abP = await upload(ab.files[0], roll);
- const msP = await upload(ms.files[0], roll);
- const psP = await upload(ps.files[0], roll);
+msgBox.innerHTML="Submitting...";
 
- const {error} = await sb.from("students").insert({
-  roll_number:roll,
-  full_name:name.value,
-  father_name:father.value,
-  dob:dob.value,
-  gender:gender.value,
-  mobile:mobile.value,
-  qualification:qualification.value,
-  exam_level:examLevel.value,
-  aadhar_no:aadhar.value,
-  address:address.value,
-  photo_path:photoP,
-  aadhar_front_path:afP,
-  aadhar_back_path:abP,
-  marksheet_path:msP,
-  payment_screenshot_path:psP,
-  upi_txn:txn.value,
-  form_status:"submitted",
-  payment_status:"pending"
+const roll = await generateRoll();
+
+try{
+ const photoPath = await uploadFile(photoFile.files[0], `photos/${roll}.jpg`);
+ const afPath = await uploadFile(aadharFront.files[0], `aadhar_front/${roll}.jpg`);
+ const abPath = await uploadFile(aadharBack.files[0], `aadhar_back/${roll}.jpg`);
+ const msPath = await uploadFile(marksheet.files[0], `marksheet/${roll}.jpg`);
+ const payPath = await uploadFile(paymentFile.files[0], `payment/${roll}.jpg`);
+
+ const { error } = await sb.from("students").insert({
+  roll_number: roll,
+  full_name: name.value,
+  father_name: father.value,
+  dob: dob.value,
+  gender: gender.value,
+  mobile: mobile.value,
+  qualification: qualification.value,
+  exam_level: examLevel.value,
+  aadhar_no: aadhar.value,
+  address: address.value,
+  form_status: "submitted",
+  payment_status: "pending",
+  upi_txn: txnId.value,
+  photo_path: photoPath,
+  aadhar_front_path: afPath,
+  aadhar_back_path: abPath,
+  marksheet_path: msPath,
+  payment_screenshot_path: payPath
  });
 
- if(error){
-  msg.innerText=error.message;
-  return;
- }
+ if(error) throw error;
 
- msg.innerHTML="✅ Form submitted<br><b>Roll No:</b> "+roll;
- e.target.reset();
+ msgBox.innerHTML =
+ "<span style='color:lightgreen'>Form submitted successfully.<br>Roll No: <b>"+roll+"</b></span>";
+
+ applyForm.reset();
+
+}catch(err){
+ msgBox.innerHTML="<span style='color:red'>"+err.message+"</span>";
+}
 }
 </script>
 
