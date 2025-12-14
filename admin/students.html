@@ -54,6 +54,7 @@ a{color:#1976d2}
 <tbody id="tbody"></tbody>
 </table>
 
+<!-- DETAILS -->
 <div id="detailBox" style="display:none">
 
 <div class="section">
@@ -68,17 +69,45 @@ a{color:#1976d2}
 
 <div class="section">
 <b>Documents</b><br>
-Photo: <a id="dPhoto" target="_blank"></a><br>
-Aadhaar Front: <a id="dAF" target="_blank"></a><br>
-Aadhaar Back: <a id="dAB" target="_blank"></a><br>
-Marksheet: <a id="dMS" target="_blank"></a><br>
-Payment SS: <a id="dPSS" target="_blank"></a>
+Photo: <a id="dPhoto" target="_blank">Not uploaded</a><br>
+Aadhaar Front: <a id="dAF" target="_blank">Not uploaded</a><br>
+Aadhaar Back: <a id="dAB" target="_blank">Not uploaded</a><br>
+Marksheet: <a id="dMS" target="_blank">Not uploaded</a><br>
+Payment SS: <a id="dPSS" target="_blank">Not uploaded</a>
 </div>
 
 <div class="section">
 <button class="approve" onclick="setStatus('approved',true)">Approve</button>
 <button class="pending" onclick="setStatus('pending',false)">Pending</button>
 <button class="reject" onclick="setStatus('rejected',false)">Reject</button>
+</div>
+
+<div class="section">
+<b>Admit Card</b>
+<label>Centre</label>
+<input id="cCentre">
+<label>Date</label>
+<input id="cDate">
+<label>Shift</label>
+<input id="cShift">
+<label>Start</label>
+<input id="cStart">
+<label>End</label>
+<input id="cEnd">
+<label><input type="checkbox" id="cAllow"> Admit Allowed</label>
+<button class="approve" onclick="saveAdmit()">Save Admit</button>
+</div>
+
+<div class="section">
+<b>Result</b>
+<label>Marks</label>
+<input id="rMarks">
+<label>Rank</label>
+<input id="rRank">
+<label>Status</label>
+<input id="rStatus">
+<label><input type="checkbox" id="rPub"> Publish</label>
+<button class="approve" onclick="saveResult()">Save Result</button>
 </div>
 
 <p class="msg" id="dMsg"></p>
@@ -94,25 +123,22 @@ const sb = supabase.createClient(
 
 let currentId=null;
 
-function setLink(a, path){
- if(!path){
-   a.innerText="Not uploaded";
-   a.removeAttribute("href");
-   a.style.pointerEvents="none";
-   a.style.opacity="0.6";
-   return;
- }
- const url = sb.storage.from("student_docs").getPublicUrl(path).data.publicUrl;
- a.href = url;
- a.innerText = "Open";
- a.style.pointerEvents="auto";
- a.style.opacity="1";
+function pub(path){
+ if(!path) return null;
+ const {data}=sb.storage.from("student_docs").getPublicUrl(path);
+ return data?.publicUrl || null;
 }
 
 async function load(){
- const {data}=await sb.from("students").select("*").order("created_at",{ascending:false});
+ const {data,error}=await sb.from("students")
+   .select("*")
+   .order("created_at",{ascending:false});
+
+ if(error){listMsg.innerText=error.message;return;}
+
  tbody.innerHTML="";
  let i=1;
+
  data.forEach(s=>{
   const tr=document.createElement("tr");
   tr.innerHTML=`
@@ -127,30 +153,56 @@ async function load(){
     <button class="view">View</button>
     <button class="del">Delete</button>
    </td>`;
-  tr.querySelector(".view").onclick=()=>open(s);
-  tr.querySelector(".del").onclick=()=>del(s.id);
+  tr.querySelector(".view").onclick=()=>openDetail(s);
+  tr.querySelector(".del").onclick=()=>delRow(s.id);
   tbody.appendChild(tr);
  });
  listMsg.innerText="Loaded";
 }
 load();
 
-function open(s){
+function setLink(el,path){
+ const url=pub(path);
+ if(url){
+  el.href=url;
+  el.textContent="Open";
+  el.style.pointerEvents="auto";
+ }else{
+  el.removeAttribute("href");
+  el.textContent="Not uploaded";
+  el.style.pointerEvents="none";
+ }
+}
+
+function openDetail(s){
  currentId=s.id;
  detailBox.style.display="block";
- dName.innerText = s.full_name || s.name || "";
- dFather.innerText = s.father_name || "";
- dMobile.innerText = s.mobile || "";
- dRoll.innerText = s.roll_number || "";
- dLevel.innerText = s.exam_level || "";
- dStatus.innerText = s.form_status || "";
- dPayment.innerText = s.payment_status || "";
 
- setLink(dPhoto, s.photo_path);
- setLink(dAF, s.aadhar_front_path);
- setLink(dAB, s.aadhar_back_path);
- setLink(dMS, s.marksheet_path);
- setLink(dPSS, s.payment_screenshot_path);
+ dName.innerText=s.full_name || s.name || "";
+ dFather.innerText=s.father_name||"";
+ dMobile.innerText=s.mobile||"";
+ dRoll.innerText=s.roll_number||"";
+ dLevel.innerText=s.exam_level||"";
+ dStatus.innerText=s.form_status||"";
+ dPayment.innerText=s.payment_status||"";
+
+ setLink(dPhoto,s.photo_path);
+ setLink(dAF,s.aadhar_front_path);
+ setLink(dAB,s.aadhar_back_path);
+ setLink(dMS,s.marksheet_path);
+ setLink(dPSS,s.payment_screenshot_path);
+
+ cCentre.value=s.exam_center||"";
+ cDate.value=s.exam_date||"";
+ cShift.value=s.exam_shift||"";
+ cStart.value=s.exam_start_time||"";
+ cEnd.value=s.exam_end_time||"";
+ cAllow.checked=s.admit_allowed===true;
+
+ rMarks.value=s.marks||"";
+ rRank.value=s.rank||"";
+ rStatus.value=s.result_status||"";
+ rPub.checked=s.result_published===true;
 }
 
 async function setStatus(st,pay){
@@ -161,14 +213,37 @@ async function setStatus(st,pay){
  load();
 }
 
-async function del(id){
+async function saveAdmit(){
+ await sb.from("students").update({
+  exam_center:cCentre.value,
+  exam_date:cDate.value,
+  exam_shift:cShift.value,
+  exam_start_time:cStart.value,
+  exam_end_time:cEnd.value,
+  admit_allowed:cAllow.checked
+ }).eq("id",currentId);
+ dMsg.innerText="Admit saved";
+}
+
+async function saveResult(){
+ await sb.from("students").update({
+  marks:rMarks.value||null,
+  rank:rRank.value||null,
+  result_status:rStatus.value||null,
+  result_published:rPub.checked
+ }).eq("id",currentId);
+ dMsg.innerText="Result saved";
+}
+
+async function delRow(id){
  if(!confirm("Permanent delete?"))return;
  await sb.from("students").delete().eq("id",id);
  load();
 }
 
 async function downloadExcel(){
- const {data}=await sb.from("students").select("full_name,roll_number,mobile");
+ const {data}=await sb.from("students")
+  .select("full_name,roll_number,mobile");
  const ws=XLSX.utils.json_to_sheet(data);
  const wb=XLSX.utils.book_new();
  XLSX.utils.book_append_sheet(wb,ws,"Students");
