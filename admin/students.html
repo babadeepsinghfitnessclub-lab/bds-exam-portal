@@ -15,6 +15,7 @@ th{background:#eee}
 button{padding:5px 8px;border:none;border-radius:4px;cursor:pointer;font-size:12px}
 .view{background:#1976d2;color:#fff}
 .del{background:#c62828;color:#fff}
+.edit{background:#6a1b9a;color:#fff}
 .approve{background:#2e7d32;color:#fff}
 .pending{background:#ffa000}
 .reject{background:#c62828;color:#fff}
@@ -135,7 +136,7 @@ async function load(){
  let i=1;
 
  data.forEach(s=>{
-  const name = s.full_name || s.name || "";
+  const name = s.full_name || "";
 
   const tr=document.createElement("tr");
   tr.innerHTML=`
@@ -148,10 +149,12 @@ async function load(){
    <td>${s.payment_status||"pending"}</td>
    <td>
     <button class="view">View</button>
+    <button class="edit">Edit Name</button>
     <button class="del">Delete</button>
    </td>`;
 
   tr.querySelector(".view").onclick=()=>openDetail(s);
+  tr.querySelector(".edit").onclick=()=>editName(s.id, name);
   tr.querySelector(".del").onclick=()=>delRow(s.id);
   tbody.appendChild(tr);
  });
@@ -159,6 +162,25 @@ async function load(){
  listMsg.innerText="Loaded";
 }
 load();
+
+/* EDIT NAME */
+async function editName(id, oldName){
+ const newName = prompt("Enter correct full name", oldName || "");
+ if(!newName) return;
+
+ const { error } = await sb
+  .from("students")
+  .update({ full_name: newName })
+  .eq("id", id);
+
+ if(error){
+  alert(error.message);
+  return;
+ }
+
+ alert("Name updated");
+ load();
+}
 
 /* DOCUMENT LINK */
 function setLink(el,path){
@@ -177,7 +199,7 @@ function openDetail(s){
  currentId = s.id;
  detailBox.style.display="block";
 
- dName.innerText   = s.full_name || s.name || "";
+ dName.innerText   = s.full_name || "";
  dFather.innerText = s.father_name || "";
  dMobile.innerText = s.mobile || "";
  dRoll.innerText   = s.roll_number || "";
@@ -241,10 +263,10 @@ async function delRow(id){
 /* EXCEL */
 async function downloadExcel(){
  const {data}=await sb.from("students")
-  .select("full_name,name,roll_number,mobile,exam_level");
+  .select("full_name,roll_number,mobile,exam_level");
 
  const rows=data.map(s=>({
-  Name: s.full_name || s.name || "",
+  Name: s.full_name || "",
   Roll: s.roll_number,
   Mobile: s.mobile,
   ExamLevel: s.exam_level
